@@ -50,7 +50,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.secondaryLink} onPress={() => router.push('/register')}>
-          <Text style={styles.secondaryLinkText}>Tidak punya akun? Daftar</Text>
+          <Text style={styles.secondaryLinkText}>Belum punya akun? Daftar</Text>
         </TouchableOpacity>
       </View>
 
