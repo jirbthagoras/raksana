@@ -1,11 +1,8 @@
 export interface User {
-  id: string;
+  id: number;
   email: string;
   username: string;
-  name: string;
-  avatar?: string;
-  createdAt: string;
-  updatedAt: string;
+  name?: string;
 }
 
 export interface AuthState {
@@ -25,12 +22,21 @@ export interface RegisterCredentials {
   username: string;
   name: string;
   password: string;
-  confirmPassword: string;
+  password_confirmation: string;
+}
+
+// Go API response format
+export interface GoApiResponse<T> {
+  data: T;
 }
 
 export interface AuthResponse {
   user: User;
   token: string;
+}
+
+export interface RegisterResponse {
+  message: string;
 }
 
 export interface ApiError {

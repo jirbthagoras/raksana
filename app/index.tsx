@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
+  Animated,
   Dimensions,
   SafeAreaView,
   ScrollView,
@@ -13,7 +14,6 @@ import {
 import AnimatedLogo from '../components/AnimatedLogo';
 import FloatingElements from '../components/FloatingElements';
 import GradientBackground from '../components/GradientBackground';
-import TypewriterText from '../components/TypewriterText';
 import { Colors, Fonts } from '../constants';
 
 const { width, height } = Dimensions.get('window');
@@ -21,6 +21,30 @@ const { width, height } = Dimensions.get('window');
 export default function Index() {
   const router = useRouter();
   const [showTypewriter, setShowTypewriter] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  // Auto-trigger typewriter effect after component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTypewriter(true);
+      // Start fade and slide animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 1500); // Delay to let the logo animation settle
+
+    return () => clearTimeout(timer);
+  }, [fadeAnim, slideAnim]);
 
   return (
     <GradientBackground>
@@ -41,28 +65,24 @@ export default function Index() {
               </View>
               
               <AnimatedLogo 
-                size={180} 
+                size={160} 
                 style={styles.logoContainer}
               />
               
-              <View style={styles.subtitleContainer}>
-                {showTypewriter ? (
-                  <TypewriterText 
-                    text="Craft your Eco Centric Lifestyle"
-                    speed={80}
-                    style={styles.typewriterText}
-                  />
-                ) : (
-                  <TouchableOpacity 
-                    onPress={() => setShowTypewriter(true)}
-                    style={styles.subtitleTouchable}
-                  >
-                    <Text style={styles.subtitlePlaceholder}>
-                      Tap untuk melihat misi kami ✨
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              {/* Additional tagline that appears after typewriter */}
+              <Animated.View 
+                style={[
+                  styles.taglineContainer,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                  }
+                ]}
+              >
+                <Text style={styles.taglineText}>
+                  Bangun Gaya Hidup Eco Centric Mu!
+                </Text>
+              </Animated.View>
             </View>
           </View>
 
@@ -103,55 +123,84 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     paddingHorizontal: 24,
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingTop: 60,
+    paddingBottom: 20,
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
   heroContent: {
     alignItems: 'center',
     maxWidth: width * 0.9,
-    gap: 20,
+    gap: 24,
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
   },
   titleUnderline: {
-    width: 60,
+    width: 80,
     height: 4,
     backgroundColor: Colors.primary,
     borderRadius: 2,
-    marginTop: 8,
+    marginTop: 12,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   logoContainer: {
-    marginVertical: 20,
+    marginVertical: 15,
   },
   subtitleContainer: {
-    minHeight: 60,
+    minHeight: 70,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
-  },
-  subtitleTouchable: {
-    paddingVertical: 12,
+    marginTop: 10,
     paddingHorizontal: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 20,
+  },
+  placeholderContainer: {
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 25,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: 'rgba(0, 106, 100, 0.2)',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   subtitlePlaceholder: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 14,
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
     color: Colors.primary,
     textAlign: 'center',
+    opacity: 0.8,
   },
   typewriterText: {
     fontFamily: Fonts.display.bold,
-    fontSize: 18,
+    fontSize: 22,
     color: Colors.tertiary,
     textAlign: 'center',
-    lineHeight: 26,
+    lineHeight: 30,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  taglineContainer: {
+    marginTop: 15,
+    paddingHorizontal: 30,
+    opacity: 0.9,
+  },
+  taglineText: {
+    fontFamily: Fonts.text.italic,
+    fontSize: 16,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   appTitle: {
     fontFamily: Fonts.display.bold,
@@ -193,7 +242,7 @@ const styles = StyleSheet.create({
   },
   ctaSection: {
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 70,
     alignItems: 'center',
     gap: 12,
   },

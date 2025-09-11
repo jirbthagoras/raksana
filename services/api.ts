@@ -1,11 +1,8 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { AuthResponse, ApiError } from '../types/auth';
+import { ApiError, AuthResponse, GoApiResponse, RegisterResponse } from '../types/auth';
 
-// API Configuration
-const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:3000/api' // Development
-  : 'https://your-production-api.com/api'; // Production
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
 
 class ApiService {
   private api: AxiosInstance;
@@ -29,7 +26,7 @@ class ApiService {
         try {
           const token = await SecureStore.getItemAsync('auth_token');
           if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers.Authorization = `${token}`;
           }
         } catch (error) {
           console.warn('Failed to get auth token:', error);
@@ -43,10 +40,8 @@ class ApiService {
     this.api.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
-        // Handle 401 Unauthorized - just clear token and logout
         if (error.response?.status === 401) {
           await this.clearAuthTokens();
-          // You can emit an event here to redirect to login
         }
 
         return Promise.reject(this.handleApiError(error));
@@ -57,19 +52,68 @@ class ApiService {
   private handleApiError(error: AxiosError): ApiError {
     if (error.response) {
       const responseData = error.response.data as any;
+      
+      // Handle your Go backend error structure
+      if (responseData && !responseData.success && responseData.error) {
+        const backendError = responseData.error;
+        
+        // Extract message from backend error structure
+        let message = backendError.message || 'Terjadi kesalahan';
+        
+        // Handle different error types based on your Go backend
+        if (error.response.status === 400 && backendError.fields) {
+          // Validation error - has fields
+          message = backendError.message || 'Failed validation';
+        } else if (error.response.status === 500) {
+          // Internal server error
+          message = backendError.message || 'Internal server error';
+        } else {
+          // Basic error
+          message = backendError.message || 'Terjadi kesalahan';
+        }
+        
+        return {
+          message,
+          status: error.response.status,
+          errors: backendError.fields, // For validation errors
+        };
+      }
+      
+      // Fallback for non-standard responses
+      let message = 'Terjadi kesalahan';
+      switch (error.response.status) {
+        case 400:
+          message = 'Data yang dikirim tidak valid';
+          break;
+        case 401:
+          message = 'Unauthorized';
+          break;
+        case 403:
+          message = 'Akses ditolak';
+          break;
+        case 404:
+          message = 'Endpoint tidak ditemukan';
+          break;
+        case 500:
+          message = 'Terjadi kesalahan pada server';
+          break;
+        default:
+          message = responseData?.message || 'Terjadi kesalahan';
+      }
+      
       return {
-        message: responseData?.message || 'An error occurred',
+        message,
         status: error.response.status,
         errors: responseData?.errors,
       };
     } else if (error.request) {
       return {
-        message: 'Network error. Please check your connection.',
+        message: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
         status: 0,
       };
     } else {
       return {
-        message: error.message || 'An unexpected error occurred',
+        message: 'Terjadi kesalahan yang tidak terduga',
         status: -1,
       };
     }
@@ -77,11 +121,11 @@ class ApiService {
 
   // Auth methods
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/login', {
+    const response: AxiosResponse<GoApiResponse<AuthResponse>> = await this.api.post('/auth/login', {
       email,
       password,
     });
-    return response.data;
+    return response.data.data
   }
 
   async register(userData: {
@@ -89,18 +133,20 @@ class ApiService {
     username: string;
     name: string;
     password: string;
-  }): Promise<AuthResponse> {
-    const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/register', userData);
-    return response.data;
+    password_confirmation: string;
+  }): Promise<RegisterResponse> {
+    const response: AxiosResponse<GoApiResponse<RegisterResponse>> = await this.api.post('/auth/register', userData);
+    return response.data.data; // Extract from Go API wrapper
   }
 
   async logout(): Promise<void> {
+    // Simply clear tokens - no API call needed
     await this.clearAuthTokens();
   }
 
   async getProfile(): Promise<any> {
-    const response = await this.api.get('/auth/profile');
-    return response.data;
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/auth/profile');
+    return response.data.data; // Extract from Go API wrapper
   }
 
   // Token management

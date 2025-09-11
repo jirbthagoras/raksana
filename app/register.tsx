@@ -3,9 +3,13 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors, Fonts } from '../constants';
+import { useAuth } from '../contexts/AuthContext';
+import { useError } from '../contexts/ErrorContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { register, isLoading } = useAuth();
+  const { showError } = useError();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
@@ -13,6 +17,33 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleRegister = async () => {
+    if (!email || !username || !name || !password || !confirmPassword) {
+      showError('Mohon isi semua field', 'Input Required', 'warning');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showError('Password dan konfirmasi password tidak sama', 'Password Mismatch', 'warning');
+      return;
+    }
+
+    if (password.length < 6) {
+      showError('Password minimal 6 karakter', 'Password Too Short', 'warning');
+      return;
+    }
+
+    try {
+      const result = await register({ email, username, name, password, password_confirmation: confirmPassword });
+      if (result?.success) {
+        showError(result.message, 'Registration Successful', 'info');
+        setTimeout(() => router.replace('/login'), 2000);
+      }
+    } catch (error: any) {
+      showError(error.message || 'Terjadi kesalahan saat registrasi', 'Registrasi Gagal', 'error');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -84,8 +115,14 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.primaryButton} onPress={() => { /* handle submit later */ }}>
-            <Text style={styles.primaryButtonText}>Daftar</Text>
+          <TouchableOpacity 
+            style={[styles.primaryButton, isLoading && styles.disabledButton]} 
+            onPress={handleRegister}
+            disabled={isLoading}
+          >
+            <Text style={styles.primaryButtonText}>
+              {isLoading ? 'Memproses...' : 'Daftar'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryLink} onPress={() => router.push('/login')}>
@@ -112,7 +149,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   header: {
-    paddingTop: 32,
+    paddingTop: 40,
     paddingBottom: 12,
   },
   title: {
@@ -164,6 +201,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 16,
+  },
+  disabledButton: {
+    backgroundColor: Colors.text.light,
+    opacity: 0.6,
   },
   primaryButtonText: {
     fontFamily: Fonts.display.medium,

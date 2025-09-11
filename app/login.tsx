@@ -3,18 +3,37 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors, Fonts } from '../constants';
+import { useAuth } from '../contexts/AuthContext';
+import { useError } from '../contexts/ErrorContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login, isLoading } = useAuth();
+  const { showError } = useError();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      showError('Mohon isi email dan password', 'Input Required', 'warning');
+      return;
+    }
+
+    console.log('Login: Starting login process');
+    try {
+      await login({ email, password });
+      router.replace('/home');
+    } catch (error: any) {
+      showError(error.message || 'Terjadi kesalahan saat login', 'Login Gagal', 'error');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <View style={styles.header}>
-        <Text style={styles.title}>Hola! Salam hijau</Text>
+        <Text style={styles.title}>Masuk</Text>
         <Text style={styles.subtitle}>Lanjutkan perjalanan-mu di Raksana.</Text>
       </View>
 
@@ -45,8 +64,14 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={() => { /* handle submit later */ }}>
-          <Text style={styles.primaryButtonText}>Masuk</Text>
+        <TouchableOpacity 
+          style={[styles.primaryButton, isLoading && styles.disabledButton]} 
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          <Text style={styles.primaryButtonText}>
+            {isLoading ? 'Memproses...' : 'Masuk'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.secondaryLink} onPress={() => router.push('/register')}>
@@ -123,6 +148,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 16,
+  },
+  disabledButton: {
+    backgroundColor: Colors.text.light,
+    opacity: 0.6,
   },
   primaryButtonText: {
     fontFamily: Fonts.display.medium,
