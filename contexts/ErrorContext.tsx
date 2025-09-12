@@ -12,6 +12,7 @@ interface ErrorContextType {
   showError: (message: string, title?: string, type?: 'error' | 'warning' | 'info') => void;
   hideError: () => void;
   showApiError: (error: any) => void;
+  hasActiveError: boolean;
 }
 
 const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
@@ -76,6 +77,7 @@ export function ErrorProvider({ children }: ErrorProviderProps) {
     showError,
     hideError,
     showApiError,
+    hasActiveError: errorState.visible,
   };
 
   return (

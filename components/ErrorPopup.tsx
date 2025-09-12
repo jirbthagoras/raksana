@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
-import { Fonts } from '../constants/Fonts';
+import { Colors, Fonts } from '../constants';
 
 interface ErrorPopupProps {
   visible: boolean;
@@ -40,12 +39,12 @@ export function ErrorPopup({
   return (
     <Modal
       visible={visible}
-      transparent
+      transparent={true}
       animationType="fade"
-      statusBarTranslucent
-      presentationStyle="overFullScreen"
+      statusBarTranslucent={true}
       onRequestClose={onClose}
-      hardwareAccelerated={true}
+      supportedOrientations={['portrait']}
+      presentationStyle="overFullScreen"
     >
       <View style={styles.overlay}>
         <View style={styles.container}>

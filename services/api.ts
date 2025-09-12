@@ -145,7 +145,7 @@ class ApiService {
   }
 
   async getProfile(): Promise<any> {
-    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/auth/profile');
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/auth/me');
     return response.data.data; // Extract from Go API wrapper
   }
 

@@ -1,18 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors, Fonts } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
-import { useError } from '../contexts/ErrorContext';
+import { ErrorProvider, useError } from '../contexts/ErrorContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const segments = useSegments();
   const { login, isLoading } = useAuth();
   const { showError } = useError();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Debug current route
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -23,13 +26,14 @@ export default function LoginScreen() {
     console.log('Login: Starting login process');
     try {
       await login({ email, password });
-      router.replace('/home');
+      router.replace('/(tabs)');
     } catch (error: any) {
       showError(error.message || 'Terjadi kesalahan saat login', 'Login Gagal', 'error');
     }
   };
 
   return (
+    <ErrorProvider>
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <View style={styles.header}>
@@ -84,6 +88,7 @@ export default function LoginScreen() {
         <Text style={styles.backLinkText}>Kembali</Text>
       </TouchableOpacity>
     </SafeAreaView>
+    </ErrorProvider>
   );
 }
 

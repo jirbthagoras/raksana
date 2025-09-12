@@ -88,13 +88,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       const token = await apiService.getAuthToken();
       if (token) {
-        // Token exists, assume user is authenticated
-        // Create a basic user object since we don't have profile endpoint
-        const user = { id: 1, email: 'user@example.com', username: 'user', name: 'User' };
-        dispatch({ 
-          type: 'RESTORE_SESSION', 
-          payload: { user, token } 
-        });
+        // Token exists, fetch user profile from API
+        try {
+          const user = await apiService.getProfile();
+          dispatch({ 
+            type: 'RESTORE_SESSION', 
+            payload: { user, token } 
+          });
+        } catch (profileError) {
+          console.warn('Failed to fetch user profile:', profileError);
+          // Token might be invalid, clear it
+          await apiService.clearAuthTokens();
+          dispatch({ type: 'LOGOUT' });
+        }
       } else {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
@@ -116,6 +122,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('AuthContext: Calling API login');
       const response = await apiService.login(credentials.email, credentials.password);
       
+      console.log('AuthContext: API response:', response);
+      console.log('AuthContext: User data:', response.user);
+      console.log('AuthContext: Token:', response.token);
+      
       // Save token securely
       await apiService.saveAuthToken(response.token);
       
@@ -125,7 +135,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         payload: { user: response.user, token: response.token } 
       });
     } catch (error) {
-      console.log('AuthContext: Login failed, setting loading to false');
+      console.log('AuthContext: Login failed, setting loading to false, NOT changing auth state');
+      // Only set loading to false, don't change authentication state
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error; // Re-throw to handle in UI
     }

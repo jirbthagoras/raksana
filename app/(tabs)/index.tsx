@@ -1,5 +1,4 @@
-import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Dimensions,
   SafeAreaView,
@@ -10,32 +9,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import FloatingElements from '../components/FloatingElements';
-import GradientBackground from '../components/GradientBackground';
-import { Colors, Fonts } from '../constants';
-import { useAuth } from '../contexts/AuthContext';
+import FloatingElements from '../../components/FloatingElements';
+import GradientBackground from '../../components/GradientBackground';
+import { Colors, Fonts } from '../../constants';
+import { useAuth } from '../../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
-export default function Home() {
-  const router = useRouter();
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
-
-  // Authentication guard
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
-  }
+export default function HomeTab() {
+  const { user, logout } = useAuth();
+  console.log(user)
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -55,14 +42,8 @@ export default function Home() {
           <View style={styles.header}>
             <View style={styles.welcomeSection}>
               <Text style={styles.welcomeText}>Selamat Datang,</Text>
-              <Text style={styles.userName}>{user?.name || 'User'}</Text>
+              <Text style={styles.userName}>{user?.name || user?.username || 'User'}</Text>
             </View>
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutText}>Keluar</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Main Content Area */}
@@ -175,7 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 120, // Extra padding for tab bar
   },
   header: {
     flexDirection: 'row',
