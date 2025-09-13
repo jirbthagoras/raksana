@@ -6,15 +6,22 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import FloatingElements from '../../components/FloatingElements';
 import GradientBackground from '../../components/GradientBackground';
 import { Colors, Fonts } from '../../constants';
 
-import PocketCard from '@/components/Home/BalanceCard';
+import BackyardButton from '@/components/Home/BackyardButton';
+import DailyChallenge from '@/components/Home/DailyChallenge';
+import EventsButton from '@/components/Home/EventsButton';
+import JournalButton from '@/components/Home/JournalButton';
+import MemoryButton from '@/components/Home/MemoryButton';
+import PacketsButton from '@/components/Home/PacketsButton';
+import PocketCard from '@/components/Home/PointCard';
 import ProgressBar from '@/components/Home/ProgressBar';
+import RecapsButton from '@/components/Home/RecapsButton';
+import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
 import StreakButton from '@/components/Home/StreakButton';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -41,7 +48,7 @@ export default function HomeTab() {
             </View>
             <View style={styles.headerButtons}>
               <StreakButton 
-                streak={100} 
+                streak={1} 
                 onPress={() => console.log('Streak pressed!')} 
               />
               <ProgressBar 
@@ -58,92 +65,60 @@ export default function HomeTab() {
           <View style={styles.mainContent}>
             {/* Dashboard Cards */}
             <View style={styles.dashboardSection}>
-              <Text style={styles.sectionTitle}>Dashboard</Text>
-              <PocketCard 
+              <PocketCard
                 balance={125000}
                 currency="GP"
-                changePercent={12}
-                changeAmount={15000}
                 onHistoryPress={() => console.log('History pressed!')}
+                onConvertPress={() => console.log('Convert pressed!')}
               />
             </View>
 
             {/* Quick Actions */}
-            <View style={styles.actionsSection}>
-              <Text style={styles.sectionTitle}>Aksi Cepat</Text>
-              
-              <View style={styles.actionGrid}>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>🌱</Text>
-                  <Text style={styles.actionText}>Catat Aktivitas Hijau</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>♻️</Text>
-                  <Text style={styles.actionText}>Daur Ulang</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>🚲</Text>
-                  <Text style={styles.actionText}>Transportasi Hijau</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>💡</Text>
-                  <Text style={styles.actionText}>Tips Hemat Energi</Text>
-                </TouchableOpacity>
+            <View style={styles.quickActionsSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Quick Actions</Text>
+                <View style={styles.scrollIndicator}>
+                  <View style={styles.scrollDot} />
+                  <View style={styles.scrollDot} />
+                  <View style={styles.scrollDot} />
+                </View>
+              </View>
+              <View style={styles.scrollWrapper}>
+                <ScrollView 
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.scrollContainer}
+                  style={styles.horizontalScroll}
+                  decelerationRate="fast"
+                  snapToInterval={132}
+                  snapToAlignment="start"
+                >
+                  <JournalButton onPress={() => console.log('Journal pressed!')} />
+                  <MemoryButton onPress={() => console.log('Album pressed!')} />
+                  <EventsButton onPress={() => console.log('Events pressed!')} />
+                  <PacketsButton onPress={() => console.log('Packets pressed!')} />
+                  <RecapsButton onPress={() => console.log('Recaps pressed!')} />
+                  <RecyclopediaButton onPress={() => console.log('Recyclopedia pressed!')} />
+                  <BackyardButton onPress={() => console.log('Backyard pressed!')} />
+                </ScrollView>
+                <View style={styles.scrollGradientLeft} />
+                <View style={styles.scrollGradientRight} />
               </View>
             </View>
 
-            {/* Recent Activities */}
-            <View style={styles.activitiesSection}>
-              <Text style={styles.sectionTitle}>Aktivitas Terbaru</Text>
-              
-              <View style={styles.activityList}>
-                <View style={styles.activityItem}>
-                  <Text style={styles.activityIcon}>🚶‍♂️</Text>
-                  <View style={styles.activityContent}>
-                    <Text style={styles.activityTitle}>Berjalan kaki ke kantor</Text>
-                    <Text style={styles.activityTime}>2 jam yang lalu</Text>
-                  </View>
-                  <Text style={styles.activityPoints}>+25 poin</Text>
-                </View>
-                
-                <View style={styles.activityItem}>
-                  <Text style={styles.activityIcon}>♻️</Text>
-                  <View style={styles.activityContent}>
-                    <Text style={styles.activityTitle}>Mendaur ulang botol plastik</Text>
-                    <Text style={styles.activityTime}>5 jam yang lalu</Text>
-                  </View>
-                  <Text style={styles.activityPoints}>+15 poin</Text>
-                </View>
-                
-                <View style={styles.activityItem}>
-                  <Text style={styles.activityIcon}>🌿</Text>
-                  <View style={styles.activityContent}>
-                    <Text style={styles.activityTitle}>Menggunakan tas belanja kain</Text>
-                    <Text style={styles.activityTime}>1 hari yang lalu</Text>
-                  </View>
-                  <Text style={styles.activityPoints}>+10 poin</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Weekly Challenge */}
             <View style={styles.challengeSection}>
-              <Text style={styles.sectionTitle}>Tantangan Minggu Ini</Text>
-              
-              <View style={styles.challengeCard}>
-                <Text style={styles.challengeTitle}>Kurangi Penggunaan Plastik</Text>
-                <Text style={styles.challengeDescription}>
-                  Hindari penggunaan plastik sekali pakai selama 7 hari
-                </Text>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: '60%' }]} />
-                </View>
-                <Text style={styles.progressText}>4/7 hari tercapai</Text>
-              </View>
+              <DailyChallenge
+                id={4}
+                day={4}
+                difficulty="hard"
+                name="Jejak Nol Plastik Piknik"
+                description="Hari ini, siapkan piknik makan siang tanpa menggunakan plastik sekali pakai. Bawa bekal dengan wadah dan alat makan sendiri, lalu nikmati di taman terdekat sambil memungut 5 sampah plastik yang kamu temukan! #ZeroWastePicnic #EcoChallenge"
+                point_gain={350}
+                participants={0}
+                onPress={() => console.log('Challenge pressed!')}
+              />
             </View>
+            
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -166,10 +141,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 16,
     paddingTop: 60,
-    paddingBottom: 24,
+    paddingBottom: 15,
   },
   welcomeSection: {
     flex: 1,
+    marginBottom: 15,
   },
   welcomeText: {
     fontFamily: Fonts.text.regular,
@@ -222,7 +198,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dashboardSection: {
-    marginBottom: 12,
   },
   actionsSection: {
     marginBottom: 8,
@@ -260,82 +235,61 @@ const styles = StyleSheet.create({
   activityList: {
     gap: 12,
   },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  activityIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 14,
-    color: Colors.primary,
-    marginBottom: 2,
-  },
-  activityTime: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 12,
-    color: Colors.secondary,
-  },
-  activityPoints: {
-    fontFamily: Fonts.text.bold,
-    fontSize: 12,
-    color: Colors.primary,
-  },
   challengeSection: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  challengeCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+  quickActionsSection: {
+    marginBottom: 24,
   },
-  challengeTitle: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 18,
-    color: Colors.primary,
-    marginBottom: 8,
-  },
-  challengeDescription: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 14,
-    color: Colors.secondary,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
-    lineHeight: 20,
+    paddingHorizontal: 24,
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: 'rgba(0, 106, 100, 0.2)',
-    borderRadius: 4,
-    marginBottom: 8,
+  scrollIndicator: {
+    flexDirection: 'row',
+    gap: 4,
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: 4,
+  scrollDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.outline + '40',
   },
-  progressText: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 12,
-    color: Colors.secondary,
-    textAlign: 'center',
+  scrollWrapper: {
+    position: 'relative',
+    height: 120,
+  },
+  horizontalScroll: {
+    height: 120,
+  },
+  scrollContainer: {
+    paddingLeft: 24,
+    paddingRight: 24,
+    gap: 12,
+    alignItems: 'center',
+    height: 120,
+  },
+  scrollGradientLeft: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 20,
+    backgroundColor: 'transparent',
+    zIndex: 1,
+    pointerEvents: 'none',
+  },
+  scrollGradientRight: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 20,
+    backgroundColor: 'transparent',
+    zIndex: 1,
+    pointerEvents: 'none',
   },
 });
