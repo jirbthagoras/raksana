@@ -9,7 +9,7 @@ interface ErrorState {
 }
 
 interface ErrorContextType {
-  showError: (message: string, title?: string, type?: 'error' | 'warning' | 'info') => void;
+  showPopUp: (message: string, title?: string, type?: 'error' | 'warning' | 'info') => void;
   hideError: () => void;
   showApiError: (error: any) => void;
   hasActiveError: boolean;
@@ -29,7 +29,7 @@ export function ErrorProvider({ children }: ErrorProviderProps) {
     type: 'error',
   });
 
-  const showError = (message: string, title = 'Error', type: 'error' | 'warning' | 'info' = 'error') => {
+  const showPopUp = (message: string, title = 'Error', type: 'error' | 'warning' | 'info' = 'error') => {
     setErrorState({
       visible: true,
       title,
@@ -70,11 +70,11 @@ export function ErrorProvider({ children }: ErrorProviderProps) {
       type = 'error';
     }
 
-    showError(error.message || 'An unexpected error occurred', title, type);
+    showPopUp(error.message || 'An unexpected error occurred', title, type);
   };
 
   const contextValue: ErrorContextType = {
-    showError,
+    showPopUp,
     hideError,
     showApiError,
     hasActiveError: errorState.visible,

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
   SafeAreaView,
@@ -8,9 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import GradientBackground from '../../components/GradientBackground';
 import FloatingElements from '../../components/FloatingElements';
+import GradientBackground from '../../components/GradientBackground';
 import { Colors, Fonts } from '../../constants';
 
 export default function ExploreTab() {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
   },
   section: {
     paddingHorizontal: 24,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.primary,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   articleCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -179,13 +179,13 @@ const styles = StyleSheet.create({
   articleDescription: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
     lineHeight: 20,
     marginBottom: 12,
   },
   articleMeta: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
   },
 });

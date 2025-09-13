@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Keyboard, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors, Fonts } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { useError } from '../contexts/ErrorContext';
@@ -9,7 +9,7 @@ import { useError } from '../contexts/ErrorContext';
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, isLoading } = useAuth();
-  const { showError } = useError();
+  const { showPopUp } = useError();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
@@ -18,30 +18,37 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Dismiss keyboard when loading starts
+  useEffect(() => {
+    if (isLoading) {
+      Keyboard.dismiss();
+    }
+  }, [isLoading]);
+
   const handleRegister = async () => {
     if (!email || !username || !name || !password || !confirmPassword) {
-      showError('Mohon isi semua field', 'Input Required', 'warning');
+      showPopUp('Mohon isi semua field', 'Input Required', 'warning');
       return;
     }
 
     if (password !== confirmPassword) {
-      showError('Password dan konfirmasi password tidak sama', 'Password Mismatch', 'warning');
+      showPopUp('Password dan konfirmasi password tidak sama', 'Password Mismatch', 'warning');
       return;
     }
 
     if (password.length < 6) {
-      showError('Password minimal 6 karakter', 'Password Too Short', 'warning');
+      showPopUp('Password minimal 6 karakter', 'Password Too Short', 'warning');
       return;
     }
 
     try {
       const result = await register({ email, username, name, password, password_confirmation: confirmPassword });
       if (result?.success) {
-        showError(result.message, 'Registration Successful', 'info');
+        showPopUp(result.message, 'Registration Successful', "info");
         setTimeout(() => router.replace('/login'), 2000);
       }
     } catch (error: any) {
-      showError(error.message || 'Terjadi kesalahan saat registrasi', 'Registrasi Gagal', 'error');
+      showPopUp(error.message || 'Terjadi kesalahan saat registrasi', 'Registrasi Gagal', 'error');
     }
   };
 
@@ -61,7 +68,7 @@ export default function RegisterScreen() {
             onChangeText={setEmail}
             style={styles.input}
             placeholder="contoh@email.com"
-            placeholderTextColor={Colors.text.light}
+            placeholderTextColor={Colors.onSurfaceVariant}
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -72,7 +79,7 @@ export default function RegisterScreen() {
             onChangeText={setUsername}
             style={styles.input}
             placeholder="Username"
-            placeholderTextColor={Colors.text.light}
+            placeholderTextColor={Colors.onSurfaceVariant}
             autoCapitalize="none"
           />
 
@@ -82,7 +89,7 @@ export default function RegisterScreen() {
             onChangeText={setName}
             style={styles.input}
             placeholder="Nama Lengkap"
-            placeholderTextColor={Colors.text.light}
+            placeholderTextColor={Colors.onSurfaceVariant}
           />
 
           <Text style={styles.label}>Password</Text>
@@ -92,11 +99,11 @@ export default function RegisterScreen() {
               onChangeText={setPassword}
               style={[styles.input, { flex: 1, marginBottom: 0, paddingRight: 44 }]}
               placeholder="••••••••"
-              placeholderTextColor={Colors.text.light}
+              placeholderTextColor={Colors.onSurfaceVariant}
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color={Colors.text.secondary} />
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color={Colors.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
 
@@ -107,11 +114,11 @@ export default function RegisterScreen() {
               onChangeText={setConfirmPassword}
               style={[styles.input, { flex: 1, marginBottom: 0, paddingRight: 44 }]}
               placeholder="••••••••"
-              placeholderTextColor={Colors.text.light}
+              placeholderTextColor={Colors.onSurfaceVariant}
               secureTextEntry={!showConfirmPassword}
             />
             <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-              <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} size={22} color={Colors.text.secondary} />
+              <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} size={22} color={Colors.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
 
@@ -130,7 +137,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backLink} onPress={() => router.replace('/')}>
           <Ionicons name="chevron-back" size={20} color={Colors.secondary} />
           <Text style={styles.backLinkText}>Back</Text>
         </TouchableOpacity>
@@ -160,7 +167,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 6,
   },
   form: {
@@ -169,19 +176,19 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.onBackground,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: Colors.white,
-    borderColor: '#E5E7EB',
+    backgroundColor: Colors.background,
+    borderColor: Colors.primary,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontFamily: Fonts.text.regular,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.onSurface,
     marginBottom: 12,
   },
   passwordRow: {
@@ -203,13 +210,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   disabledButton: {
-    backgroundColor: Colors.text.light,
+    backgroundColor: Colors.surfaceVariant,
     opacity: 0.6,
   },
   primaryButtonText: {
     fontFamily: Fonts.display.medium,
     fontSize: 16,
-    color: Colors.white,
+    color: Colors.onPrimary,
   },
   secondaryLink: {
     alignItems: 'center',

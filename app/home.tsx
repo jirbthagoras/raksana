@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontFamily: Fonts.text.regular,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
     marginBottom: 4,
   },
   userName: {
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 20,
     borderRadius: 16,
-    shadowColor: Colors.black,
+    shadowColor: Colors.scrim,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
     marginBottom: 8,
   },
   cardValue: {
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: Colors.black,
+    shadowColor: Colors.scrim,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   actionText: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.onBackground,
     textAlign: 'center',
   },
   activitiesSection: {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 16,
     borderRadius: 12,
-    shadowColor: Colors.black,
+    shadowColor: Colors.scrim,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -315,13 +315,13 @@ const styles = StyleSheet.create({
   activityTitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.onBackground,
     marginBottom: 2,
   },
   activityTime: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
   },
   activityPoints: {
     fontFamily: Fonts.text.bold,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 20,
     borderRadius: 16,
-    shadowColor: Colors.black,
+    shadowColor: Colors.scrim,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -350,13 +350,13 @@ const styles = StyleSheet.create({
   challengeDescription: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
     marginBottom: 16,
     lineHeight: 20,
   },
   progressBar: {
     height: 8,
-    backgroundColor: 'rgba(0, 106, 100, 0.2)',
+    backgroundColor: Colors.primaryContainer,
     borderRadius: 4,
     marginBottom: 8,
   },
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   progressText: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
     textAlign: 'center',
   },
 });

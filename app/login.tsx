@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useSegments } from 'expo-router';
-import React, { useState } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard } from 'react-native';
 import { Colors, Fonts } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorProvider, useError } from '../contexts/ErrorContext';
@@ -10,16 +10,23 @@ export default function LoginScreen() {
   const router = useRouter();
   const segments = useSegments();
   const { login, isLoading } = useAuth();
-  const { showError } = useError();
+  const { showPopUp } = useError();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Dismiss keyboard when loading starts
+  useEffect(() => {
+    if (isLoading) {
+      Keyboard.dismiss();
+    }
+  }, [isLoading]);
 
   // Debug current route
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showError('Mohon isi email dan password', 'Input Required', 'warning');
+      showPopUp('Mohon isi email dan password', 'Input Required', 'warning');
       return;
     }
 
@@ -28,7 +35,7 @@ export default function LoginScreen() {
       await login({ email, password });
       router.replace('/(tabs)');
     } catch (error: any) {
-      showError(error.message || 'Terjadi kesalahan saat login', 'Login Gagal', 'error');
+      showPopUp(error.message || 'Terjadi kesalahan saat login', 'Login Gagal', 'error');
     }
   };
 
@@ -48,7 +55,7 @@ export default function LoginScreen() {
           onChangeText={setEmail}
           style={styles.input}
           placeholder="contoh@email.com"
-          placeholderTextColor={Colors.text.light}
+          placeholderTextColor={Colors.onSurfaceVariant}
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -60,11 +67,11 @@ export default function LoginScreen() {
             onChangeText={setPassword}
             style={[styles.input, { flex: 1, marginBottom: 0, paddingRight: 44 }]}
             placeholder="••••••••"
-            placeholderTextColor={Colors.text.light}
+            placeholderTextColor={Colors.onSurfaceVariant}
             secureTextEntry={!showPassword}
           />
           <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
-            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color={Colors.text.secondary} />
+            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color={Colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
 
@@ -83,7 +90,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
+      <TouchableOpacity style={styles.backLink} onPress={() => router.replace('/')}>
         <Ionicons name="chevron-back" size={20} color={Colors.secondary} />
         <Text style={styles.backLinkText}>Kembali</Text>
       </TouchableOpacity>
@@ -111,7 +118,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 6,
   },
   form: {
@@ -120,20 +127,20 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.onBackground,
     marginBottom: 8,
     marginTop: 10,
   },
   input: {
-    backgroundColor: Colors.white,
-    borderColor: '#E5E7EB',
+    backgroundColor: Colors.background,
+    borderColor: Colors.primary,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontFamily: Fonts.text.regular,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.onSurface,
     marginBottom: 12,
   },
   passwordRow: {
@@ -155,13 +162,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   disabledButton: {
-    backgroundColor: Colors.text.light,
+    backgroundColor: Colors.surfaceVariant,
     opacity: 0.6,
   },
   primaryButtonText: {
     fontFamily: Fonts.display.medium,
     fontSize: 16,
-    color: Colors.white,
+    color: Colors.onPrimary,
   },
   secondaryLink: {
     alignItems: 'center',

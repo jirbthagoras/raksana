@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
+import { Colors } from '../constants';
 
 interface AnimatedLogoProps {
   size?: number;
@@ -130,8 +131,8 @@ const styles = StyleSheet.create({
   glowEffect: {
     position: 'absolute',
     borderRadius: 1000,
-    backgroundColor: '#006A64',
-    shadowColor: '#006A64',
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
     shadowOffset: {
       width: 0,
       height: 0,

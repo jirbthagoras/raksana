@@ -15,70 +15,48 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const segments = useSegments();
   const previousAuthState = useRef<boolean | null>(null);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (isLoading) return; // Wait for auth state to be determined
+    if (isLoading) {
+      return; // Wait for auth state to be determined
+    }
     
     // Don't do any navigation when there's an active error popup
     if (hasActiveError) {
-      console.log('AuthGuard: Active error popup, skipping all navigation');
       return;
     }
 
     const firstSegment = segments[0];
     const isAuthRoute = firstSegment === 'login' || firstSegment === 'register';
     const isRootRoute = segments.length < 1;
+    const isTabsRoute = firstSegment === '(tabs)';
 
-    // Don't do any redirects if user is on auth routes - let them handle their own navigation
-    if (isAuthRoute) {
-      console.log('AuthGuard: On auth route, skipping all redirects');
-      // Update the previous state to prevent future unwanted redirects
-      previousAuthState.current = isAuthenticated;
-      return;
-    }
-
-    // Only redirect when authentication state actually changes, not on every render
+    // Update previous state to track changes
     const authStateChanged = previousAuthState.current !== null && previousAuthState.current !== isAuthenticated;
-    const isFirstLoad = previousAuthState.current === null;
+    previousAuthState.current = isAuthenticated;
 
-    console.log('AuthGuard Debug:', {
-      isLoading,
-      isAuthenticated,
-      firstSegment,
-      isAuthRoute,
-      isRootRoute,
-      authStateChanged,
-      isFirstLoad,
-      previousAuthState: previousAuthState.current
-    });
-
-    if (isFirstLoad) {
-      // Initial load logic
-      previousAuthState.current = isAuthenticated;
-      
-      if (isAuthenticated) {
-        if (isRootRoute) {
-          console.log('AuthGuard: Redirecting authenticated user from root to tabs');
-          router.replace('/(tabs)');
-        }
-      } else {
-        if (!isRootRoute) {
-          console.log('AuthGuard: Redirecting unauthenticated user to login');
-          router.replace('/login');
-        }
-      }
-    } else if (authStateChanged) {
-      // Only redirect when auth state actually changes
-      previousAuthState.current = isAuthenticated;
-      
-      if (isAuthenticated) {
-        // User just logged in successfully
-        console.log('AuthGuard: User authenticated, redirecting to tabs');
+    // Handle authenticated users
+    if (isAuthenticated) {
+      // If user is authenticated but on login/register page, redirect to tabs
+      if (isAuthRoute) {
         router.replace('/(tabs)');
+        return;
       }
-      // Don't redirect when user becomes unauthenticated - let them stay where they are
+      // If user is authenticated but on root, redirect to tabs
+      if (isRootRoute) {
+        router.replace('/(tabs)');
+        return;
+      }
+    } else {
+      // Handle unauthenticated users
+      // If user is not authenticated and not on auth routes or root, redirect to login
+      if (!isAuthRoute && !isRootRoute) {
+        router.replace('/login');
+        return;
+      }
     }
-  }, [isAuthenticated, isLoading, segments, hasActiveError]);
+  }, [isAuthenticated, isLoading, segments, hasActiveError, router]);
 
   // Show loading screen while checking auth state
   return (

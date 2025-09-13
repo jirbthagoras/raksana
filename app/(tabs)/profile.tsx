@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
-     SafeAreaView,
-     ScrollView,
-     StatusBar,
-     StyleSheet,
-     Text,
-     TouchableOpacity,
-     View,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import FloatingElements from '../../components/FloatingElements';
 import GradientBackground from '../../components/GradientBackground';
@@ -81,31 +81,31 @@ export default function ProfileTab() {
               <TouchableOpacity style={styles.menuItem}>
                 <Ionicons name="person-outline" size={24} color={Colors.primary} />
                 <Text style={styles.menuText}>Edit Profil</Text>
-                <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+                <Ionicons name="chevron-forward" size={20} color={Colors.secondary} />
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.menuItem}>
                 <Ionicons name="notifications-outline" size={24} color={Colors.primary} />
                 <Text style={styles.menuText}>Notifikasi</Text>
-                <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+                <Ionicons name="chevron-forward" size={20} color={Colors.secondary} />
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.menuItem}>
                 <Ionicons name="shield-outline" size={24} color={Colors.primary} />
                 <Text style={styles.menuText}>Privasi</Text>
-                <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+                <Ionicons name="chevron-forward" size={20} color={Colors.secondary} />
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.menuItem}>
                 <Ionicons name="help-circle-outline" size={24} color={Colors.primary} />
                 <Text style={styles.menuText}>Bantuan</Text>
-                <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+                <Ionicons name="chevron-forward" size={20} color={Colors.secondary} />
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.menuItem}>
                 <Ionicons name="information-circle-outline" size={24} color={Colors.primary} />
                 <Text style={styles.menuText}>Tentang</Text>
-                <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+                <Ionicons name="chevron-forward" size={20} color={Colors.secondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: Colors.black,
+    shadowColor: Colors.background,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   userEmail: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -208,13 +208,13 @@ const styles = StyleSheet.create({
   statLabel: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
     textAlign: 'center',
   },
   menuList: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: Fonts.text.regular,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.primary,
     marginLeft: 12,
   },
   logoutButton: {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 16,
     borderRadius: 12,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,

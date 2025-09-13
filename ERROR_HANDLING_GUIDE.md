@@ -35,10 +35,10 @@ This error handling system replaces default browser alerts with beautiful, consi
 ```typescript
 import { useError } from '../contexts/ErrorContext';
 
-const { showError, showApiError } = useError();
+const { showPopUp, showApiError } = useError();
 
 // For client-side validation
-showError('Please fill all fields', 'Input Required', 'warning');
+showPopUp('Please fill all fields', 'Input Required', 'warning');
 
 // For API errors (usually handled automatically by AuthContext)
 showApiError(error);

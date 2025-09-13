@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
   SafeAreaView,
@@ -8,9 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import GradientBackground from '../../components/GradientBackground';
 import FloatingElements from '../../components/FloatingElements';
+import GradientBackground from '../../components/GradientBackground';
 import { Colors, Fonts } from '../../constants';
 
 export default function BookmarksTab() {
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
   },
   section: {
     paddingHorizontal: 24,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   bookmarkCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -184,14 +184,14 @@ const styles = StyleSheet.create({
   bookmarkDescription: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
     lineHeight: 20,
     marginBottom: 12,
   },
   bookmarkMeta: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
   },
   tipsList: {
     gap: 12,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 16,
     borderRadius: 12,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   tipTitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.primary,
     marginBottom: 4,
   },
   tipCategory: {

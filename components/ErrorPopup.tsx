@@ -30,9 +30,17 @@ export function ErrorPopup({
 
   const getIconColor = () => {
     switch (type) {
-      case 'warning': return '#FF9500';
-      case 'info': return '#007AFF';
-      default: return '#FF3B30';
+      case 'warning': return Colors.error;
+      case 'info': return Colors.primary;
+      default: return Colors.primary;
+    }
+  };
+
+  const getContainerColor = () => {
+    switch (type) {
+      case 'warning': return Colors.errorContainer;
+      case 'info': return Colors.primaryContainer || `${Colors.primary}20`; // Use primaryContainer or primary with opacity
+      default: return Colors.primaryContainer || `${Colors.primary}20`;
     }
   };
 
@@ -51,7 +59,7 @@ export function ErrorPopup({
           <View style={styles.popup}>
             {/* Header */}
             <View style={styles.header}>
-              <View style={styles.iconContainer}>
+              <View style={[styles.iconContainer, { backgroundColor: getContainerColor() }]}>
                 <Ionicons 
                   name={getIconName()} 
                   size={32} 
@@ -113,7 +121,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    backgroundColor: Colors.errorContainer,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -121,7 +129,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: Fonts.display.bold,
-    color: Colors.text.primary,
+    color: Colors.onBackground,
     textAlign: 'center',
   },
   messageContainer: {
@@ -130,7 +138,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 16,
     fontFamily: Fonts.display.regular,
-    color: Colors.text.secondary,
+    color: Colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -144,6 +152,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontFamily: Fonts.display.medium,
-    color: Colors.background,
+    color: Colors.onPrimary,
   },
 });

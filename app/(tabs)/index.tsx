@@ -12,21 +12,16 @@ import {
 import FloatingElements from '../../components/FloatingElements';
 import GradientBackground from '../../components/GradientBackground';
 import { Colors, Fonts } from '../../constants';
+
+import PocketCard from '@/components/Home/BalanceCard';
+import ProgressBar from '@/components/Home/ProgressBar';
+import StreakButton from '@/components/Home/StreakButton';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeTab() {
   const { user, logout } = useAuth();
-  console.log(user)
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
 
   return (
     <GradientBackground>
@@ -44,27 +39,33 @@ export default function HomeTab() {
               <Text style={styles.welcomeText}>Selamat Datang,</Text>
               <Text style={styles.userName}>{user?.name || user?.username || 'User'}</Text>
             </View>
+            <View style={styles.headerButtons}>
+              <StreakButton 
+                streak={100} 
+                onPress={() => console.log('Streak pressed!')} 
+              />
+              <ProgressBar 
+                level={5} 
+                points={1247} 
+                currentExp={750} 
+                neededExp={1000} 
+              />
+            </View>
           </View>
+          
 
           {/* Main Content Area */}
           <View style={styles.mainContent}>
             {/* Dashboard Cards */}
             <View style={styles.dashboardSection}>
-              <Text style={styles.sectionTitle}>Dashboard Eco Lifestyle</Text>
-              
-              <View style={styles.cardGrid}>
-                <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Jejak Karbon Hari Ini</Text>
-                  <Text style={styles.cardValue}>2.4 kg CO₂</Text>
-                  <Text style={styles.cardSubtext}>15% lebih rendah dari kemarin</Text>
-                </View>
-                
-                <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Poin Eco</Text>
-                  <Text style={styles.cardValue}>1,247</Text>
-                  <Text style={styles.cardSubtext}>+50 poin hari ini</Text>
-                </View>
-              </View>
+              <Text style={styles.sectionTitle}>Dashboard</Text>
+              <PocketCard 
+                balance={125000}
+                currency="GP"
+                changePercent={12}
+                changeAmount={15000}
+                onHistoryPress={() => console.log('History pressed!')}
+              />
             </View>
 
             {/* Quick Actions */}
@@ -159,12 +160,13 @@ const styles = StyleSheet.create({
     paddingBottom: 120, // Extra padding for tab bar
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 24,
+    gap: 16,
     paddingTop: 60,
-    paddingBottom: 20,
+    paddingBottom: 24,
   },
   welcomeSection: {
     flex: 1,
@@ -172,21 +174,37 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontFamily: Fonts.text.regular,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.tertiary,
     marginBottom: 4,
   },
   userName: {
     fontFamily: Fonts.display.bold,
-    fontSize: 24,
+    fontSize: 30,
     color: Colors.primary,
   },
-  logoutButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 1,
+    width: '100%',
+  },
+  streakView: {
+    backgroundColor: Colors.surfaceContainerHigh,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.secondary,
+    height: 55,
+    width: 55,
+    borderColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  streakText: {
+    fontFamily: Fonts.display.bold,
+    color: Colors.error,
+    fontSize: 16,
   },
   logoutText: {
     fontFamily: Fonts.text.regular,
@@ -195,7 +213,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     paddingHorizontal: 24,
-    gap: 32,
+    gap: 28,
   },
   sectionTitle: {
     fontFamily: Fonts.display.bold,
@@ -204,39 +222,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dashboardSection: {
-    marginBottom: 8,
-  },
-  cardGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  card: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  cardTitle: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 14,
-    color: Colors.text.secondary,
-    marginBottom: 8,
-  },
-  cardValue: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 24,
-    color: Colors.primary,
-    marginBottom: 4,
-  },
-  cardSubtext: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 12,
-    color: Colors.primary,
+    marginBottom: 12,
   },
   actionsSection: {
     marginBottom: 8,
@@ -252,7 +238,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -265,7 +251,7 @@ const styles = StyleSheet.create({
   actionText: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.primary,
     textAlign: 'center',
   },
   activitiesSection: {
@@ -280,7 +266,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 16,
     borderRadius: 12,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -296,13 +282,13 @@ const styles = StyleSheet.create({
   activityTitle: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.primary,
     marginBottom: 2,
   },
   activityTime: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
   },
   activityPoints: {
     fontFamily: Fonts.text.bold,
@@ -316,7 +302,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 20,
     borderRadius: 16,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -331,7 +317,7 @@ const styles = StyleSheet.create({
   challengeDescription: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -349,7 +335,7 @@ const styles = StyleSheet.create({
   progressText: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.secondary,
     textAlign: 'center',
   },
 });
