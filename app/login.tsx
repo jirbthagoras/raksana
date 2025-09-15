@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useSegments } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Keyboard, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors, Fonts } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorProvider, useError } from '../contexts/ErrorContext';
+import LoadingOverlay from '../components/LoadingComponent';
 
 export default function LoginScreen() {
   const router = useRouter();
   const segments = useSegments();
-  const { login, isLoading } = useAuth();
+  const { login, isLoginLoading } = useAuth();
   const { showPopUp } = useError();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,10 +18,10 @@ export default function LoginScreen() {
 
   // Dismiss keyboard when loading starts
   useEffect(() => {
-    if (isLoading) {
+    if (isLoginLoading) {
       Keyboard.dismiss();
     }
-  }, [isLoading]);
+  }, [isLoginLoading]);
 
   // Debug current route
 
@@ -33,7 +34,6 @@ export default function LoginScreen() {
     console.log('Login: Starting login process');
     try {
       await login({ email, password });
-      router.replace('/(tabs)');
     } catch (error: any) {
       showPopUp(error.message || 'Terjadi kesalahan saat login', 'Login Gagal', 'error');
     }
@@ -76,12 +76,12 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity 
-          style={[styles.primaryButton, isLoading && styles.disabledButton]} 
+          style={[styles.primaryButton, isLoginLoading && styles.disabledButton]} 
           onPress={handleLogin}
-          disabled={isLoading}
+          disabled={isLoginLoading}
         >
           <Text style={styles.primaryButtonText}>
-            {isLoading ? 'Memproses...' : 'Masuk'}
+            {isLoginLoading ? 'Memproses...' : 'Masuk'}
           </Text>
         </TouchableOpacity>
 
@@ -94,6 +94,8 @@ export default function LoginScreen() {
         <Ionicons name="chevron-back" size={20} color={Colors.secondary} />
         <Text style={styles.backLinkText}>Kembali</Text>
       </TouchableOpacity>
+      
+      <LoadingOverlay visible={isLoginLoading} />
     </SafeAreaView>
     </ErrorProvider>
   );

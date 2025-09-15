@@ -45,3 +45,37 @@ export interface ApiError {
   status: number;
   errors?: Record<string, string[]>;
 }
+
+// Task and Packet types
+export interface Task {
+  id: number;
+  name: string;
+  description: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Packet {
+  id: number;
+  name: string;
+  target: string;
+  description: string;
+  completed_task: number;
+  expected_task: number;
+  assigned_task: number;
+  completion_rate: string;
+  task_per_day: number;
+  completed: boolean;
+  created_at: string;
+}
+
+export interface TasksResponse {
+  tasks: Task[];
+  message?: string;
+}
+
+export interface PacketsResponse {
+  packets: Packet[];
+}

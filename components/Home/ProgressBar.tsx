@@ -1,46 +1,29 @@
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useRef } from "react";
-import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { MotiView } from "moti";
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   level: number;
-  points: number;
   currentExp: number;
   neededExp: number;
 };
 
-export default function LevelBar({ level, points, currentExp, neededExp }: Props) {
+export default function LevelBar({ level, currentExp, neededExp }: Props) {
   const progress = Math.min(currentExp / neededExp, 1);
   const progressPercentage = Math.round(progress * 100);
-
-  // Animated value for smooth transition
-  const animValue = useRef(new Animated.Value(0)).current;
-  const scaleValue = useRef(new Animated.Value(0.95)).current;
+  const [animatedProgress, setAnimatedProgress] = useState(0);
 
   useEffect(() => {
-    // Scale animation on mount
-    Animated.spring(scaleValue, {
-      toValue: 1,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
-
-    // Progress animation
-    Animated.timing(animValue, {
-      toValue: progress,
-      duration: 800,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
+    // Animate progress when it changes
+    const timer = setTimeout(() => {
+      setAnimatedProgress(progress);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [progress]);
-
-  const width = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0%", "100%"],
-  });
 
   const getLevelIcon = () => {
     if (level >= 20) return "crown";
@@ -54,7 +37,16 @@ export default function LevelBar({ level, points, currentExp, neededExp }: Props
   };
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ scale: scaleValue }] }]}>
+    <MotiView 
+      style={styles.container}
+      from={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{
+        type: 'spring',
+        damping: 15,
+        stiffness: 150,
+      }}
+    >
       {/* Compact Header */}
       <View style={styles.header}>
         <View style={styles.levelIconContainer}>
@@ -66,21 +58,28 @@ export default function LevelBar({ level, points, currentExp, neededExp }: Props
         </View>
         <View style={styles.infoSection}>
           <Text style={styles.levelText}>Lv.{level}</Text>
-          <Text style={styles.pointsText}>{points.toLocaleString()}</Text>
         </View>
       </View>
 
       {/* Compact Progress Bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
-          <Animated.View style={[StyleSheet.absoluteFill, { width }]}>
+          <MotiView 
+            style={[StyleSheet.absoluteFill, styles.progressGradient]}
+            from={{ width: '0%' }}
+            animate={{ width: `${animatedProgress * 100}%` }}
+            transition={{
+              type: 'timing',
+              duration: 800,
+            }}
+          >
             <LinearGradient
               colors={[Colors.primary, Colors.secondary, "#4CAF50"]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
-              style={[StyleSheet.absoluteFill, styles.progressGradient]}
+              style={StyleSheet.absoluteFill}
             />
-          </Animated.View>
+          </MotiView>
         </View>
         <Text style={styles.progressPercentage}>{progressPercentage}%</Text>
       </View>
@@ -89,15 +88,14 @@ export default function LevelBar({ level, points, currentExp, neededExp }: Props
       <Text style={styles.expText}>
         {currentExp} / {neededExp} XP
       </Text>
-    </Animated.View>
+    </MotiView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    maxWidth: 250,
-    height: 85,
+    width: 250,
+    minHeight: 85,
     padding: 12,
     borderRadius: 16,
     backgroundColor: Colors.mainBackground,
@@ -132,7 +130,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     lineHeight: 16,
   },
-  pointsText: {
+  multiplierText: {
     fontFamily: Fonts.text.regular,
     fontSize: 10,
     color: Colors.tertiary,

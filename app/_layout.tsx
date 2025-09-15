@@ -2,9 +2,11 @@ import { useFonts } from 'expo-font';
 import { Stack } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import AuthGuard from '../components/AuthGuard';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ErrorProvider } from '../contexts/ErrorContext';
+import { queryClient } from '../services/queryClient';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete
 SplashScreen.preventAutoHideAsync();
@@ -39,12 +41,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorProvider>
-      <AuthProvider>
-        <AuthGuard>
-          <Stack screenOptions={{ headerShown: false }} />
-        </AuthGuard>
-      </AuthProvider>
-    </ErrorProvider>
+    <QueryClientProvider client={queryClient}>
+      <ErrorProvider>
+        <AuthProvider>
+          <AuthGuard>
+            <Stack screenOptions={{ headerShown: false }} />
+          </AuthGuard>
+        </AuthProvider>
+      </ErrorProvider>
+    </QueryClientProvider>
   );
 }

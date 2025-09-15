@@ -149,7 +149,33 @@ class ApiService {
     return response.data.data; // Extract from Go API wrapper
   }
 
-  // Token management
+  async getProfileMe(): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/profile/me');
+    return response.data.data; // Extract from Go API wrapper
+  }
+
+  async getDailyChallenge(): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/challenge/today');
+    return response.data.data; // Extract from Go API wrapper
+  }
+
+  async getMyPackets(): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/packet/me');
+    return response.data.data; // Extract from Go API wrapper
+  }
+
+  async getTodayTasks(): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/task');
+    return response.data.data; // Extract from Go API wrapper
+  }
+
+  async updateTaskCompletion(taskId: number, completed: boolean): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.patch(`/task/${taskId}`, {
+      completed
+    });
+    return response.data.data; // Extract from Go API wrapper
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

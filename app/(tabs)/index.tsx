@@ -1,4 +1,5 @@
-import React from 'react';
+import { MotiText, MotiView } from 'moti';
+import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   SafeAreaView,
@@ -6,6 +7,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View
 } from 'react-native';
 import FloatingElements from '../../components/FloatingElements';
@@ -13,22 +15,98 @@ import GradientBackground from '../../components/GradientBackground';
 import { Colors, Fonts } from '../../constants';
 
 import BackyardButton from '@/components/Home/BackyardButton';
+import ChallengesButton from '@/components/Home/ChallengesButton';
 import DailyChallenge from '@/components/Home/DailyChallenge';
 import EventsButton from '@/components/Home/EventsButton';
 import JournalButton from '@/components/Home/JournalButton';
 import MemoryButton from '@/components/Home/MemoryButton';
+import NearbyQuestLocator from '@/components/Home/NearbyQuestLocator';
 import PacketsButton from '@/components/Home/PacketsButton';
 import PocketCard from '@/components/Home/PointCard';
 import ProgressBar from '@/components/Home/ProgressBar';
 import RecapsButton from '@/components/Home/RecapsButton';
 import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
 import StreakButton from '@/components/Home/StreakButton';
+import HomePageSkeleton from '../../components/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiService } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
+interface ProfileData {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+  current_exp: number;
+  exp_needed: number;
+  level: number;
+  points: number;
+  profile_url: string;
+  challenges: number;
+  events: number;
+  quests: number;
+  treasures: number;
+  longest_streak: number;
+  current_Streak: number;
+  tree_grown: number;
+  completed_task: number;
+  assigend_task: number;
+  task_completion_rate: string;
+  rank: number;
+  badges: Array<{
+    category: string;
+    name: string;
+    frequency: number;
+  }>;
+}
+
 export default function HomeTab() {
   const { user, logout } = useAuth();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await apiService.getProfileMe();
+      setProfileData(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch profile data');
+      console.error('Error fetching profile data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return <HomePageSkeleton />;
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+          <FloatingElements count={6} />
+          <View style={styles.centerContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchProfileData}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
 
   return (
     <GradientBackground>
@@ -41,49 +119,145 @@ export default function HomeTab() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header Section */}
-          <View style={styles.header}>
-            <View style={styles.welcomeSection}>
-              <Text style={styles.welcomeText}>Selamat Datang,</Text>
-              <Text style={styles.userName}>{user?.name || user?.username || 'User'}</Text>
-            </View>
-            <View style={styles.headerButtons}>
-              <StreakButton 
-                streak={1} 
-                onPress={() => console.log('Streak pressed!')} 
-              />
-              <ProgressBar 
-                level={5} 
-                points={1247} 
-                currentExp={750} 
-                neededExp={1000} 
-              />
-            </View>
-          </View>
+          <MotiView 
+            style={styles.header}
+            from={{ opacity: 0, translateY: -50 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 800, delay: 200 }}
+          >
+            <MotiView 
+              style={styles.welcomeSection}
+              from={{ opacity: 0, translateX: -30 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'spring', delay: 400, damping: 15, stiffness: 150 }}
+            >
+              <MotiText 
+                style={styles.welcomeText}
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ type: 'timing', duration: 600, delay: 600 }}
+              >
+                Selamat Datang,
+              </MotiText>
+              <MotiText 
+                style={styles.userName}
+                from={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', delay: 800, damping: 12, stiffness: 100 }}
+              >
+                {user?.username || 'User'}
+              </MotiText>
+            </MotiView>
+            <MotiView 
+              style={styles.headerButtons}
+              from={{ opacity: 0, translateX: 30 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'spring', delay: 600, damping: 15, stiffness: 150 }}
+            >
+              <MotiView
+                from={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', delay: 1000, damping: 10, stiffness: 120 }}
+              >
+                <StreakButton 
+                  streak={profileData?.current_Streak || 0} 
+                  onPress={() => console.log('Streak pressed!')} 
+                />
+              </MotiView>
+              <MotiView
+                from={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', delay: 1200, damping: 10, stiffness: 120 }}
+              >
+                <ProgressBar 
+                  level={profileData?.level || 1} 
+                  currentExp={profileData?.current_exp || 0} 
+                  neededExp={profileData?.exp_needed || 100} 
+                />
+              </MotiView>
+            </MotiView>
+          </MotiView>
           
 
           {/* Main Content Area */}
-          <View style={styles.mainContent}>
+          <MotiView 
+            style={styles.mainContent}
+            from={{ opacity: 0, translateY: 40 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'spring', delay: 1000, damping: 15, stiffness: 100 }}
+          >
             {/* Dashboard Cards */}
-            <View style={styles.dashboardSection}>
-              <PocketCard
-                balance={125000}
-                currency="GP"
-                onHistoryPress={() => console.log('History pressed!')}
-                onConvertPress={() => console.log('Convert pressed!')}
-              />
-            </View>
+            <MotiView 
+              style={styles.dashboardSection}
+              from={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', delay: 1200, damping: 12, stiffness: 120 }}
+            >
+              <MotiView
+                from={{ opacity: 0, translateY: 30, scale: 0.9 }}
+                animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                transition={{ type: 'spring', delay: 1300, damping: 15, stiffness: 100 }}
+              >
+                <PocketCard
+                  balance={profileData?.points || 0}
+                  currency="GP"
+                  onHistoryPress={() => console.log('History pressed!')}
+                  onConvertPress={() => console.log('Convert pressed!')}
+                />
+              </MotiView>
 
-            {/* Quick Actions */}
-            <View style={styles.quickActionsSection}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Quick Actions</Text>
-                <View style={styles.scrollIndicator}>
-                  <View style={styles.scrollDot} />
-                  <View style={styles.scrollDot} />
-                  <View style={styles.scrollDot} />
-                </View>
-              </View>
-              <View style={styles.scrollWrapper}>
+            <MotiView 
+              style={styles.quickActionsSection}
+              from={{ opacity: 0, translateY: 30 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'spring', delay: 1400, damping: 15, stiffness: 100 }}
+            >
+              <MotiView 
+                style={[styles.sectionHeader, { paddingHorizontal: 24 }]}
+                from={{ opacity: 0, translateX: -20 }}
+                animate={{ opacity: 1, translateX: 0 }}
+                transition={{ type: 'timing', duration: 600, delay: 1600 }}
+              >
+                <MotiText 
+                  style={styles.sectionTitle}
+                  from={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: 'spring', delay: 1800, damping: 12, stiffness: 120 }}
+                >
+                  Quick Actions
+                </MotiText>
+                <MotiView 
+                  style={styles.scrollIndicator}
+                  from={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ type: 'timing', duration: 400, delay: 2000 }}
+                >
+                  <MotiView 
+                    style={styles.scrollDot}
+                    from={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 2100, damping: 10, stiffness: 150 }}
+                  />
+                  <MotiView 
+                    style={styles.scrollDot}
+                    from={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 2200, damping: 10, stiffness: 150 }}
+                  />
+                  <MotiView 
+                    style={styles.scrollDot}
+                    from={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 2300, damping: 10, stiffness: 150 }}
+                  />
+                </MotiView>
+              </MotiView>
+              <MotiView 
+                style={styles.scrollWrapper}
+                from={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', delay: 2000, damping: 15, stiffness: 100 }}
+              >
                 <ScrollView 
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -93,33 +267,92 @@ export default function HomeTab() {
                   snapToInterval={132}
                   snapToAlignment="start"
                 >
-                  <JournalButton onPress={() => console.log('Journal pressed!')} />
-                  <MemoryButton onPress={() => console.log('Album pressed!')} />
-                  <EventsButton onPress={() => console.log('Events pressed!')} />
-                  <PacketsButton onPress={() => console.log('Packets pressed!')} />
-                  <RecapsButton onPress={() => console.log('Recaps pressed!')} />
-                  <RecyclopediaButton onPress={() => console.log('Recyclopedia pressed!')} />
-                  <BackyardButton onPress={() => console.log('Backyard pressed!')} />
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2200, damping: 12, stiffness: 120 }}
+                  >
+                    <JournalButton onPress={() => console.log('Journal pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2300, damping: 12, stiffness: 120 }}
+                  >
+                    <MemoryButton onPress={() => console.log('Album pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2400, damping: 12, stiffness: 120 }}
+                  >
+                    <EventsButton onPress={() => console.log('Events pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2500, damping: 12, stiffness: 120 }}
+                  >
+                    <PacketsButton onPress={() => console.log('Packets pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2600, damping: 12, stiffness: 120 }}
+                  >
+                    <RecapsButton onPress={() => console.log('Recaps pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2700, damping: 12, stiffness: 120 }}
+                  >
+                    <RecyclopediaButton onPress={() => console.log('Recyclopedia pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2800, damping: 12, stiffness: 120 }}
+                  >
+                    <ChallengesButton onPress={() => console.log('Challenges pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 2900, damping: 12, stiffness: 120 }}
+                  >
+                    <BackyardButton onPress={() => console.log('Backyard pressed!')} />
+                  </MotiView>
                 </ScrollView>
                 <View style={styles.scrollGradientLeft} />
                 <View style={styles.scrollGradientRight} />
-              </View>
-            </View>
-
-            <View style={styles.challengeSection}>
-              <DailyChallenge
-                id={4}
-                day={4}
-                difficulty="hard"
-                name="Jejak Nol Plastik Piknik"
-                description="Hari ini, siapkan piknik makan siang tanpa menggunakan plastik sekali pakai. Bawa bekal dengan wadah dan alat makan sendiri, lalu nikmati di taman terdekat sambil memungut 5 sampah plastik yang kamu temukan! #ZeroWastePicnic #EcoChallenge"
-                point_gain={350}
-                participants={0}
-                onPress={() => console.log('Challenge pressed!')}
-              />
-            </View>
+              </MotiView>
+            </MotiView>
+              
+              {/* Daily Challenge */}
+              <MotiView
+                from={{ opacity: 0, translateY: 40, scale: 0.95 }}
+                animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                transition={{ type: 'spring', delay: 3000, damping: 15, stiffness: 100 }}
+              >
+                <DailyChallenge
+                  onPress={() => console.log('Daily Challenge pressed!')}
+                />
+              </MotiView>
+              
+              {/* Nearby Quest Locator */}
+              <MotiView
+                from={{ opacity: 0, translateY: 40, scale: 0.95 }}
+                animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                transition={{ type: 'spring', delay: 3200, damping: 15, stiffness: 100 }}
+              >
+                <NearbyQuestLocator
+                  onLocatePress={() => console.log('Locate quests pressed!')}
+                />
+              </MotiView>
+            </MotiView>
             
-          </View>
+          </MotiView>
         </ScrollView>
       </SafeAreaView>
     </GradientBackground>
@@ -198,6 +431,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dashboardSection: {
+    gap: 12,
   },
   actionsSection: {
     marginBottom: 8,
@@ -239,14 +473,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   quickActionsSection: {
-    marginBottom: 24,
+    marginVertical: 20,
+    marginHorizontal: -24,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 0,
   },
   scrollIndicator: {
     flexDirection: 'row',
@@ -291,5 +526,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     zIndex: 1,
     pointerEvents: 'none',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  loadingText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 16,
+    color: Colors.primary,
+    marginTop: 16,
+  },
+  errorText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 16,
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.surface,
   },
 });

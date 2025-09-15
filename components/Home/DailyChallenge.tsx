@@ -2,9 +2,10 @@ import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { apiService } from "../../services/api";
 
-type Props = {
+interface ChallengeData {
   id: number;
   day: number;
   difficulty: "easy" | "medium" | "hard";
@@ -12,19 +13,16 @@ type Props = {
   description: string;
   point_gain: number;
   participants: number;
+}
+
+type Props = {
   onPress?: () => void;
 };
 
-export default function WeeklyChallenge({
-  id,
-  day,
-  difficulty,
-  name,
-  description,
-  point_gain,
-  participants,
-  onPress,
-}: Props) {
+export default function WeeklyChallenge({ onPress }: Props) {
+  const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const scaleValue = useRef(new Animated.Value(0.95)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
@@ -33,38 +31,58 @@ export default function WeeklyChallenge({
   const expandAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Initial entrance animation
-    Animated.parallel([
-      Animated.spring(scaleValue, {
-        toValue: 1,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeValue, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    fetchDailyChallenge();
+  }, []);
 
-    // Pulsing animation for reward
-    const pulse = () => {
-      Animated.sequence([
-        Animated.timing(pulseValue, {
-          toValue: 1.1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseValue, {
+  useEffect(() => {
+    if (challengeData) {
+      // Initial entrance animation
+      Animated.parallel([
+        Animated.spring(scaleValue, {
           toValue: 1,
-          duration: 1000,
+          tension: 100,
+          friction: 8,
           useNativeDriver: true,
         }),
-      ]).start(() => pulse());
-    };
-    pulse();
-  }, [day]);
+        Animated.timing(fadeValue, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Pulsing animation for reward
+      const pulse = () => {
+        Animated.sequence([
+          Animated.timing(pulseValue, {
+            toValue: 1.1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseValue, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ]).start(() => pulse());
+      };
+      pulse();
+    }
+  }, [challengeData]);
+
+  const fetchDailyChallenge = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await apiService.getDailyChallenge();
+      setChallengeData(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch daily challenge');
+      console.error('Error fetching daily challenge:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePress = () => {
     Animated.sequence([
@@ -94,10 +112,11 @@ export default function WeeklyChallenge({
     }).start();
   };
 
-  const progressPercentage = Math.round((day / 7) * 100);
+  const progressPercentage = challengeData ? Math.round((challengeData.day / 7) * 100) : 0;
   
   const getDifficultyColor = () => {
-    switch (difficulty) {
+    if (!challengeData) return Colors.primary;
+    switch (challengeData.difficulty) {
       case 'easy': return Colors.tertiary;
       case 'medium': return Colors.secondary;
       case 'hard': return Colors.error;
@@ -106,13 +125,40 @@ export default function WeeklyChallenge({
   };
   
   const getDifficultyIcon = () => {
-    switch (difficulty) {
+    if (!challengeData) return 'star';
+    switch (challengeData.difficulty) {
       case 'easy': return 'leaf';
       case 'medium': return 'mountain';
       case 'hard': return 'fire';
       default: return 'star';
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.card, styles.loadingCard]}>
+          <ActivityIndicator size="small" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading challenge...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error || !challengeData) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.card, styles.errorCard]}>
+          <Text style={styles.errorText}>{error || 'No challenge available'}</Text>
+          <TouchableOpacity onPress={fetchDailyChallenge} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <Animated.View
@@ -151,7 +197,7 @@ export default function WeeklyChallenge({
                 ]}
               >
                 <FontAwesome5 name="coins" size={10} color={Colors.secondary} />
-                <Text style={styles.compactRewardText}>+{point_gain}</Text>
+                <Text style={styles.compactRewardText}>+{challengeData.point_gain}</Text>
               </Animated.View>
               <FontAwesome5 
                 name={isExpanded ? "chevron-up" : "chevron-down"} 
@@ -183,10 +229,10 @@ export default function WeeklyChallenge({
                 <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor() + '20' }]}>
                   <FontAwesome5 name={getDifficultyIcon()} size={14} color={getDifficultyColor()} />
                   <Text style={[styles.difficultyText, { color: getDifficultyColor() }]}>
-                    {difficulty.toUpperCase()}
+                    {challengeData.difficulty.toUpperCase()}
                   </Text>
                 </View>
-                <Text style={styles.dayText}>Hari {day}</Text>
+                <Text style={styles.dayText}>Hari {challengeData.day}</Text>
               </View>
               <Animated.View
                 style={[
@@ -201,7 +247,7 @@ export default function WeeklyChallenge({
                   end={{ x: 1, y: 0 }}
                 >
                   <FontAwesome5 name="coins" size={12} color="white" />
-                  <Text style={styles.rewardText}>+{point_gain}</Text>
+                  <Text style={styles.rewardText}>+{challengeData.point_gain}</Text>
                 </LinearGradient>
               </Animated.View>
             </View>
@@ -209,8 +255,8 @@ export default function WeeklyChallenge({
             {/* Challenge content */}
             <View style={styles.content}>
               <Text style={styles.challengeLabel}>Challenge</Text>
-              <Text style={styles.title}>{name}</Text>
-              <Text style={styles.description}>{description}</Text>
+              <Text style={styles.title}>{challengeData.name}</Text>
+              <Text style={styles.description}>{challengeData.description}</Text>
             </View>
 
             {/* Progress section */}
@@ -219,7 +265,7 @@ export default function WeeklyChallenge({
               <View style={styles.daysCounter}>
                 <View style={styles.streakIndicator}>
                   <FontAwesome5 name="users" size={12} color={Colors.primary} />
-                  <Text style={styles.streakText}>{participants}</Text>
+                  <Text style={styles.streakText}>{challengeData.participants}</Text>
                 </View>
               </View>
             </View>
@@ -467,5 +513,40 @@ const styles = StyleSheet.create({
   expandableContent: {
     overflow: 'hidden',
     marginTop: 8,
+  },
+  loadingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    minHeight: 60,
+  },
+  loadingText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.secondary,
+  },
+  errorCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    minHeight: 60,
+  },
+  errorText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.error,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: Colors.primary + '20',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
+    color: Colors.primary,
   },
 });

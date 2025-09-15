@@ -49,11 +49,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="packet"
         options={{
-          title: 'Jelajahi',
+          title: 'Packet',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass" size={size} color={color} />
+            <Ionicons name="folder" size={size} color={color} />
           ),
         }}
       />

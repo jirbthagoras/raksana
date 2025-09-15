@@ -1,8 +1,8 @@
 import { useRouter, useSegments } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
 import { useError } from '../contexts/ErrorContext';
+import { useAuth } from '../hooks/useAuth';
 import LoadingOverlay from './LoadingComponent';
 
 interface AuthGuardProps {

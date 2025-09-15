@@ -5,10 +5,11 @@ import { Keyboard, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextIn
 import { Colors, Fonts } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { useError } from '../contexts/ErrorContext';
+import LoadingOverlay from '../components/LoadingComponent';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, isLoading } = useAuth();
+  const { register, isRegisterLoading } = useAuth();
   const { showPopUp } = useError();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -20,10 +21,10 @@ export default function RegisterScreen() {
 
   // Dismiss keyboard when loading starts
   useEffect(() => {
-    if (isLoading) {
+    if (isRegisterLoading) {
       Keyboard.dismiss();
     }
-  }, [isLoading]);
+  }, [isRegisterLoading]);
 
   const handleRegister = async () => {
     if (!email || !username || !name || !password || !confirmPassword) {
@@ -123,12 +124,12 @@ export default function RegisterScreen() {
           </View>
 
           <TouchableOpacity 
-            style={[styles.primaryButton, isLoading && styles.disabledButton]} 
+            style={[styles.primaryButton, isRegisterLoading && styles.disabledButton]} 
             onPress={handleRegister}
-            disabled={isLoading}
+            disabled={isRegisterLoading}
           >
             <Text style={styles.primaryButtonText}>
-              {isLoading ? 'Memproses...' : 'Daftar'}
+              {isRegisterLoading ? 'Memproses...' : 'Daftar'}
             </Text>
           </TouchableOpacity>
 
@@ -142,6 +143,8 @@ export default function RegisterScreen() {
           <Text style={styles.backLinkText}>Back</Text>
         </TouchableOpacity>
       </ScrollView>
+      
+      <LoadingOverlay visible={isRegisterLoading} />
     </SafeAreaView>
   );
 }
