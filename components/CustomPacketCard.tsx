@@ -1,5 +1,6 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ProgressRing from './ProgresRing';
@@ -17,12 +18,21 @@ interface PacketCardProps {
 }
 
 const CustomPacketCard: React.FC<PacketCardProps> = ({ packet, onPress }) => {
+  const router = useRouter();
   const completionRate = packet.assigned_task > 0 ? (packet.completed_task / packet.assigned_task) * 100 : 0;
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress(packet.id);
+    } else {
+      router.push(`/packet/${packet.id}`);
+    }
+  };
 
   return (
     <TouchableOpacity 
       style={styles.card}
-      onPress={() => onPress?.(packet.id)}
+      onPress={handlePress}
       activeOpacity={0.8}
     >
       {/* Header with ID */}

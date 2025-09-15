@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { Task, Packet, TasksResponse, PacketsResponse, GoApiResponse, ApiError } from '../types/auth';
+import { ApiError, PacketsResponse, Task, TaskCompletionResponse, TasksResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -10,6 +10,7 @@ export const apiKeys = {
   packets: () => ['packets'] as const,
   tasks: () => ['tasks'] as const,
   task: (id: number) => ['task', id] as const,
+  packetDetail: (id: number) => ['packetDetail', id] as const,
 };
 
 // Profile queries
@@ -65,11 +66,11 @@ export const useMyPackets = () => {
   });
 };
 
-// Task Completion Mutation
-export const useUpdateTaskCompletion = () => {
+// Task Completion Mutation with Congratulation Handling
+export const useUpdateTaskCompletion = (onCongratulation?: (response: TaskCompletionResponse) => void) => {
   const queryClient = useQueryClient();
   
-  return useMutation({
+  return useMutation<TaskCompletionResponse, ApiError, { taskId: number; completed: boolean }, { previousTasks: any }>({
     mutationFn: ({ taskId, completed }: { taskId: number; completed: boolean }) => 
       apiService.updateTaskCompletion(taskId, completed),
     onMutate: async ({ taskId, completed }) => {
@@ -92,6 +93,13 @@ export const useUpdateTaskCompletion = () => {
       
       return { previousTasks };
     },
+    onSuccess: (data) => {
+      // Handle congratulation popups
+      console.log(data)
+      if ((data.leveled_up || data.packet_completed)) {
+        onCongratulation?.(data);
+      }
+    },
     onError: (err, variables, context) => {
       // Rollback on error
       if (context?.previousTasks) {
@@ -102,7 +110,22 @@ export const useUpdateTaskCompletion = () => {
       // Refetch after mutation
       queryClient.invalidateQueries({ queryKey: ['tasks', 'today'] });
       queryClient.invalidateQueries({ queryKey: ['packets', 'me'] });
+      // Invalidate profile data to update homepage level, exp, and points
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
+  });
+};
+
+// Packet Detail Query
+export const usePacketDetail = (packetId: number) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery({
+    queryKey: apiKeys.packetDetail(packetId),
+    queryFn: () => apiService.getPacketDetail(packetId),
+    enabled: isAuthenticated && packetId > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -112,4 +135,5 @@ export const apiQueries = {
   useTodayTasks,
   useMyPackets,
   useUpdateTaskCompletion,
+  usePacketDetail,
 };

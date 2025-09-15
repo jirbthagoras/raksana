@@ -170,9 +170,14 @@ class ApiService {
   }
 
   async updateTaskCompletion(taskId: number, completed: boolean): Promise<any> {
-    const response: AxiosResponse<GoApiResponse<any>> = await this.api.patch(`/task/${taskId}`, {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.put(`/task/${taskId}`, {
       completed
     });
+    return response.data.data; // Extract from Go API wrapper
+  }
+
+  async getPacketDetail(packetId: number): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get(`/packet/detail/${packetId}`);
     return response.data.data; // Extract from Go API wrapper
   }
 

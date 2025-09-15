@@ -79,3 +79,11 @@ export interface TasksResponse {
 export interface PacketsResponse {
   packets: Packet[];
 }
+
+export interface TaskCompletionResponse {
+  current_level: number;
+  leveled_up: boolean;
+  message: string;
+  packet_completed: boolean;
+  packet_name: string;
+}

@@ -12,7 +12,11 @@ type Props = {
 };
 
 export default function LevelBar({ level, currentExp, neededExp }: Props) {
-  const progress = Math.min(currentExp / neededExp, 1);
+  // For journey-like experience where progress resets each level
+  // We'll use modulo to get the experience within the current level
+  // This assumes neededExp represents the experience required per level
+  const expInCurrentLevel = currentExp % neededExp;
+  const progress = Math.min(expInCurrentLevel / neededExp, 1);
   const progressPercentage = Math.round(progress * 100);
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
@@ -86,7 +90,7 @@ export default function LevelBar({ level, currentExp, neededExp }: Props) {
 
       {/* Compact XP Info */}
       <Text style={styles.expText}>
-        {currentExp} / {neededExp} XP
+        {expInCurrentLevel} / {neededExp} XP
       </Text>
     </MotiView>
   );

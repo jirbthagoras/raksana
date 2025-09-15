@@ -1,5 +1,5 @@
 import { MotiText, MotiView } from 'moti';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Dimensions,
   SafeAreaView,
@@ -29,7 +29,7 @@ import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
 import StreakButton from '@/components/Home/StreakButton';
 import HomePageSkeleton from '../../components/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
-import { apiService } from '../../services/api';
+import { useProfileMe } from '../../hooks/useApiQueries';
 
 const { width } = Dimensions.get('window');
 
@@ -62,28 +62,15 @@ interface ProfileData {
 }
 
 export default function HomeTab() {
-  const { user, logout } = useAuth();
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchProfileData();
-  }, []);
-
-  const fetchProfileData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiService.getProfileMe();
-      setProfileData(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch profile data');
-      console.error('Error fetching profile data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { user } = useAuth();
+  
+  // Use TanStack Query for profile data
+  const { 
+    data: profileData, 
+    isLoading: loading, 
+    error, 
+    refetch 
+  } = useProfileMe();
 
   // Loading state
   if (loading) {
@@ -98,8 +85,8 @@ export default function HomeTab() {
           <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
           <FloatingElements count={6} />
           <View style={styles.centerContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={fetchProfileData}>
+            <Text style={styles.errorText}>{error.message || 'Failed to fetch profile data'}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>

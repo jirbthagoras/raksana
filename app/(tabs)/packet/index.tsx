@@ -1,8 +1,8 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
-import React from 'react';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,15 +11,21 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CongratulationPopup } from '../../../components/CongratulationPopup';
 import CustomPacketCard from '../../../components/CustomPacketCard';
+import { SkeletonCircle, SkeletonText } from '../../../components/SkeletonLoader';
 import TaskCheckbox from '../../../components/TaskCheckbox';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useMyPackets, useTodayTasks, useUpdateTaskCompletion } from '../../../hooks/useApiQueries';
+import { TaskCompletionResponse } from '../../../types/auth';
 
 export default function PacketScreen() {
   const { user } = useAuth();
   
-  // Use TanStack Query hooks
+  // Congratulation popup state
+  const [congratulationData, setCongratulationData] = useState<TaskCompletionResponse | null>(null);
+  const [showCongratulation, setShowCongratulation] = useState(false);
+  
   const { 
     data: packetsData, 
     isLoading: packetsLoading, 
@@ -34,7 +40,11 @@ export default function PacketScreen() {
     refetch: refetchTasks 
   } = useTodayTasks();
   
-  const updateTaskMutation = useUpdateTaskCompletion();
+  const updateTaskMutation = useUpdateTaskCompletion((response: TaskCompletionResponse) => {
+    setCongratulationData(response);
+    console.log(response)
+    setShowCongratulation(true);
+  });
 
   // Extract data from API responses
   const packets = packetsData?.packets || [];
@@ -47,6 +57,11 @@ export default function PacketScreen() {
   const handleTaskToggle = (taskId: number, completed: boolean) => {
     updateTaskMutation.mutate({ taskId, completed });
   };
+  
+  const handleCloseCongratulation = () => {
+    setShowCongratulation(false);
+    setCongratulationData(null);
+  };
 
   const handleRefresh = async () => {
     await Promise.all([refetchPackets(), refetchTasks()]);
@@ -58,14 +73,82 @@ export default function PacketScreen() {
   };
 
   const completedTasksCount = tasks.filter((task: any) => task.completed).length;
+  
+  // Check if all packets are completed
+  const allPacketsCompleted = packets.length > 0 && packets.every((packet: any) => packet.completed);
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Memuat paket...</Text>
-        </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header Skeleton */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <View style={{ flex: 1 }}>
+                <SkeletonText lines={1} lineHeight={24} lastLineWidth="60%" />
+                <View style={{ height: 8 }} />
+                <SkeletonText lines={1} lineHeight={16} lastLineWidth="80%" />
+              </View>
+              <SkeletonCircle size={48} />
+            </View>
+          </View>
+
+          {/* Packets Section Skeleton */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <SkeletonCircle size={18} />
+              <SkeletonText lines={1} lineHeight={18} lastLineWidth="30%" />
+              <SkeletonCircle size={24} />
+            </View>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.packetsScrollContainer}
+              style={styles.packetsScroll}
+            >
+              {[1, 2, 3].map((index) => (
+                <View key={index} style={styles.packetSkeletonContainer}>
+                  <View style={styles.packetSkeleton}>
+                    <View style={styles.packetSkeletonHeader}>
+                      <SkeletonText lines={1} lineHeight={12} lastLineWidth="40%" />
+                    </View>
+                    <View style={styles.packetSkeletonContent}>
+                      <SkeletonText lines={2} lineHeight={16} lastLineWidth="70%" />
+                      <View style={{ height: 12 }} />
+                      <View style={styles.packetSkeletonStats}>
+                        <SkeletonCircle size={60} />
+                        <View style={{ flex: 1, marginLeft: 16 }}>
+                          <SkeletonText lines={2} lineHeight={14} lastLineWidth="60%" />
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Tasks Section Skeleton */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <SkeletonCircle size={18} />
+              <SkeletonText lines={1} lineHeight={18} lastLineWidth="40%" />
+              <SkeletonCircle size={24} />
+            </View>
+            {[1, 2, 3, 4].map((index) => (
+              <View key={index} style={styles.taskSkeletonContainer}>
+                <SkeletonCircle size={24} />
+                <View style={{ flex: 1, marginLeft: 16 }}>
+                  <SkeletonText lines={2} lineHeight={16} lastLineWidth="80%" />
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -88,9 +171,9 @@ export default function PacketScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.greeting}>
-                Halo, {user?.username || 'Pengguna'}! 👋
+                Halo, {user?.username || 'Pengguna'}!
               </Text>
               <Text style={styles.subtitle}>
                 Kelola paket dan tugas harianmu
@@ -159,14 +242,27 @@ export default function PacketScreen() {
                     <CustomPacketCard 
                       packet={packet} 
                       onPress={(packetId) => {
-                        console.log('Navigate to packet detail:', packetId);
-                        // TODO: Add navigation to packet detail screen
+                        router.push(`/packet/${packetId}`);
                       }} 
                     />
                   </View>
                 </View>
               ))}
             </ScrollView>
+          )}
+          
+          {/* Create New Packet Button - Show when all packets are completed */}
+          {allPacketsCompleted && (
+            <View style={styles.createPacketSection}>
+              <View style={styles.completionBadge}>
+                <FontAwesome5 name="trophy" size={16} color={Colors.primary} />
+                <Text style={styles.completionText}>Semua paket selesai!</Text>
+              </View>
+              <TouchableOpacity style={styles.createPacketButton} onPress={handleAddPacket}>
+                <FontAwesome5 name="plus-circle" size={20} color={Colors.onPrimary} />
+                <Text style={styles.createPacketButtonText}>Buat Paket Baru</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
 
@@ -192,7 +288,7 @@ export default function PacketScreen() {
             </View>
           ) : tasks.length === 0 ? (
             <View style={styles.emptyState}>
-              <FontAwesome5 name="check-circle" size={48} color={Colors.onSurfaceVariant} />
+              <FontAwesome5 name="check-circle" size={48} color={Colors.primary} />
               <Text style={styles.emptyTitle}>Tidak ada tugas hari ini</Text>
               <Text style={styles.emptySubtitle}>
                 Selamat! Kamu sudah menyelesaikan semua tugas
@@ -201,7 +297,7 @@ export default function PacketScreen() {
           ) : (
             tasks.map((task: any, index: number) => (
               <TaskCheckbox 
-                key={task.id} 
+                key={task.id}
                 task={task} 
                 index={index}
                 onToggle={handleTaskToggle}
@@ -213,6 +309,17 @@ export default function PacketScreen() {
         {/* Bottom spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+      
+      {/* Congratulation Popup */}
+      {congratulationData && (
+        <CongratulationPopup
+          visible={showCongratulation}
+          onClose={handleCloseCongratulation}
+          type={congratulationData.leveled_up ? 'levelUp' : 'packetComplete'}
+          level={congratulationData.current_level}
+          packetName={congratulationData.packet_name}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -425,5 +532,88 @@ const styles = StyleSheet.create({
   },
   statusTextInactive: {
     color: Colors.onSurfaceVariant,
+  },
+  // Skeleton loading styles
+  packetSkeletonContainer: {
+    marginRight: 16,
+    minWidth: 280,
+    maxWidth: 320,
+  },
+  packetSkeleton: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+  },
+  packetSkeletonHeader: {
+    marginBottom: 12,
+  },
+  packetSkeletonContent: {
+    gap: 8,
+  },
+  packetSkeletonStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  taskSkeletonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+  },
+  // Create packet section styles
+  createPacketSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: Colors.primaryContainer + '30',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.primary + '20',
+  },
+  completionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: Colors.primary + '10',
+    borderRadius: 20,
+  },
+  completionText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.primary,
+  },
+  createPacketButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 28,
+    gap: 10,
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  createPacketButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onPrimary,
   },
 });

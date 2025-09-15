@@ -13,7 +13,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ completed, total, size }) =
   const radius = (size - 12) / 2; // 12 = stroke width * 2 (6 each side)
   const strokeWidth = 6;
   const circumference = 2 * Math.PI * radius;
-  const percentage = total > 0 ? Math.min(completed / total, 1) : 0;
+  const percentage = total > 0 ? (completed / total) : 0;
   const strokeDasharray = `${circumference * percentage} ${circumference}`;
 
   return (
@@ -46,7 +46,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ completed, total, size }) =
       {/* Center label */}
       <View style={styles.ringCenter}>
         <Text style={styles.ringText}>
-          {completed}/{total}
+          {Math.round(percentage * 100)}%
         </Text>
       </View>
     </View>
