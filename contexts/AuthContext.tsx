@@ -20,6 +20,7 @@ interface AuthContextType extends AuthState {
   isLoginLoading: boolean;
   isRegisterLoading: boolean;
   isLogoutLoading: boolean;
+  isFastAuthComplete: boolean;
 }
 
 // Create Context
@@ -102,6 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoginLoading: loginMutation.isPending,
     isRegisterLoading: registerMutation.isPending,
     isLogoutLoading: logoutMutation.isPending,
+    isFastAuthComplete: authStatus.isFastAuthComplete,
   };
 
   return (

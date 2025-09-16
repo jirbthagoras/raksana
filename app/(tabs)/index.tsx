@@ -239,7 +239,7 @@ export default function HomeTab() {
                 >
                   Quick Actions
                 </MotiText>
-                <MotiView 
+                <MotiView
                   style={styles.scrollIndicator}
                   from={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

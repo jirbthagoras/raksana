@@ -143,6 +143,22 @@ export const useRegions = () => {
   });
 };
 
+// Create Packet Mutation
+export const useCreatePacket = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<any, ApiError, { target: string; description: string }>({
+    mutationFn: ({ target, description }) => 
+      apiService.createPacket({ target, description }),
+    onSuccess: () => {
+      // Invalidate and refetch packets list
+      queryClient.invalidateQueries({ queryKey: ['packets', 'me'] });
+      // Also invalidate tasks in case the new packet becomes active
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'today'] });
+    },
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,

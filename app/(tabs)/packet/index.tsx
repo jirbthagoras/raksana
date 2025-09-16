@@ -68,8 +68,7 @@ export default function PacketScreen() {
   };
 
   const handleAddPacket = () => {
-    // TODO: Navigate to add packet screen
-    console.log('Add packet pressed');
+    router.push('/packet/create');
   };
 
   const completedTasksCount = tasks.filter((task: any) => task.completed).length;

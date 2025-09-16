@@ -10,7 +10,7 @@ interface AuthGuardProps {
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isFastAuthComplete } = useAuth();
   const { hasActiveError } = useError();
   const router = useRouter();
   const segments = useSegments();
@@ -18,8 +18,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (isLoading) {
-      return; // Wait for auth state to be determined
+    // Only wait for fast auth check, not full profile loading
+    if (!isFastAuthComplete) {
+      return; // Wait for fast auth check to complete
     }
     
     // Don't do any navigation when there's an active error popup

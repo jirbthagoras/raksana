@@ -186,6 +186,11 @@ class ApiService {
     return response.data.data; // Extract from Go API wrapper
   }
 
+  async createPacket(packetData: { target: string; description: string }): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.post('/packet', packetData);
+    return response.data.data;
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }
