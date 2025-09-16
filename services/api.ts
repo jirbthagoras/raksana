@@ -181,6 +181,11 @@ class ApiService {
     return response.data.data; // Extract from Go API wrapper
   }
 
+  async getRegions(): Promise<any> {
+    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/region');
+    return response.data.data; // Extract from Go API wrapper
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

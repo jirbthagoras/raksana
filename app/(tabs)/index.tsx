@@ -2,6 +2,7 @@ import { MotiText, MotiView } from 'moti';
 import React from 'react';
 import {
   Dimensions,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -19,6 +20,7 @@ import ChallengesButton from '@/components/Home/ChallengesButton';
 import DailyChallenge from '@/components/Home/DailyChallenge';
 import EventsButton from '@/components/Home/EventsButton';
 import JournalButton from '@/components/Home/JournalButton';
+import LeaderboardButton from '@/components/Home/LeaderboardButton';
 import MemoryButton from '@/components/Home/MemoryButton';
 import NearbyQuestLocator from '@/components/Home/NearbyQuestLocator';
 import PacketsButton from '@/components/Home/PacketsButton';
@@ -26,10 +28,11 @@ import PocketCard from '@/components/Home/PointCard';
 import ProgressBar from '@/components/Home/ProgressBar';
 import RecapsButton from '@/components/Home/RecapsButton';
 import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
+import RegionCard from '@/components/Home/RegionCard';
 import StreakButton from '@/components/Home/StreakButton';
 import HomePageSkeleton from '../../components/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
-import { useProfileMe } from '../../hooks/useApiQueries';
+import { useProfileMe, useRegions } from '../../hooks/useApiQueries';
 
 const { width } = Dimensions.get('window');
 
@@ -69,8 +72,22 @@ export default function HomeTab() {
     data: profileData, 
     isLoading: loading, 
     error, 
-    refetch 
+    refetch,
+    isFetching
   } = useProfileMe();
+
+  // Use TanStack Query for regions data
+  const { 
+    data: regionsData, 
+    isLoading: regionsLoading, 
+    error: regionsError,
+    refetch: refetchRegions
+  } = useRegions();
+
+  // Handle refresh
+  const handleRefresh = React.useCallback(async () => {
+    await Promise.all([refetch(), refetchRegions()]);
+  }, [refetch, refetchRegions]);
 
   // Loading state
   if (loading) {
@@ -104,6 +121,15 @@ export default function HomeTab() {
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching && !loading}
+              onRefresh={handleRefresh}
+              tintColor={Colors.primary}
+              colors={[Colors.primary]}
+              progressBackgroundColor={Colors.surface}
+            />
+          }
         >
           {/* Header Section */}
           <MotiView 
@@ -308,6 +334,13 @@ export default function HomeTab() {
                     animate={{ opacity: 1, translateY: 0, scale: 1 }}
                     transition={{ type: 'spring', delay: 2900, damping: 12, stiffness: 120 }}
                   >
+                    <LeaderboardButton onPress={() => console.log('Leaderboard pressed!')} />
+                  </MotiView>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                    transition={{ type: 'spring', delay: 3000, damping: 12, stiffness: 120 }}
+                  >
                     <BackyardButton onPress={() => console.log('Backyard pressed!')} />
                   </MotiView>
                 </ScrollView>
@@ -327,11 +360,83 @@ export default function HomeTab() {
                 />
               </MotiView>
               
+              {/* Regions Section */}
+              <MotiView
+                from={{ opacity: 0, translateY: 40, scale: 0.95 }}
+                animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                transition={{ type: 'spring', delay: 3000, damping: 15, stiffness: 100 }}
+              >
+                <View style={styles.regionsSection}>
+                  <MotiView 
+                    style={[styles.sectionHeader, { paddingHorizontal: 24 }]}
+                    from={{ opacity: 0, translateX: -20 }}
+                    animate={{ opacity: 1, translateX: 0 }}
+                    transition={{ type: 'timing', duration: 600, delay: 3200 }}
+                  >
+                    <MotiText 
+                      style={styles.sectionTitle}
+                      from={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: 'spring', delay: 3400, damping: 12, stiffness: 120 }}
+                    >
+                      Explore Regions
+                    </MotiText>
+                  </MotiView>
+                  
+                  <MotiView 
+                    style={styles.regionsScrollWrapper}
+                    from={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', delay: 3600, damping: 15, stiffness: 100 }}
+                  >
+                    {regionsLoading ? (
+                      <View style={styles.regionsLoadingContainer}>
+                        <Text style={styles.regionsLoadingText}>Loading regions...</Text>
+                      </View>
+                    ) : regionsError ? (
+                      <View style={styles.regionsErrorContainer}>
+                        <Text style={styles.regionsErrorText}>Failed to load regions</Text>
+                        <TouchableOpacity 
+                          style={styles.regionsRetryButton} 
+                          onPress={() => refetchRegions()}
+                        >
+                          <Text style={styles.regionsRetryText}>Retry</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <ScrollView 
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.regionsScrollContainer}
+                        style={styles.regionsHorizontalScroll}
+                        decelerationRate="fast"
+                        snapToInterval={152}
+                        snapToAlignment="start"
+                      >
+                        {regionsData?.regions?.map((region, index) => (
+                          <MotiView
+                            key={region.id}
+                            from={{ opacity: 0, translateY: 20, scale: 0.8 }}
+                            animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                            transition={{ type: 'spring', delay: 3800 + (index * 100), damping: 12, stiffness: 120 }}
+                          >
+                            <RegionCard
+                              region={region}
+                              onPress={(selectedRegion) => console.log('Region pressed:', selectedRegion.name)}
+                            />
+                          </MotiView>
+                        ))}
+                      </ScrollView>
+                    )}
+                  </MotiView>
+                </View>
+              </MotiView>
+
               {/* Nearby Quest Locator */}
               <MotiView
                 from={{ opacity: 0, translateY: 40, scale: 0.95 }}
                 animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                transition={{ type: 'spring', delay: 3200, damping: 15, stiffness: 100 }}
+                transition={{ type: 'spring', delay: 4200, damping: 15, stiffness: 100 }}
               >
                 <NearbyQuestLocator
                   onLocatePress={() => console.log('Locate quests pressed!')}
@@ -542,6 +647,59 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontFamily: Fonts.text.bold,
     fontSize: 16,
+    color: Colors.surface,
+  },
+  regionsSection: {
+    marginVertical: 20,
+    marginHorizontal: -24,
+  },
+  regionsScrollWrapper: {
+    position: 'relative',
+    height: 210,
+  },
+  regionsHorizontalScroll: {
+    height: 400,
+  },
+  regionsScrollContainer: {
+    paddingLeft: 24,
+    paddingRight: 24,
+    gap: 12,
+    alignItems: 'center',
+    height: 200,
+  },
+  regionsLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  regionsLoadingText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.tertiary,
+  },
+  regionsErrorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  regionsErrorText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  regionsRetryButton: {
+    backgroundColor: Colors.secondary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  regionsRetryText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
     color: Colors.surface,
   },
 });

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, PacketsResponse, Task, TaskCompletionResponse, TasksResponse } from '../types/auth';
+import { ApiError, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -11,6 +11,7 @@ export const apiKeys = {
   tasks: () => ['tasks'] as const,
   task: (id: number) => ['task', id] as const,
   packetDetail: (id: number) => ['packetDetail', id] as const,
+  regions: () => ['regions'] as const,
 };
 
 // Profile queries
@@ -129,6 +130,19 @@ export const usePacketDetail = (packetId: number) => {
   });
 };
 
+// Regions Query
+export const useRegions = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<RegionsResponse, ApiError>({
+    queryKey: apiKeys.regions(),
+    queryFn: () => apiService.getRegions(),
+    enabled: isAuthenticated,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
@@ -136,4 +150,5 @@ export const apiQueries = {
   useMyPackets,
   useUpdateTaskCompletion,
   usePacketDetail,
+  useRegions,
 };

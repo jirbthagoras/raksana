@@ -2,6 +2,7 @@ import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/SkeletonLoa
 import { Colors, Fonts } from '@/constants';
 import { usePacketDetail } from '@/hooks/useApiQueries';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React from 'react';
@@ -16,6 +17,7 @@ import {
 } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -229,7 +231,7 @@ export default function PacketDetailScreen() {
   const completionPercentage = data.expected_task > 0 ? (data.completed_task / data.expected_task) * 100 : 0;
   const taskCompletionRate = parseFloat(data.task_completion_rate.replace('%', ''));
 
-  // Prepare pie chart data for completion rate
+  // Clean pie chart data
   const pieData = [
     {
       name: 'Completed',
@@ -241,11 +243,15 @@ export default function PacketDetailScreen() {
     {
       name: 'Remaining',
       population: 100 - completionPercentage,
-      color: '#E0E0E0',
+      color: '#E8F5E8',
       legendFontColor: Colors.onSurface,
       legendFontSize: 12,
     },
   ];
+
+  const circumference = 2 * Math.PI * 85; // radius = 85
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (completionPercentage / 100) * circumference;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -310,28 +316,73 @@ export default function PacketDetailScreen() {
           {/* Progress Section */}
           <View style={styles.progressSection}>
             <View style={styles.chartContainer}>
-              <PieChart
-                data={pieData.filter(item => item.population > 0)}
-                width={200}
-                height={200}
-                chartConfig={{
-                  backgroundColor: 'transparent',
-                  backgroundGradientFrom: 'transparent',
-                  backgroundGradientTo: 'transparent',
-                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                }}
-                accessor="population"
-                backgroundColor="transparent"
-                paddingLeft="45"
-                center={[0, 0]}
-                absolute={true}
-                hasLegend={false}
-              />
+              {/* Beautiful SVG Circle Progress */}
+              <View style={styles.svgContainer}>
+                <Svg width={200} height={200} style={styles.svgChart}>
+                  <Defs>
+                    <SvgLinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <Stop offset="0%" stopColor="#4CAF50" stopOpacity="1" />
+                      <Stop offset="50%" stopColor="#66BB6A" stopOpacity="1" />
+                      <Stop offset="100%" stopColor="#81C784" stopOpacity="1" />
+                    </SvgLinearGradient>
+                    <SvgLinearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <Stop offset="0%" stopColor="#F1F8E9" stopOpacity="1" />
+                      <Stop offset="100%" stopColor="#E8F5E8" stopOpacity="1" />
+                    </SvgLinearGradient>
+                  </Defs>
+                  
+                  {/* Background Circle */}
+                  <Circle
+                    cx="100"
+                    cy="100"
+                    r="85"
+                    stroke="url(#backgroundGradient)"
+                    strokeWidth="16"
+                    fill="transparent"
+                  />
+                  
+                  {/* Progress Circle */}
+                  <Circle
+                    cx="100"
+                    cy="100"
+                    r="85"
+                    stroke="url(#progressGradient)"
+                    strokeWidth="16"
+                    fill="transparent"
+                    strokeDasharray={strokeDasharray}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    transform="rotate(-90 100 100)"
+                  />
+                </Svg>
+              </View>
+
+              {/* Clean Center Text */}
               <View style={styles.chartCenterText}>
-                <Text style={styles.completionPercentage}>
-                  {Math.round(completionPercentage)}%
-                </Text>
-                <Text style={styles.completionLabel}>Selesai</Text>
+                <LinearGradient
+                  colors={['#2E7D32', '#4CAF50']}
+                  style={styles.centerTextGradient}
+                >
+                  <Text style={styles.completionPercentage}>
+                    {Math.round(completionPercentage)}%
+                  </Text>
+                  <Text style={styles.completionLabel}>Selesai</Text>
+                  
+                  {/* Achievement Badge */}
+                  {completionPercentage >= 100 && (
+                    <View style={styles.achievementBadge}>
+                      <FontAwesome5 name="trophy" size={16} color="#FFD700" />
+                      <Text style={styles.achievementText}>Sempurna!</Text>
+                    </View>
+                  )}
+                  
+                  {completionPercentage >= 75 && completionPercentage < 100 && (
+                    <View style={styles.achievementBadge}>
+                      <FontAwesome5 name="star" size={14} color="#4CAF50" />
+                      <Text style={styles.achievementText}>Hebat!</Text>
+                    </View>
+                  )}
+                </LinearGradient>
               </View>
             </View>
 
@@ -428,7 +479,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontFamily: Fonts.text.bold,
     fontSize: 16,
-    color: Colors.onSurfaceVariant,
+    color: Colors.primary,
   },
   errorContainer: {
     flex: 1,
@@ -463,7 +514,7 @@ const styles = StyleSheet.create({
     color: Colors.onPrimary,
   },
   packetCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceBright,
     marginHorizontal: 16,
     marginVertical: 12,
     padding: 16,
@@ -551,23 +602,83 @@ const styles = StyleSheet.create({
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
+    width: 220,
+    height: 220,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 120,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  svgContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  svgChart: {
+    position: 'absolute',
   },
   chartCenterText: {
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+  },
+  centerTextGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 65,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   completionPercentage: {
     fontFamily: Fonts.display.bold,
-    fontSize: 16,
-    color: Colors.onSurface,
+    fontSize: 32,
+    color: '#FFFFFF',
     textAlign: 'center',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   completionLabel: {
     fontFamily: Fonts.text.regular,
-    fontSize: 9,
-    color: Colors.onSurfaceVariant,
+    fontSize: 13,
+    color: '#E8F5E8',
     textAlign: 'center',
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    fontWeight: '600',
+  },
+  achievementBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 15,
+    gap: 5,
+  },
+  achievementText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 11,
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontWeight: '700',
   },
   statsContainer: {
     width: '100%',

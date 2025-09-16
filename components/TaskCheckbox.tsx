@@ -51,9 +51,10 @@ export default function TaskCheckbox({ task, index, onToggle }: TaskCheckboxProp
       style={styles.container}
     >
       <TouchableOpacity
-        style={styles.touchable}
+        style={[styles.touchable, task.completed && styles.disabledTouchable]}
         onPress={() => onToggle(task.id, !task.completed)}
-        activeOpacity={0.7}
+        activeOpacity={task.completed ? 1 : 0.7}
+        disabled={task.completed}
       >
         <View style={styles.content}>
           {/* Checkbox */}
@@ -151,6 +152,9 @@ const styles = StyleSheet.create({
   },
   touchable: {
     position: 'relative',
+  },
+  disabledTouchable: {
+    opacity: 0.7,
   },
   content: {
     flexDirection: 'row',

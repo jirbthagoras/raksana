@@ -87,3 +87,17 @@ export interface TaskCompletionResponse {
   packet_completed: boolean;
   packet_name: string;
 }
+
+// Region types
+export interface Region {
+  id: number;
+  name: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  tree_amount: number;
+}
+
+export interface RegionsResponse {
+  regions: Region[];
+}

@@ -7,20 +7,21 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native
 type Props = {
   balance: number;
   currency?: string;
+  onPress?: () => void;
   onHistoryPress?: () => void;
   onConvertPress?: () => void;
 };
 
 export default function BalanceCard({ 
   balance = 1000, 
-  currency = "Rp", 
+  currency = "Rp",
+  onPress,
   onHistoryPress,
   onConvertPress,
 }: Props) {
   const scaleValue = useRef(new Animated.Value(0.95)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
-  const historyButtonScale = useRef(new Animated.Value(1)).current;
-  const convertButtonScale = useRef(new Animated.Value(1)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -44,35 +45,24 @@ export default function BalanceCard({
 
   const handleHistoryPress = () => {
     Animated.sequence([
-      Animated.timing(historyButtonScale, {
-        toValue: 0.95,
+      Animated.timing(buttonScale, {
+        toValue: 0.98,
         duration: 100,
         useNativeDriver: true,
       }),
-      Animated.timing(historyButtonScale, {
+      Animated.timing(buttonScale, {
         toValue: 1,
         duration: 100,
         useNativeDriver: true,
       }),
     ]).start();
-    onHistoryPress?.();
+    onHistoryPress?.() || onPress?.();
   };
 
   const handleConvertPress = () => {
-    Animated.sequence([
-      Animated.timing(convertButtonScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(convertButtonScale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
     onConvertPress?.();
   };
+
 
   return (
     <Animated.View 
@@ -90,7 +80,7 @@ export default function BalanceCard({
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        {/* Header with Creative History Button */}
+        {/* Simple Header */}
         <View style={styles.header}>
           <View style={styles.titleSection}>
             <View style={styles.iconContainer}>
@@ -98,19 +88,6 @@ export default function BalanceCard({
             </View>
             <Text style={styles.cardTitle}>Point</Text>
           </View>
-          <Animated.View style={{ transform: [{ scale: historyButtonScale }] }}>
-            <TouchableOpacity 
-              style={styles.creativeHistoryButton}
-              onPress={handleHistoryPress}
-              activeOpacity={0.8}
-            >
-              <View style={styles.historyButtonContent}>
-                <FontAwesome5 name="clock" size={14} color="white" />
-                <Text style={styles.historyButtonText}>History</Text>
-              </View>
-              <View style={styles.historyButtonGlow} />
-            </TouchableOpacity>
-          </Animated.View>
         </View>
 
         {/* Prominent Balance Display */}
@@ -122,24 +99,18 @@ export default function BalanceCard({
           <View style={styles.balanceAccent} />
         </View>
 
-        <Animated.View style={[styles.convertSection, { transform: [{ scale: convertButtonScale }] }]}>
+        {/* Minimalist Navigation Button */}
+        <Animated.View style={[styles.buttonContainer, { transform: [{ scale: buttonScale }] }]}>
           <TouchableOpacity 
-            style={styles.creativeConvertButton}
-            onPress={handleConvertPress}
-            activeOpacity={0.9}
+            style={styles.navButton}
+            onPress={handleHistoryPress}
+            activeOpacity={0.7}
           >
-            <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
-              style={styles.convertButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <FontAwesome5 name="magic" size={16} color="white" />
-              <Text style={styles.convertButtonText}>Convert Points</Text>
-              <FontAwesome5 name="arrow-right" size={12} color="white" />
-            </LinearGradient>
+            <Text style={styles.navButtonText}>History</Text>
+            <FontAwesome5 name="chevron-right" size={12} color={Colors.primary} />
           </TouchableOpacity>
         </Animated.View>
+
       </LinearGradient>
     </Animated.View>
   );
@@ -159,13 +130,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 8,
-    minHeight: 240,
+    minHeight: 160,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 32,
   },
   titleSection: {
     flexDirection: "row",
@@ -185,40 +155,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.primary,
   },
-  creativeHistoryButton: {
-    position: 'relative',
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  historyButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: Colors.primary,
-    borderRadius: 20,
-    zIndex: 2,
-  },
-  historyButtonText: {
-    fontFamily: Fonts.text.bold,
-    fontSize: 11,
-    color: 'white',
-  },
-  historyButtonGlow: {
-    position: 'absolute',
-    top: -2,
-    left: -2,
-    right: -2,
-    bottom: -2,
-    backgroundColor: Colors.primary,
-    borderRadius: 22,
-    opacity: 0.3,
-    zIndex: 1,
-  },
   balanceSection: {
     position: 'relative',
-    marginBottom: 20,
+    flex: 1,
+    justifyContent: 'center',
   },
   balanceContainer: {
     flexDirection: "row",
@@ -248,30 +188,25 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  creativeConvertButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+  buttonContainer: {
+    marginTop: 16,
   },
-  convertButtonGradient: {
+  navButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.primaryContainer + '40',
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 10,
+    borderColor: Colors.primary + '20',
   },
-  convertButtonText: {
-    fontFamily: Fonts.display.bold,
+  navButtonText: {
+    fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: 'white',
-  },
-  convertSection: {
+    color: Colors.primary,
     flex: 1,
-    justifyContent: 'flex-end',
   },
 });
