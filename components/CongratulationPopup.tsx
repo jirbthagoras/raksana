@@ -15,9 +15,11 @@ const { width } = Dimensions.get('window');
 interface CongratulationPopupProps {
   visible: boolean;
   onClose: () => void;
-  type: 'levelUp' | 'packetComplete';
+  type: 'levelUp' | 'packetComplete' | 'unlock';
   level?: number;
   packetName?: string;
+  difficulty?: string;
+  zIndex?: number;
 }
 
 export const CongratulationPopup: React.FC<CongratulationPopupProps> = ({
@@ -26,8 +28,12 @@ export const CongratulationPopup: React.FC<CongratulationPopupProps> = ({
   type,
   level,
   packetName,
+  difficulty,
+  zIndex = 1000,
 }) => {
   const isLevelUp = type === 'levelUp';
+  const isPacketComplete = type === 'packetComplete';
+  const isUnlock = type === 'unlock';
   
   return (
     <Modal
@@ -36,15 +42,17 @@ export const CongratulationPopup: React.FC<CongratulationPopupProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { zIndex }]}>
         <View style={styles.popup}>
           {/* Icon */}
           <View style={[
             styles.iconContainer,
-            isLevelUp ? styles.levelUpIconContainer : styles.packetCompleteIconContainer
+            isLevelUp ? styles.levelUpIconContainer : 
+            isPacketComplete ? styles.packetCompleteIconContainer : 
+            styles.unlockIconContainer
           ]}>
             <FontAwesome5 
-              name={isLevelUp ? "star" : "trophy"} 
+              name={isLevelUp ? "star" : isPacketComplete ? "trophy" : "unlock-alt"} 
               size={48} 
               color={Colors.onPrimary} 
             />
@@ -52,14 +60,16 @@ export const CongratulationPopup: React.FC<CongratulationPopupProps> = ({
           
           {/* Title */}
           <Text style={styles.title}>
-            {isLevelUp ? 'Selamat!' : 'Paket Selesai!'}
+            {isLevelUp ? 'Selamat!' : isPacketComplete ? 'Paket Selesai!' : 'Habit Terbuka!'}
           </Text>
           
           {/* Message */}
           <Text style={styles.message}>
             {isLevelUp 
               ? `Kamu naik ke level ${level}!`
-              : `Kamu telah menyelesaikan paket "${packetName}"`
+              : isPacketComplete 
+              ? `Kamu telah menyelesaikan paket "${packetName}"`
+              : `Habit "${packetName}" berhasil dibuka!`
             }
           </Text>
           
@@ -67,7 +77,9 @@ export const CongratulationPopup: React.FC<CongratulationPopupProps> = ({
           <Text style={styles.subtitle}>
             {isLevelUp 
               ? 'Terus pertahankan konsistensimu!'
-              : 'Luar biasa! Kamu semakin konsisten!'
+              : isPacketComplete 
+              ? 'Luar biasa! Kamu semakin konsisten!'
+              : `Tingkat kesulitan: ${difficulty || 'Sedang'}. Siap untuk tantangan baru?`
             }
           </Text>
           
@@ -118,6 +130,9 @@ const styles = StyleSheet.create({
   },
   packetCompleteIconContainer: {
     backgroundColor: Colors.secondary,
+  },
+  unlockIconContainer: {
+    backgroundColor: '#FF6B35', // Orange color for unlock
   },
   title: {
     fontFamily: Fonts.display.bold,

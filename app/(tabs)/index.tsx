@@ -24,7 +24,7 @@ import LeaderboardButton from '@/components/Home/LeaderboardButton';
 import MemoryButton from '@/components/Home/MemoryButton';
 import NearbyQuestLocator from '@/components/Home/NearbyQuestLocator';
 import PacketsButton from '@/components/Home/PacketsButton';
-import PocketCard from '@/components/Home/PointCard';
+import BalanceCard from '@/components/Home/PointCard';
 import ProgressBar from '@/components/Home/ProgressBar';
 import RecapsButton from '@/components/Home/RecapsButton';
 import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
@@ -211,7 +211,7 @@ export default function HomeTab() {
                 animate={{ opacity: 1, translateY: 0, scale: 1 }}
                 transition={{ type: 'spring', delay: 1300, damping: 15, stiffness: 100 }}
               >
-                <PocketCard
+                <BalanceCard
                   balance={profileData?.points || 0}
                   currency="GP"
                   onHistoryPress={() => console.log('History pressed!')}
@@ -379,7 +379,7 @@ export default function HomeTab() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ type: 'spring', delay: 3400, damping: 12, stiffness: 120 }}
                     >
-                      Explore Regions
+                      Green Regions
                     </MotiText>
                   </MotiView>
                   
@@ -410,7 +410,7 @@ export default function HomeTab() {
                         contentContainerStyle={styles.regionsScrollContainer}
                         style={styles.regionsHorizontalScroll}
                         decelerationRate="fast"
-                        snapToInterval={152}
+                        snapToInterval={172}
                         snapToAlignment="start"
                       >
                         {regionsData?.regions?.map((region, index) => (

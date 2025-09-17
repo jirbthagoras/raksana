@@ -202,7 +202,7 @@ export default function NearbyQuestLocator({ onLocatePress }: Props) {
                 color="white" 
               />
               <Text style={styles.locateButtonText}>
-                {'Locate Quests'}
+                {'Locate Quest'}
               </Text>
             </Animated.View>
           </LinearGradient>

@@ -2,7 +2,6 @@ import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/SkeletonLoa
 import { Colors, Fonts } from '@/constants';
 import { usePacketDetail } from '@/hooks/useApiQueries';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React from 'react';
@@ -15,9 +14,9 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { PieChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
+import { HabitUnlockModal } from '../../../components/HabitUnlockModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -113,6 +112,9 @@ export default function PacketDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const packetId = parseInt(id || '0');
+  
+  // Modal state
+  const [showUnlockModal, setShowUnlockModal] = React.useState(false);
 
   const {
     data: packetData,
@@ -249,7 +251,7 @@ export default function PacketDetailScreen() {
     },
   ];
 
-  const circumference = 2 * Math.PI * 85; // radius = 85
+  const circumference = 2 * Math.PI * 70; // radius = 70
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (completionPercentage / 100) * circumference;
 
@@ -265,7 +267,15 @@ export default function PacketDetailScreen() {
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detail Paket</Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Detail Paket</Text>
+        </View>
+        <TouchableOpacity 
+            style={styles.headerInfoButton}
+            onPress={() => setShowUnlockModal(true)}
+          >
+            <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+          </TouchableOpacity>
         <View style={styles.headerSpacer} />
       </MotiView>
 
@@ -315,76 +325,62 @@ export default function PacketDetailScreen() {
 
           {/* Progress Section */}
           <View style={styles.progressSection}>
-            <View style={styles.chartContainer}>
-              {/* Beautiful SVG Circle Progress */}
-              <View style={styles.svgContainer}>
-                <Svg width={200} height={200} style={styles.svgChart}>
-                  <Defs>
-                    <SvgLinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <Stop offset="0%" stopColor="#4CAF50" stopOpacity="1" />
-                      <Stop offset="50%" stopColor="#66BB6A" stopOpacity="1" />
-                      <Stop offset="100%" stopColor="#81C784" stopOpacity="1" />
-                    </SvgLinearGradient>
-                    <SvgLinearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <Stop offset="0%" stopColor="#F1F8E9" stopOpacity="1" />
-                      <Stop offset="100%" stopColor="#E8F5E8" stopOpacity="1" />
-                    </SvgLinearGradient>
-                  </Defs>
-                  
+            <MotiView
+              from={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'timing', duration: 800, delay: 400 }}
+              style={styles.chartContainer}
+            >
+              {/* Clean Progress Ring */}
+              <View style={styles.progressRingContainer}>
+                <Svg width={160} height={160} style={styles.progressSvg}>
                   {/* Background Circle */}
                   <Circle
-                    cx="100"
-                    cy="100"
-                    r="85"
-                    stroke="url(#backgroundGradient)"
-                    strokeWidth="16"
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    stroke={Colors.surfaceVariant}
+                    strokeWidth="12"
                     fill="transparent"
                   />
                   
-                  {/* Progress Circle */}
+                  {/* Progress Circle with animation */}
                   <Circle
-                    cx="100"
-                    cy="100"
-                    r="85"
-                    stroke="url(#progressGradient)"
-                    strokeWidth="16"
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    stroke={completionPercentage >= 100 ? Colors.secondary : Colors.primary}
+                    strokeWidth="12"
                     fill="transparent"
-                    strokeDasharray={strokeDasharray}
+                    strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
                     strokeLinecap="round"
-                    transform="rotate(-90 100 100)"
+                    transform="rotate(-90 80 80)"
                   />
                 </Svg>
-              </View>
 
-              {/* Clean Center Text */}
-              <View style={styles.chartCenterText}>
-                <LinearGradient
-                  colors={['#2E7D32', '#4CAF50']}
-                  style={styles.centerTextGradient}
-                >
+                {/* Center Content */}
+                <View style={styles.chartCenterContent}>
                   <Text style={styles.completionPercentage}>
                     {Math.round(completionPercentage)}%
                   </Text>
                   <Text style={styles.completionLabel}>Selesai</Text>
                   
-                  {/* Achievement Badge */}
+                  {/* Achievement Icon */}
                   {completionPercentage >= 100 && (
-                    <View style={styles.achievementBadge}>
-                      <FontAwesome5 name="trophy" size={16} color="#FFD700" />
-                      <Text style={styles.achievementText}>Sempurna!</Text>
+                    <View style={styles.achievementIcon}>
+                      <FontAwesome5 name="trophy" size={16} color={Colors.secondary} />
                     </View>
                   )}
                   
                   {completionPercentage >= 75 && completionPercentage < 100 && (
-                    <View style={styles.achievementBadge}>
-                      <FontAwesome5 name="star" size={14} color="#4CAF50" />
-                      <Text style={styles.achievementText}>Hebat!</Text>
+                    <View style={styles.achievementIcon}>
+                      <FontAwesome5 name="star" size={14} color={Colors.primary} />
                     </View>
                   )}
-                </LinearGradient>
+                </View>
               </View>
-            </View>
+            </MotiView>
 
             <View style={styles.statsContainer}>
               <View style={styles.statRow}>
@@ -429,6 +425,12 @@ export default function PacketDetailScreen() {
         {/* Bottom spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+      
+      {/* Habit Unlock Modal */}
+      <HabitUnlockModal
+        visible={showUnlockModal}
+        onClose={() => setShowUnlockModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -454,12 +456,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerTitleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
   headerTitle: {
     fontFamily: Fonts.display.bold,
     fontSize: 18,
     color: Colors.onSurface,
-    flex: 1,
-    textAlign: 'center',
+  },
+  headerInfoButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerSpacer: {
     width: 40,
@@ -596,89 +611,58 @@ const styles = StyleSheet.create({
   progressSection: {
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 16,
+    gap: 20,
   },
   chartContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressRingContainer: {
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 220,
-    height: 220,
-    backgroundColor: '#FAFAFA',
-    borderRadius: 120,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  svgContainer: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  svgChart: {
-    position: 'absolute',
-  },
-  chartCenterText: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-  },
-  centerTextGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 65,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    shadowColor: '#2E7D32',
+    width: 160,
+    height: 160,
+    backgroundColor: Colors.surface,
+    borderRadius: 80,
+    borderWidth: 1,
+    borderColor: Colors.outline + '10',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  progressSvg: {
+    position: 'absolute',
+  },
+  chartCenterContent: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 100,
+    height: 100,
   },
   completionPercentage: {
     fontFamily: Fonts.display.bold,
-    fontSize: 32,
-    color: '#FFFFFF',
+    fontSize: 28,
+    color: Colors.onSurface,
     textAlign: 'center',
-    fontWeight: '900',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    marginBottom: 2,
   },
   completionLabel: {
     fontFamily: Fonts.text.regular,
-    fontSize: 13,
-    color: '#E8F5E8',
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
     textAlign: 'center',
-    marginTop: 4,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontWeight: '600',
+    letterSpacing: 0.5,
   },
-  achievementBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 15,
-    gap: 5,
-  },
-  achievementText: {
-    fontFamily: Fonts.text.bold,
-    fontSize: 11,
-    color: '#FFFFFF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    fontWeight: '700',
+  achievementIcon: {
+    marginTop: 8,
+    padding: 4,
+    backgroundColor: Colors.surfaceVariant + '50',
+    borderRadius: 12,
   },
   statsContainer: {
     width: '100%',

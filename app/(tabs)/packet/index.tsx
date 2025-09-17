@@ -1,7 +1,7 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -22,9 +22,17 @@ import { TaskCompletionResponse } from '../../../types/auth';
 export default function PacketScreen() {
   const { user } = useAuth();
   
-  // Congratulation popup state
-  const [congratulationData, setCongratulationData] = useState<TaskCompletionResponse | null>(null);
-  const [showCongratulation, setShowCongratulation] = useState(false);
+  // Congratulation popup queue system
+  const [congratulationQueue, setCongratulationQueue] = useState<Array<{
+    id: string;
+    type: 'levelUp' | 'packetComplete' | 'unlock';
+    data: TaskCompletionResponse;
+  }>>([]);
+  const [currentPopup, setCurrentPopup] = useState<{
+    id: string;
+    type: 'levelUp' | 'packetComplete' | 'unlock';
+    data: TaskCompletionResponse;
+  } | null>(null);
   
   const { 
     data: packetsData, 
@@ -41,9 +49,44 @@ export default function PacketScreen() {
   } = useTodayTasks();
   
   const updateTaskMutation = useUpdateTaskCompletion((response: TaskCompletionResponse) => {
-    setCongratulationData(response);
-    console.log(response)
-    setShowCongratulation(true);
+    console.log('Task completion response:', response);
+    
+    // Create congratulation items based on response
+    const newCongratulations: Array<{
+      id: string;
+      type: 'levelUp' | 'packetComplete' | 'unlock';
+      data: TaskCompletionResponse;
+    }> = [];
+    
+    // Add unlock popup if habit is unlocked
+    if (response.unlock && response.unlock.is_unlocked) {
+      newCongratulations.push({
+        id: `unlock-${Date.now()}`,
+        type: 'unlock',
+        data: response
+      });
+    }
+    
+    // Add packet completion popup
+    if (response.packet_completed) {
+      newCongratulations.push({
+        id: `packet-${Date.now()}`,
+        type: 'packetComplete',
+        data: response
+      });
+    }
+    
+    // Add level up popup
+    if (response.leveled_up) {
+      newCongratulations.push({
+        id: `level-${Date.now()}`,
+        type: 'levelUp',
+        data: response
+      });
+    }
+    
+    // Add to queue
+    setCongratulationQueue(prev => [...prev, ...newCongratulations]);
   });
 
   // Extract data from API responses
@@ -58,9 +101,17 @@ export default function PacketScreen() {
     updateTaskMutation.mutate({ taskId, completed });
   };
   
+  // Effect to manage popup queue
+  useEffect(() => {
+    if (congratulationQueue.length > 0 && !currentPopup) {
+      const nextPopup = congratulationQueue[0];
+      setCurrentPopup(nextPopup);
+      setCongratulationQueue(prev => prev.slice(1));
+    }
+  }, [congratulationQueue, currentPopup]);
+  
   const handleCloseCongratulation = () => {
-    setShowCongratulation(false);
-    setCongratulationData(null);
+    setCurrentPopup(null);
   };
 
   const handleRefresh = async () => {
@@ -73,7 +124,7 @@ export default function PacketScreen() {
 
   const completedTasksCount = tasks.filter((task: any) => task.completed).length;
   
-  // Check if all packets are completed
+  // Check if all packets are completed hahayayaya
   const allPacketsCompleted = packets.length > 0 && packets.every((packet: any) => packet.completed);
 
   if (loading) {
@@ -310,14 +361,25 @@ export default function PacketScreen() {
       </ScrollView>
       
       {/* Congratulation Popup */}
-      {congratulationData && (
+      {currentPopup && (
         <CongratulationPopup
-          visible={showCongratulation}
+          visible={true}
           onClose={handleCloseCongratulation}
-          type={congratulationData.leveled_up ? 'levelUp' : 'packetComplete'}
-          level={congratulationData.current_level}
-          packetName={congratulationData.packet_name}
+          type={currentPopup.type}
+          level={currentPopup.data.current_level}
+          packetName={currentPopup.type === 'unlock' ? currentPopup.data.unlock?.packet_name : currentPopup.data.packet_name}
+          difficulty={currentPopup.type === 'unlock' ? currentPopup.data.unlock?.difficulty : undefined}
+          zIndex={1000}
         />
+      )}
+      
+      {/* Queue indicator for multiple popups */}
+      {congratulationQueue.length > 0 && (
+        <View style={styles.queueIndicator}>
+          <Text style={styles.queueText}>
+            +{congratulationQueue.length} lagi
+          </Text>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -613,6 +675,22 @@ const styles = StyleSheet.create({
   createPacketButtonText: {
     fontFamily: Fonts.text.bold,
     fontSize: 16,
+    color: Colors.onPrimary,
+  },
+  // Queue indicator styles
+  queueIndicator: {
+    position: 'absolute',
+    top: 100,
+    right: 20,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    zIndex: 999,
+  },
+  queueText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
     color: Colors.onPrimary,
   },
 });

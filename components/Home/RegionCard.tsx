@@ -11,22 +11,38 @@ type Props = {
 };
 
 export default function RegionCard({ region, onPress }: Props) {
-  const scaleValue = useRef(new Animated.Value(1)).current;
+  const scaleValue = useRef(new Animated.Value(0.9)).current;
+  const fadeValue = useRef(new Animated.Value(0)).current;
   const glowOpacity = useRef(new Animated.Value(0.3)).current;
   const floatAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Initial entrance animation
+    Animated.parallel([
+      Animated.timing(fadeValue, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        friction: 8,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     // Subtle glow animation
     const glowAnimation = () => {
       Animated.sequence([
         Animated.timing(glowOpacity, {
           toValue: 0.6,
-          duration: 2400,
+          duration: 2500,
           useNativeDriver: true,
         }),
         Animated.timing(glowOpacity, {
           toValue: 0.3,
-          duration: 2400,
+          duration: 2500,
           useNativeDriver: true,
         }),
       ]).start(() => glowAnimation());
@@ -38,12 +54,12 @@ export default function RegionCard({ region, onPress }: Props) {
       Animated.sequence([
         Animated.timing(floatAnimation, {
           toValue: 1,
-          duration: 2000,
+          duration: 2200,
           useNativeDriver: true,
         }),
         Animated.timing(floatAnimation, {
           toValue: 0,
-          duration: 2000,
+          duration: 2200,
           useNativeDriver: true,
         }),
       ]).start(() => floatAnim());
@@ -51,21 +67,25 @@ export default function RegionCard({ region, onPress }: Props) {
     floatAnim();
   }, []);
 
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scaleValue, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleValue, {
-        toValue: 1,
-        tension: 400,
-        friction: 5,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  const handlePressIn = () => {
+    Animated.spring(scaleValue, {
+      toValue: 0.96,
+      friction: 8,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
 
+  const handlePressOut = () => {
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      friction: 8,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePress = () => {
     onPress?.(region);
   };
 
@@ -75,208 +95,166 @@ export default function RegionCard({ region, onPress }: Props) {
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ scale: scaleValue }],
-        },
-      ]}
-    >
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={handlePress}
-        style={styles.touchable}
-      >
-        {/* Background Gradient */}
+    <Animated.View style={[styles.cardContainer, { transform: [{ scale: scaleValue }], opacity: fadeValue }]}>
+      {/* Glow effect */}
+      <Animated.View style={[styles.glowContainer, { opacity: glowOpacity }]}>
         <LinearGradient
-          colors={['#E8F5E8', '#F0F9F0']}
-          style={styles.backgroundGradient}
+          colors={[Colors.primary + '20', 'transparent']}
+          style={styles.glow}
         />
-
-        {/* Glow effect */}
-        <Animated.View
-          style={[
-            styles.glowEffect,
-            {
-              opacity: glowOpacity,
-            },
-          ]}
-        />
-
-        {/* Tree Icon */}
-        <Animated.View
-          style={[
-            styles.iconContainer,
-            {
-              transform: [{ translateY: floatTranslate }],
-            },
-          ]}
+      </Animated.View>
+      
+      <LinearGradient
+        colors={[Colors.surface, Colors.background]}
+        style={styles.card}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <TouchableOpacity
+          style={styles.cardContent}
+          onPress={handlePress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={0.9}
         >
-          <View style={styles.iconBackground}>
-            <LinearGradient
-              colors={['#4CAF50', '#66BB6A']}
-              style={styles.iconGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            <MaterialIcons 
-              name="park" 
-              size={28} 
-              color="#FFFFFF" 
-              style={styles.icon}
-            />
+          {/* Header with Icon */}
+          <View style={styles.header}>
+            <Animated.View
+              style={[
+                styles.iconContainer,
+                {
+                  transform: [{ translateY: floatTranslate }],
+                },
+              ]}
+            >
+              <View style={styles.iconBackground}>
+                <MaterialIcons 
+                  name="park" 
+                  size={20} 
+                  color={Colors.primary} 
+                />
+              </View>
+            </Animated.View>
+            <Text style={styles.regionName} numberOfLines={1}>
+              {region.name}
+            </Text>
           </View>
-        </Animated.View>
 
-        {/* Tree Count - Main Focus */}
-        <View style={styles.treeCountContainer}>
-          <Text style={styles.treeCount}>
-            {region.tree_amount.toLocaleString()}
-          </Text>
-          <Text style={styles.treeLabel}>Trees</Text>
-        </View>
-
-        {/* Region Info */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.regionName} numberOfLines={1}>
-            {region.name}
-          </Text>
-          <View style={styles.locationRow}>
+          {/* Location */}
+          <View style={styles.locationContainer}>
             <FontAwesome5 
               name="map-marker-alt" 
-              size={10} 
-              color={Colors.tertiary} 
+              size={12} 
+              color={Colors.onSurfaceVariant} 
               style={styles.locationIcon}
             />
             <Text style={styles.regionLocation} numberOfLines={1}>
               {region.location}
             </Text>
           </View>
-        </View>
-      </TouchableOpacity>
+
+          {/* Tree Count - Main Focus */}
+          <View style={styles.treeCountContainer}>
+            <Text style={styles.treeCount}>
+              {region.tree_amount?.toLocaleString() || '0'}
+            </Text>
+            <Text style={styles.treeLabel}>Trees Planted</Text>
+          </View>
+        </TouchableOpacity>
+      </LinearGradient>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  cardContainer: {
     width: 160,
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    position: "relative",
+    marginRight: 12,
+  },
+  glowContainer: {
+    position: "absolute",
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 24,
+    zIndex: -1,
+  },
+  glow: {
+    flex: 1,
+    borderRadius: 24,
+  },
+  card: {
     borderRadius: 20,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
+    padding: 16,
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 6,
-    minHeight: 200,
-    maxHeight: 150,
-    marginRight: 12,
-    overflow: 'hidden',
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: Colors.primary + "10",
+    minHeight: 140,
   },
-  touchable: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    position: 'relative',
-    width: '100%',
-    height: '100%',
+  cardContent: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "space-between",
   },
-  backgroundGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 20,
-  },
-  glowEffect: {
-    position: 'absolute',
-    top: 12,
-    left: '50%',
-    marginLeft: -25,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#4CAF50',
-    opacity: 0.2,
-  },
-  iconContainer: {
-    position: 'relative',
-    width: 50,
-    height: 50,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
+  iconContainer: {
+    marginRight: 8,
+  },
   iconBackground: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    overflow: 'hidden',
-    position: 'relative',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 25,
-  },
-  icon: {
-    zIndex: 1,
-  },
-  treeCountContainer: {
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  treeCount: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 24,
-    color: '#2E7D32',
-    textAlign: 'center',
-    fontWeight: '800',
-  },
-  treeLabel: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 12,
-    color: '#4CAF50',
-    textAlign: 'center',
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  infoContainer: {
-    alignItems: 'center',
-    width: '100%',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary + "15",
+    justifyContent: "center",
+    alignItems: "center",
   },
   regionName: {
+    fontSize: 14,
     fontFamily: Fonts.display.bold,
-    fontSize: 12,
-    color: Colors.primary,
-    textAlign: 'center',
-    marginBottom: 4,
+    color: Colors.onSurface,
+    flex: 1,
   },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  locationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
   },
   locationIcon: {
-    marginRight: 4,
+    marginRight: 6,
   },
   regionLocation: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 10,
-    color: Colors.tertiary,
-    textAlign: 'center',
+    fontSize: 12,
+    fontFamily: Fonts.display.medium,
+    color: Colors.onSurfaceVariant,
     flex: 1,
+  },
+  treeCountContainer: {
+    alignItems: "center",
+  },
+  treeCount: {
+    fontSize: 20,
+    fontFamily: Fonts.display.bold,
+    color: Colors.primary,
+    textAlign: "center",
+  },
+  treeLabel: {
+    fontSize: 11,
+    fontFamily: Fonts.display.medium,
+    color: Colors.onSurfaceVariant,
+    textAlign: "center",
+    marginTop: 2,
   },
 });

@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
-  balance: number;
+  balance?: number;
   currency?: string;
   onPress?: () => void;
   onHistoryPress?: () => void;
@@ -19,98 +19,116 @@ export default function BalanceCard({
   onHistoryPress,
   onConvertPress,
 }: Props) {
-  const scaleValue = useRef(new Animated.Value(0.95)).current;
+  const scaleValue = useRef(new Animated.Value(0.9)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
-  const buttonScale = useRef(new Animated.Value(1)).current;
+  const glowOpacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
+    // Initial entrance animation
     Animated.parallel([
-      Animated.spring(scaleValue, {
-        toValue: 1,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      }),
       Animated.timing(fadeValue, {
         toValue: 1,
         duration: 600,
         useNativeDriver: true,
-      })
+      }),
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        friction: 8,
+        tension: 100,
+        useNativeDriver: true,
+      }),
     ]).start();
+
+    // Subtle glow animation
+    const glowAnimation = () => {
+      Animated.sequence([
+        Animated.timing(glowOpacity, {
+          toValue: 0.6,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowOpacity, {
+          toValue: 0.3,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => glowAnimation());
+    };
+    glowAnimation();
   }, []);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID').format(Math.abs(amount));
+  const handlePressIn = () => {
+    Animated.spring(scaleValue, {
+      toValue: 0.96,
+      friction: 8,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const handleHistoryPress = () => {
-    Animated.sequence([
-      Animated.timing(buttonScale, {
-        toValue: 0.98,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonScale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    onHistoryPress?.() || onPress?.();
+  const handlePressOut = () => {
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      friction: 8,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const handleConvertPress = () => {
-    onConvertPress?.();
+  const formatBalance = (amount: number) => {
+    return amount.toLocaleString('id-ID');
   };
-
 
   return (
-    <Animated.View 
-      style={[
-        styles.cardContainer, 
-        { 
-          transform: [{ scale: scaleValue }],
-          opacity: fadeValue 
-        }
-      ]}
-    >
+    <Animated.View style={[styles.cardContainer, { transform: [{ scale: scaleValue }], opacity: fadeValue }]}>
+      {/* Glow effect */}
+      <Animated.View style={[styles.glowContainer, { opacity: glowOpacity }]}>
+        <LinearGradient
+          colors={[Colors.primary + '20', 'transparent']}
+          style={styles.glow}
+        />
+      </Animated.View>
+      
       <LinearGradient
-        colors={[Colors.background, Colors.surface]}
+        colors={[Colors.surface, Colors.background]}
         style={styles.card}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        {/* Simple Header */}
-        <View style={styles.header}>
-          <View style={styles.titleSection}>
+        <TouchableOpacity
+          style={styles.cardContent}
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={0.9}
+        >
+          {/* Header */}
+          <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <FontAwesome5 name="coins" size={18} color={Colors.primary} />
+              <FontAwesome5 name="wallet" size={18} color={Colors.primary} />
             </View>
-            <Text style={styles.cardTitle}>Point</Text>
+            <Text style={styles.title}>Your Point</Text>
           </View>
-        </View>
 
-        {/* Prominent Balance Display */}
-        <View style={styles.balanceSection}>
+          {/* Balance */}
           <View style={styles.balanceContainer}>
-            <Text style={styles.currencySymbol}>{currency}</Text>
-            <Text style={styles.cardValue}>{formatCurrency(balance)}</Text>
+            <Text style={styles.currency}>{currency}</Text>
+            <Text style={styles.balance}>{formatBalance(balance)}</Text>
           </View>
-          <View style={styles.balanceAccent} />
-        </View>
 
-        {/* Minimalist Navigation Button */}
-        <Animated.View style={[styles.buttonContainer, { transform: [{ scale: buttonScale }] }]}>
-          <TouchableOpacity 
-            style={styles.navButton}
-            onPress={handleHistoryPress}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.navButtonText}>History</Text>
-            <FontAwesome5 name="chevron-right" size={12} color={Colors.primary} />
-          </TouchableOpacity>
-        </Animated.View>
-
+          {/* Action Buttons */}
+          <View style={styles.actionContainer}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={onHistoryPress}
+            >
+              <FontAwesome5 name="history" size={14} color={Colors.primary} />
+              <Text style={styles.actionText}>Riwayat</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.divider} />
+          </View>
+        </TouchableOpacity>
       </LinearGradient>
     </Animated.View>
   );
@@ -119,94 +137,100 @@ export default function BalanceCard({
 const styles = StyleSheet.create({
   cardContainer: {
     width: "100%",
+    position: "relative",
+  },
+  glowContainer: {
+    position: "absolute",
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 24,
+    zIndex: -1,
+  },
+  glow: {
+    flex: 1,
+    borderRadius: 24,
   },
   card: {
-    padding: 24,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Colors.outline + "30",
+    borderRadius: 20,
+    padding: 20,
     shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
     shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-    minHeight: 160,
+    shadowRadius: 12,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: Colors.primary + "10",
+  },
+  cardContent: {
+    width: "100%",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 32,
-  },
-  titleSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+    marginBottom: 18,
   },
   iconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.primaryContainer,
+    backgroundColor: Colors.primary + "15",
     justifyContent: "center",
     alignItems: "center",
+    marginRight: 12,
   },
-  cardTitle: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 16,
-    color: Colors.primary,
-  },
-  balanceSection: {
-    position: 'relative',
-    flex: 1,
-    justifyContent: 'center',
+  title: {
+    fontSize: 15,
+    fontFamily: Fonts.display.medium,
+    color: Colors.onSurfaceVariant,
   },
   balanceContainer: {
     flexDirection: "row",
     alignItems: "baseline",
-    gap: 6,
+    marginBottom: 22,
   },
-  balanceAccent: {
-    position: 'absolute',
-    bottom: -8,
-    left: 0,
-    width: 60,
-    height: 3,
-    backgroundColor: Colors.secondary,
-    borderRadius: 2,
+  currency: {
+    fontSize: 16,
+    fontFamily: Fonts.display.medium,
+    color: Colors.onSurfaceVariant,
+    marginRight: 4,
   },
-  currencySymbol: {
+  balance: {
+    fontSize: 28,
     fontFamily: Fonts.display.bold,
-    fontSize: 18,
-    color: Colors.tertiary,
+    color: Colors.onSurface,
   },
-  cardValue: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 36,
-    color: Colors.primary,
-    lineHeight: 42,
-    textShadowColor: 'rgba(0,0,0,0.1)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+  actionContainer: {
+    flexDirection: "row",
+    alignContent: "flex-end",
+    justifyContent: "space-between",
+    paddingTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: Colors.outline + "40",
   },
-  buttonContainer: {
-    marginTop: 16,
-  },
-  navButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    alignSelf: "flex-end",
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: Colors.primaryContainer + '40',
-    borderRadius: 12,
-    borderWidth: 1,
-    marginTop: 10,
-    borderColor: Colors.primary + '20',
-  },
-  navButtonText: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 14,
-    color: Colors.primary,
     flex: 1,
+    justifyContent: "center",
+    borderRadius: 12,
+  },
+  actionText: {
+    fontSize: 13,
+    fontFamily: Fonts.display.medium,
+    color: Colors.primary,
+    marginLeft: 6,
+  },
+  divider: {
+    width: 1,
+    height: 24,
+    backgroundColor: Colors.outline + "30",
   },
 });

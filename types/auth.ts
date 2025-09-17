@@ -86,6 +86,11 @@ export interface TaskCompletionResponse {
   message: string;
   packet_completed: boolean;
   packet_name: string;
+  unlock?: {
+    packet_name: string;
+    difficulty: string;
+    is_unlocked: boolean;
+  };
 }
 
 // Region types
