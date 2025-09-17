@@ -8,16 +8,12 @@ type Props = {
   balance?: number;
   currency?: string;
   onPress?: () => void;
-  onHistoryPress?: () => void;
-  onConvertPress?: () => void;
 };
 
 export default function BalanceCard({ 
   balance = 1000, 
   currency = "Rp",
   onPress,
-  onHistoryPress,
-  onConvertPress,
 }: Props) {
   const scaleValue = useRef(new Animated.Value(0.9)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
@@ -100,14 +96,15 @@ export default function BalanceCard({
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          activeOpacity={0.9}
+          activeOpacity={0.8}
         >
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconContainer}>
               <FontAwesome5 name="wallet" size={18} color={Colors.primary} />
             </View>
-            <Text style={styles.title}>Your Point</Text>
+            <Text style={styles.title}>Saldo Kamu</Text>
+            <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} style={styles.chevronIcon} />
           </View>
 
           {/* Balance */}
@@ -116,17 +113,9 @@ export default function BalanceCard({
             <Text style={styles.balance}>{formatBalance(balance)}</Text>
           </View>
 
-          {/* Action Buttons */}
-          <View style={styles.actionContainer}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={onHistoryPress}
-            >
-              <FontAwesome5 name="history" size={14} color={Colors.primary} />
-              <Text style={styles.actionText}>Riwayat</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.divider} />
+          {/* Footer Info */}
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerText}>Tap to view details</Text>
           </View>
         </TouchableOpacity>
       </LinearGradient>
@@ -204,33 +193,20 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display.bold,
     color: Colors.onSurface,
   },
-  actionContainer: {
-    flexDirection: "row",
-    alignContent: "flex-end",
-    justifyContent: "space-between",
-    paddingTop: 18,
+  chevronIcon: {
+    marginLeft: "auto",
+  },
+  footerContainer: {
+    marginTop: 18,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.outline + "40",
+    borderTopColor: Colors.outline + "20",
+    alignItems: "center",
   },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    alignSelf: "flex-end",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    flex: 1,
-    justifyContent: "center",
-    borderRadius: 12,
-  },
-  actionText: {
-    fontSize: 13,
+  footerText: {
+    fontSize: 12,
     fontFamily: Fonts.display.medium,
-    color: Colors.primary,
-    marginLeft: 6,
-  },
-  divider: {
-    width: 1,
-    height: 24,
-    backgroundColor: Colors.outline + "30",
+    color: Colors.onSurfaceVariant,
+    opacity: 0.7,
   },
 });

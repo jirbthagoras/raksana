@@ -214,8 +214,7 @@ export default function HomeTab() {
                 <BalanceCard
                   balance={profileData?.points || 0}
                   currency="GP"
-                  onHistoryPress={() => console.log('History pressed!')}
-                  onConvertPress={() => console.log('Convert pressed!')}
+                  onPress={() => console.log('Balance card pressed!')}
                 />
               </MotiView>
 
