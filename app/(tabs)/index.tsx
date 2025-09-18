@@ -22,6 +22,7 @@ import EventsButton from '@/components/Home/EventsButton';
 import JournalButton from '@/components/Home/JournalButton';
 import LeaderboardButton from '@/components/Home/LeaderboardButton';
 import MemoryButton from '@/components/Home/MemoryButton';
+import MonthlyRecapButton from '@/components/Home/MonthlyRecapButton';
 import NearbyQuestLocator from '@/components/Home/NearbyQuestLocator';
 import PacketsButton from '@/components/Home/PacketsButton';
 import BalanceCard from '@/components/Home/PointCard';
@@ -30,6 +31,7 @@ import RecapsButton from '@/components/Home/RecapsButton';
 import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
 import RegionCard from '@/components/Home/RegionCard';
 import StreakButton from '@/components/Home/StreakButton';
+import WeeklyRecapButton from '@/components/Home/WeeklyRecapButton';
 import HomePageSkeleton from '../../components/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfileMe, useRegions } from '../../hooks/useApiQueries';
@@ -216,6 +218,21 @@ export default function HomeTab() {
                   currency="GP"
                   onPress={() => console.log('Balance card pressed!')}
                 />
+                <MotiView
+                from={{ opacity: 0, translateY: 40, scale: 0.95 }}
+                animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                transition={{ type: 'spring', delay: 1500, damping: 15, stiffness: 100 }}
+              >
+                <WeeklyRecapButton onPress={() => console.log('Weekly Recap pressed!')} />
+              </MotiView>
+              
+              <MotiView
+                from={{ opacity: 0, translateY: 40, scale: 0.95 }}
+                animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                transition={{ type: 'spring', delay: 1700, damping: 15, stiffness: 100 }}
+              >
+                <MonthlyRecapButton onPress={() => console.log('Monthly Recap pressed!')} />
+              </MotiView>
               </MotiView>
 
             <MotiView 
@@ -347,13 +364,14 @@ export default function HomeTab() {
                 <View style={styles.scrollGradientRight} />
               </MotiView>
             </MotiView>
-              
+
               {/* Daily Challenge */}
               <MotiView
                 from={{ opacity: 0, translateY: 40, scale: 0.95 }}
                 animate={{ opacity: 1, translateY: 0, scale: 1 }}
                 transition={{ type: 'spring', delay: 3000, damping: 15, stiffness: 100 }}
               >
+                <Text style={styles.sectionTitle}>Daily Challenge</Text>
                 <DailyChallenge
                   onPress={() => console.log('Daily Challenge pressed!')}
                 />

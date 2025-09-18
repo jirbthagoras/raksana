@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: "100%",
     position: "relative",
+    marginBottom: 13,
   },
   glowContainer: {
     position: "absolute",
