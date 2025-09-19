@@ -361,6 +361,7 @@ export default function PacketDetailScreen() {
 
                 {/* Center Content */}
                 <View style={styles.chartCenterContent}>
+                  <Text style={styles.completionLabel}>Rate</Text>
                   <Text style={styles.completionPercentage}>
                     {Math.round(completionPercentage)}%
                   </Text>
@@ -383,24 +384,48 @@ export default function PacketDetailScreen() {
             </MotiView>
 
             <View style={styles.statsContainer}>
-              <View style={styles.statRow}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{data.completed_task}</Text>
-                  <Text style={styles.statLabel}>Dikerjakan</Text>
+              {/* AI Target Section */}
+              <View style={styles.statSection}>
+                <View style={styles.statSectionHeader}>
+                  <FontAwesome5 name="robot" size={12} color={Colors.primary} />
+                  <Text style={styles.statSectionTitle}>Target AI</Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{data.expected_task}</Text>
-                  <Text style={styles.statLabel}>Total Tugas</Text>
+                <View style={styles.statRow}>
+                  <View style={[styles.statItem, styles.aiStatItem]}>
+                    <Text style={styles.statValue}>{data.completed_task}</Text>
+                    <Text style={styles.statLabel}>Selesai</Text>
+                  </View>
+                  <View style={[styles.statItem, styles.aiStatItem]}>
+                    <Text style={styles.statValue}>{data.expected_task}</Text>
+                    <Text style={styles.statLabel}>Target</Text>
+                  </View>
                 </View>
               </View>
-              <View style={styles.statRow}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{data.task_completion_rate}</Text>
-                  <Text style={styles.statLabel}>Win Rate</Text>
+
+              {/* User Performance Section */}
+              <View style={styles.statSection}>
+                <View style={styles.statSectionHeader}>
+                  <FontAwesome5 name="user" size={12} color={Colors.secondary} />
+                  <Text style={styles.statSectionTitle}>Performa Anda</Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{data.task_per_day}</Text>
-                  <Text style={styles.statLabel}>Per Hari</Text>
+                <View style={styles.statRow}>
+                  <View style={[styles.statItem, styles.userStatItem]}>
+                    <Text style={styles.statValue}>{data.assigned_task}</Text>
+                    <Text style={styles.statLabel}>Ditugaskan</Text>
+                  </View>
+                  <View style={[styles.statItem, styles.userStatItem]}>
+                    <Text style={styles.statValue}>{data.task_completion_rate}</Text>
+                    <Text style={styles.statLabel}>Win Rate</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Daily Progress */}
+              <View style={styles.dailyProgressContainer}>
+                <View style={styles.dailyProgressItem}>
+                  <FontAwesome5 name="calendar-day" size={14} color={Colors.onSurfaceVariant} />
+                  <Text style={styles.dailyProgressValue}>{data.task_per_day}</Text>
+                  <Text style={styles.dailyProgressLabel}>Tugas per Hari</Text>
                 </View>
               </View>
             </View>
@@ -666,7 +691,60 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     width: '100%',
+    gap: 16,
+  },
+  statSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: Colors.outline + '15',
+  },
+  statSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+    marginBottom: 8,
+  },
+  statSectionTitle: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  aiStatItem: {
+    backgroundColor: Colors.primary + '08',
+    borderColor: Colors.primary + '20',
+    borderWidth: 1,
+  },
+  userStatItem: {
+    backgroundColor: Colors.secondary + '08',
+    borderColor: Colors.secondary + '20',
+    borderWidth: 1,
+  },
+  dailyProgressContainer: {
+    marginTop: 8,
+  },
+  dailyProgressItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.surfaceVariant + '30',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  dailyProgressValue: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onSurface,
+  },
+  dailyProgressLabel: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
   },
   statRow: {
     flexDirection: 'row',
