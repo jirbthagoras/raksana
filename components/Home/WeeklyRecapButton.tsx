@@ -1,6 +1,9 @@
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef } from "react";
 import {
+  Animated,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,74 +19,174 @@ export default function WeeklyRecapButton({ onPress }: Props) {
   const today = new Date();
   const isSunday = today.getDay() === 0;
   
+  const scaleValue = useRef(new Animated.Value(1)).current;
+  const glowOpacity = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    if (isSunday) {
+      // Subtle glow animation for active state
+      const glowAnimation = () => {
+        Animated.sequence([
+          Animated.timing(glowOpacity, {
+            toValue: 0.6,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowOpacity, {
+            toValue: 0.3,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ]).start(() => glowAnimation());
+      };
+      glowAnimation();
+    }
+  }, [isSunday]);
+  
   const handlePress = () => {
     if (isSunday) {
+      // Gentle press animation
+      Animated.sequence([
+        Animated.timing(scaleValue, {
+          toValue: 0.97,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleValue, {
+          toValue: 1,
+          tension: 200,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
       onPress?.();
     }
   };
 
   return (
-    <TouchableOpacity
+    <Animated.View
       style={[
-        styles.button,
-        isSunday ? styles.activeButton : styles.inactiveButton
+        styles.container,
+        {
+          transform: [{ scale: scaleValue }],
+        },
       ]}
-      onPress={handlePress}
-      activeOpacity={isSunday ? 0.8 : 1}
-      disabled={!isSunday}
     >
-      <View style={styles.buttonContent}>
-        <FontAwesome5 
-          name="calendar-week" 
-          size={20} 
-          color={isSunday ? 'white' : Colors.onSurfaceVariant}
-          style={styles.icon}
-        />
-        <Text style={[
-          styles.buttonText,
-          isSunday ? styles.activeText : styles.inactiveText
-        ]}>
-          Get Weekly Recap
-        </Text>
-      </View>
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.touchable}
+        onPress={handlePress}
+        activeOpacity={isSunday ? 0.9 : 1}
+        disabled={!isSunday}
+      >
+        {/* Glow effect for active state */}
+        {isSunday && (
+          <Animated.View
+            style={[
+              styles.glowEffect,
+              {
+                opacity: glowOpacity,
+              },
+            ]}
+          />
+        )}
+
+        {/* Button content */}
+        <LinearGradient
+          colors={isSunday 
+            ? [Colors.primary, Colors.secondary] 
+            : [Colors.surfaceContainer, Colors.surfaceContainerHigh]
+          }
+          style={[
+            styles.button,
+            isSunday ? styles.activeButton : styles.inactiveButton
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.buttonContent}>
+            <View style={styles.iconContainer}>
+              <FontAwesome5 
+                name="calendar-week" 
+                size={18} 
+                color={isSunday ? 'white' : Colors.onSurfaceVariant}
+              />
+            </View>
+            <Text style={[
+              styles.buttonText,
+              isSunday ? styles.activeText : styles.inactiveText
+            ]}>
+              Get Weekly Recap
+            </Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+    marginVertical: 8,
+  },
+  touchable: {
+    position: 'relative',
+    borderRadius: 16,
+  },
+  glowEffect: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
+    opacity: 0.2,
+    zIndex: -1,
+  },
   button: {
     width: "100%",
     paddingVertical: 18,
     paddingHorizontal: 24,
     borderRadius: 16,
-    marginVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    borderWidth: 1,
+  },
+  activeButton: {
+    borderColor: Colors.primary + '30',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 6,
+  },
+  inactiveButton: {
+    borderColor: Colors.outline + '20',
+    shadowColor: Colors.outline,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
   },
-  icon: {
-    marginRight: 8,
-  },
-  activeButton: {
-    backgroundColor: '#EF4444', // Bright red
-    shadowColor: '#EF4444',
-  },
-  inactiveButton: {
-    backgroundColor: Colors.outline + '40',
-    shadowColor: 'transparent',
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
     fontFamily: Fonts.display.bold,
-    fontSize: 17,
-    letterSpacing: 0.5,
+    fontSize: 16,
+    letterSpacing: 0.3,
   },
   activeText: {
     color: 'white',

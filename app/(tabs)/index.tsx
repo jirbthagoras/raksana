@@ -32,6 +32,7 @@ import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
 import RegionCard from '@/components/Home/RegionCard';
 import StreakButton from '@/components/Home/StreakButton';
 import WeeklyRecapButton from '@/components/Home/WeeklyRecapButton';
+import { useRouter } from 'expo-router';
 import HomePageSkeleton from '../../components/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfileMe, useRegions } from '../../hooks/useApiQueries';
@@ -95,6 +96,8 @@ export default function HomeTab() {
   if (loading) {
     return <HomePageSkeleton />;
   }
+
+  const router = useRouter();
 
   // Error state
   if (error) {
@@ -301,7 +304,7 @@ export default function HomeTab() {
                     animate={{ opacity: 1, translateY: 0, scale: 1 }}
                     transition={{ type: 'spring', delay: 2200, damping: 12, stiffness: 120 }}
                   >
-                    <JournalButton onPress={() => console.log('Journal pressed!')} />
+                    <JournalButton onPress={() => router.push('/journal')} />
                   </MotiView>
                   <MotiView
                     from={{ opacity: 0, translateY: 20, scale: 0.8 }}

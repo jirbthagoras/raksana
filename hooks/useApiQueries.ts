@@ -12,6 +12,7 @@ export const apiKeys = {
   task: (id: number) => ['task', id] as const,
   packetDetail: (id: number) => ['packetDetail', id] as const,
   regions: () => ['regions'] as const,
+  logs: () => ['logs'] as const,
 };
 
 // Profile queries
@@ -159,6 +160,33 @@ export const useCreatePacket = () => {
   });
 };
 
+// Logs Query
+export const useLogs = (isPrivate: boolean = false) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery({
+    queryKey: [...apiKeys.logs(), isPrivate],
+    queryFn: () => apiService.getLogs(isPrivate),
+    enabled: isAuthenticated,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Create Log Mutation
+export const useCreateLog = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<any, ApiError, { text: string; is_private: boolean }>({
+    mutationFn: ({ text, is_private }) => 
+      apiService.createLog({ text, is_private }),
+    onSuccess: () => {
+      // Invalidate and refetch logs list
+      queryClient.invalidateQueries({ queryKey: apiKeys.logs() });
+    },
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
@@ -167,4 +195,6 @@ export const apiQueries = {
   useUpdateTaskCompletion,
   usePacketDetail,
   useRegions,
+  useLogs,
+  useCreateLog,
 };
