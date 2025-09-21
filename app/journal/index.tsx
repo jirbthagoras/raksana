@@ -2,8 +2,7 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { MotiView } from 'moti';
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -132,7 +131,7 @@ export default function JournalScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <FontAwesome5 name="book-open" size={48} color={Colors.outline} />
-      <Text style={styles.emptyTitle}>No Journal Entries</Text>
+      <Text style={styles.emptyTitle}>Tidak ada log</Text>
       <Text style={styles.emptyDescription}>
         Start documenting your journey by creating your first journal entry.
       </Text>
@@ -155,7 +154,7 @@ export default function JournalScreen() {
       <FontAwesome5 name="exclamation-triangle" size={48} color={Colors.error} />
       <Text style={styles.errorTitle}>Failed to Load Journal</Text>
       <Text style={styles.errorDescription}>
-        {error?.message || 'Something went wrong while loading your journal entries.'}
+        {error?.message || 'Something went wrong while loading your journal logs.'}
       </Text>
       <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
         <Text style={styles.retryButtonText}>Try Again</Text>
@@ -189,7 +188,7 @@ export default function JournalScreen() {
                 <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
               </TouchableOpacity>
               <Text style={styles.headerSubtitle}>
-                {logs.length} {logs.length === 1 ? 'entry' : 'entries'} • {showPrivateLogs ? 'Private' : 'Public'}
+                {logs.length} {logs.length === 1 ? 'log' : 'logs'} • {showPrivateLogs ? 'Private' : 'Public'}
               </Text>
             </View>
             <TouchableOpacity 
@@ -242,7 +241,7 @@ export default function JournalScreen() {
       {isLoading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading journal entries...</Text>
+          <Text style={styles.loadingText}>Loading journal log...</Text>
         </View>
       ) : error ? (
         renderError()

@@ -57,9 +57,9 @@ export const JournalInfoModal: React.FC<JournalInfoModalProps> = ({
               </View>
 
               <Text style={styles.infoDescription}>
-                Journal adalah cara bagi pengguna untuk merefleksikan hari mereka. 
+                Journal adalah cara bagi anda untuk merefleksikan hari anda. 
                 Setiap harinya Anda dapat mencatat perkembangan, pengalaman, dan 
-                pembelajaran yang didapat.
+                pembelajaran yang didapat. Tentu dalam bentuk log.
               </Text>
             </View>
 
@@ -112,7 +112,7 @@ export const JournalInfoModal: React.FC<JournalInfoModalProps> = ({
 
               <Text style={styles.infoDescription}>
                 Unit terkecil dari journal disebut "log". Setiap log dapat berupa 
-                catatan pribadi (private) atau dapat dibagikan kepada komunitas (public).
+                catatan pribadi (private) atau dapat dibagikan kepada komunitas (public). Log yang sudah dibuat tidak dapat dihapus.
               </Text>
             </View>
 
