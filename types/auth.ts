@@ -106,3 +106,19 @@ export interface Region {
 export interface RegionsResponse {
   regions: Region[];
 }
+
+// Leaderboard types
+export interface LeaderboardEntry {
+  id: string;
+  name: string;
+  image_url: string;
+  points: number;
+  rank: number;
+  is_user: boolean;
+}
+
+export interface LeaderboardResponse {
+  data: {
+    leaderboard: LeaderboardEntry[];
+  };
+}

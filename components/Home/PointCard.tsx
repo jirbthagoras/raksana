@@ -103,7 +103,7 @@ export default function BalanceCard({
             <View style={styles.iconContainer}>
               <FontAwesome5 name="wallet" size={18} color={Colors.primary} />
             </View>
-            <Text style={styles.title}>Saldo Kamu</Text>
+            <Text style={styles.title}>Poin</Text>
             <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} style={styles.chevronIcon} />
           </View>
 

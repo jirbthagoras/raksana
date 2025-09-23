@@ -9,14 +9,54 @@ type Props = {
   level: number;
   currentExp: number;
   neededExp: number;
+  neededExpPreviousLevel?: number;
 };
 
-export default function LevelBar({ level, currentExp, neededExp }: Props) {
-  // For journey-like experience where progress resets each level
-  // We'll use modulo to get the experience within the current level
-  // This assumes neededExp represents the experience required per level
-  const expInCurrentLevel = currentExp % neededExp;
-  const progress = Math.min(expInCurrentLevel / neededExp, 1);
+export default function LevelBar({ level, currentExp, neededExp, neededExpPreviousLevel }: Props) {
+  // Store previous level to detect level ups
+  const [prevLevel, setPrevLevel] = useState(level);
+  const [shouldResetProgress, setShouldResetProgress] = useState(false);
+  
+  // Debug: Let's understand what values we're getting
+  console.log('ProgressBar Debug:', { level, currentExp, neededExp, prevLevel });
+  
+  // Detect level up
+  useEffect(() => {
+    if (level > prevLevel) {
+      console.log('Level up detected!', prevLevel, '->', level);
+      setShouldResetProgress(true);
+      setPrevLevel(level);
+      
+      // Reset the flag after a short delay to allow animation
+      setTimeout(() => {
+        setShouldResetProgress(false);
+      }, 100);
+    } else if (level !== prevLevel) {
+      setPrevLevel(level);
+    }
+  }, [level, prevLevel]);
+  
+  // Calculate progress - properly handle level-relative experience
+  let displayCurrentExp, displayNeededExp, progress;
+  
+  if (shouldResetProgress) {
+    // Force progress to 0% immediately after level up
+    displayCurrentExp = 0;
+    displayNeededExp = neededExp;
+    progress = 0;
+  } else {
+    // Calculate experience relative to current level using the previous level threshold
+    const previousLevelExp = neededExpPreviousLevel || 0;
+    const expInCurrentLevel = currentExp - previousLevelExp;
+    const expNeededForCurrentLevel = neededExp - previousLevelExp;
+    
+    displayCurrentExp = Math.max(0, expInCurrentLevel);
+    displayNeededExp = expNeededForCurrentLevel;
+    progress = Math.min(Math.max(0, expInCurrentLevel) / expNeededForCurrentLevel, 1);
+  }
+
+  console.log(currentExp)
+  
   const progressPercentage = Math.round(progress * 100);
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
@@ -37,7 +77,10 @@ export default function LevelBar({ level, currentExp, neededExp }: Props) {
   };
 
   const getNextLevelExp = () => {
-    return neededExp - currentExp;
+    const previousLevelExp = neededExpPreviousLevel || 0;
+    const expInCurrentLevel = currentExp - previousLevelExp;
+    const expNeededForCurrentLevel = neededExp - previousLevelExp;
+    return expNeededForCurrentLevel - Math.max(0, expInCurrentLevel);
   };
 
   return (
@@ -90,7 +133,7 @@ export default function LevelBar({ level, currentExp, neededExp }: Props) {
 
       {/* Compact XP Info */}
       <Text style={styles.expText}>
-        {expInCurrentLevel} / {neededExp} XP
+        {displayCurrentExp} / {displayNeededExp} XP
       </Text>
     </MotiView>
   );

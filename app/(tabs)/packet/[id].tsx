@@ -412,7 +412,7 @@ export default function PacketDetailScreen() {
                   <View style={[styles.statItem, styles.userStatItem]}>
                     <Text style={styles.statValue}>{data.assigned_task}</Text>
                     <Text style={styles.statLabel}>Ditugaskan</Text>
-                  </View>
+                  </View> 
                   <View style={[styles.statItem, styles.userStatItem]}>
                     <Text style={styles.statValue}>{data.task_completion_rate}</Text>
                     <Text style={styles.statLabel}>Win Rate</Text>

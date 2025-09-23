@@ -1,6 +1,7 @@
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -87,6 +88,8 @@ export default function LeaderboardButton({ onPress }: Props) {
       }),
     ]).start();
 
+    // Navigate to leaderboard screen
+    router.push('/leaderboard');
     onPress?.();
   };
 

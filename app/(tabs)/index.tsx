@@ -56,6 +56,7 @@ interface ProfileData {
   longest_streak: number;
   current_Streak: number;
   tree_grown: number;
+  needed_exp_previous_level: number;
   completed_task: number;
   assigend_task: number;
   task_completion_rate: string;
@@ -190,7 +191,8 @@ export default function HomeTab() {
                 <ProgressBar 
                   level={profileData?.level || 1} 
                   currentExp={profileData?.current_exp || 0} 
-                  neededExp={profileData?.exp_needed || 100} 
+                  neededExp={profileData?.exp_needed || 100}
+                  neededExpPreviousLevel={profileData?.needed_exp_previous_level || 0}
                 />
               </MotiView>
             </MotiView>

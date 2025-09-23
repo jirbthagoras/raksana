@@ -201,6 +201,11 @@ class ApiService {
     return response.data.data;
   }
 
+  async getLeaderboard(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/leaderboard');
+    return response.data; // Based on your API response format: { "data": { "leaderboard": [...] } }
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

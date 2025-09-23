@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse } from '../types/auth';
+import { ApiError, LeaderboardResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -13,6 +13,7 @@ export const apiKeys = {
   packetDetail: (id: number) => ['packetDetail', id] as const,
   regions: () => ['regions'] as const,
   logs: () => ['logs'] as const,
+  leaderboard: () => ['leaderboard'] as const,
 };
 
 // Profile queries
@@ -112,6 +113,8 @@ export const useUpdateTaskCompletion = (onCongratulation?: (response: TaskComple
       // Refetch after mutation
       queryClient.invalidateQueries({ queryKey: ['tasks', 'today'] });
       queryClient.invalidateQueries({ queryKey: ['packets', 'me'] });
+      // Invalidate all packet detail queries to sync completion percentages
+      queryClient.invalidateQueries({ queryKey: ['packetDetail'] });
       // Invalidate profile data to update homepage level, exp, and points
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
@@ -187,6 +190,19 @@ export const useCreateLog = () => {
   });
 };
 
+// Leaderboard Query
+export const useLeaderboard = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<LeaderboardResponse, ApiError>({
+    queryKey: apiKeys.leaderboard(),
+    queryFn: () => apiService.getLeaderboard(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
@@ -197,4 +213,5 @@ export const apiQueries = {
   useRegions,
   useLogs,
   useCreateLog,
+  useLeaderboard,
 };
