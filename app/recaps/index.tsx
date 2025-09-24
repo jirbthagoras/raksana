@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RecapCard } from '../../components/RecapCard';
 import { RecapDetailModal } from '../../components/RecapDetailModal';
+import { RecapsInfoModal } from '../../components/RecapsInfoModal';
 import { SkeletonCircle, SkeletonText } from '../../components/SkeletonLoader';
 import { useMonthlyRecaps, useWeeklyRecaps } from '../../hooks/useApiQueries';
 import { MonthlyRecap, WeeklyRecap } from '../../types/auth';
@@ -22,6 +24,7 @@ export default function RecapsScreen() {
   const [selectedRecap, setSelectedRecap] = useState<WeeklyRecap | MonthlyRecap | null>(null);
   const [selectedRecapType, setSelectedRecapType] = useState<'weekly' | 'monthly'>('weekly');
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const {
     data: weeklyRecapsData,
@@ -160,7 +163,12 @@ export default function RecapsScreen() {
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>Recaps</Text>
         </View>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity 
+          style={styles.headerInfoButton}
+          onPress={() => setShowInfoModal(true)}
+        >
+          <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+        </TouchableOpacity>
       </MotiView>
 
       <ScrollView
@@ -307,6 +315,12 @@ export default function RecapsScreen() {
         recap={selectedRecap}
         type={selectedRecapType}
       />
+      
+      {/* Recaps Info Modal */}
+      <RecapsInfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -345,6 +359,14 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  headerInfoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,

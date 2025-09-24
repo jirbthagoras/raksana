@@ -2,6 +2,7 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -165,77 +166,86 @@ export default function JournalScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <LinearGradient
-          colors={[Colors.surface, Colors.surfaceContainerLow]}
-          style={styles.headerGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 400 }}
+        style={styles.header}
+      >
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => router.back()}
         >
-          <View style={styles.headerContent}>
-            <TouchableOpacity 
-              style={styles.backButton} 
-              onPress={() => router.back()}
+          <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
+        </TouchableOpacity>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Journal</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.headerInfoButton} 
+            onPress={() => setShowInfoModal(true)}
+          >
+            <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.createButton} 
+            onPress={handleCreateJournal}
+          >
+            <LinearGradient
+              colors={[Colors.primary, Colors.secondary]}
+              style={styles.createButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
-              <FontAwesome5 name="arrow-left" size={20} color={Colors.primary} />
-            </TouchableOpacity>
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.headerTitle}>Journal</Text>
-              <TouchableOpacity 
-                style={styles.infoButton} 
-                onPress={() => setShowInfoModal(true)}
-              >
-                <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
-              </TouchableOpacity>
-              <Text style={styles.headerSubtitle}>
-                {logs.length} {logs.length === 1 ? 'log' : 'logs'} • {showPrivateLogs ? 'Private' : 'Public'}
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.createButton} 
-              onPress={handleCreateJournal}
-            >
-              <LinearGradient
-                colors={[Colors.primary, Colors.secondary]}
-                style={styles.createButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <FontAwesome5 name="plus" size={16} color="white" />
-              </LinearGradient>
-            </TouchableOpacity>
+              <FontAwesome5 name="plus" size={16} color="white" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </MotiView>
+      
+      {/* Stats Bar */}
+      <MotiView
+        from={{ opacity: 0, translateY: -10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 400, delay: 200 }}
+        style={styles.statsBar}
+      >
+        <Text style={styles.statsText}>
+          {logs.length} {logs.length === 1 ? 'log' : 'logs'} • {showPrivateLogs ? 'Private' : 'Public'}
+        </Text>
+      </MotiView>
+      
+      {/* Privacy Toggle */}
+      <MotiView
+        from={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'timing', duration: 400, delay: 300 }}
+        style={styles.privacyToggleContainer}
+      >
+        <View style={styles.privacyToggleContent}>
+          <View style={styles.privacyToggleLeft}>
+            <FontAwesome5 
+              name={showPrivateLogs ? "lock" : "globe"} 
+              size={14} 
+              color={showPrivateLogs ? Colors.error : Colors.secondary} 
+            />
+            <Text style={[
+              styles.privacyToggleLabel,
+              { color: showPrivateLogs ? Colors.error : Colors.secondary }
+            ]}>
+              {showPrivateLogs ? 'Private Logs' : 'Public Logs'}
+            </Text>
           </View>
-          
-          {/* Privacy Toggle */}
-          <View style={styles.privacyToggleContainer}>
-            <View style={styles.privacyToggleContent}>
-              <View style={styles.privacyToggleLeft}>
-                <FontAwesome5 
-                  name={showPrivateLogs ? "lock" : "globe"} 
-                  size={14} 
-                  color={showPrivateLogs ? Colors.error : Colors.secondary} 
-                />
-                <Text style={[
-                  styles.privacyToggleLabel,
-                  { color: showPrivateLogs ? Colors.error : Colors.secondary }
-                ]}>
-                  {showPrivateLogs ? 'Private Logs' : 'Public Logs'}
-                </Text>
-              </View>
-              <Switch
-                value={showPrivateLogs}
-                onValueChange={setShowPrivateLogs}
-                trackColor={{ 
-                  false: Colors.outline + '40', 
-                  true: Colors.error + '40' 
-                }}
-                thumbColor={showPrivateLogs ? Colors.error : Colors.secondary}
-                style={styles.privacySwitch}
-              />
-            </View>
-          </View>
-        </LinearGradient>
-      </View>
+          <Switch
+            value={showPrivateLogs}
+            onValueChange={setShowPrivateLogs}
+            trackColor={{ false: Colors.outline, true: Colors.primary }}
+            thumbColor={Colors.onPrimary}
+            ios_backgroundColor={Colors.outline}
+          />
+        </View>
+      </MotiView>
 
       {/* Content */}
       {isLoading ? (
@@ -285,17 +295,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.outline + '20',
-  },
-  headerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.outline + '20',
   },
   backButton: {
     width: 40,
@@ -307,18 +312,39 @@ const styles = StyleSheet.create({
   },
   headerTitleContainer: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontFamily: Fonts.display.bold,
-    fontSize: 28,
-    color: Colors.primary,
-    marginBottom: 2,
+    fontSize: 18,
+    color: Colors.onSurface,
   },
-  headerSubtitle: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerInfoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statsBar: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: Colors.surfaceVariant + '30',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.outline + '10',
+  },
+  statsText: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
   },
   createButton: {
     borderRadius: 20,
@@ -485,8 +511,10 @@ const styles = StyleSheet.create({
   },
   privacyToggleContainer: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingVertical: 12,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.outline + '10',
   },
   privacyToggleContent: {
     flexDirection: 'row',
