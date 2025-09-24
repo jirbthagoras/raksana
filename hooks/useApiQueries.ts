@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, LeaderboardResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse } from '../types/auth';
+import { ApiError, LeaderboardResponse, MonthlyRecapResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -14,6 +14,8 @@ export const apiKeys = {
   regions: () => ['regions'] as const,
   logs: () => ['logs'] as const,
   leaderboard: () => ['leaderboard'] as const,
+  weeklyRecaps: () => ['weeklyRecaps'] as const,
+  monthlyRecaps: () => ['monthlyRecaps'] as const,
 };
 
 // Profile queries
@@ -203,6 +205,32 @@ export const useLeaderboard = () => {
   });
 };
 
+// Weekly Recaps Query
+export const useWeeklyRecaps = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<WeeklyRecapResponse, ApiError>({
+    queryKey: apiKeys.weeklyRecaps(),
+    queryFn: () => apiService.getWeeklyRecaps(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Monthly Recaps Query
+export const useMonthlyRecaps = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<MonthlyRecapResponse, ApiError>({
+    queryKey: apiKeys.monthlyRecaps(),
+    queryFn: () => apiService.getMonthlyRecaps(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
@@ -214,4 +242,6 @@ export const apiQueries = {
   useLogs,
   useCreateLog,
   useLeaderboard,
+  useWeeklyRecaps,
+  useMonthlyRecaps,
 };

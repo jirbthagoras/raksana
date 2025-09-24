@@ -24,7 +24,6 @@ import LeaderboardButton from '@/components/Home/LeaderboardButton';
 import MemoryButton from '@/components/Home/MemoryButton';
 import MonthlyRecapButton from '@/components/Home/MonthlyRecapButton';
 import NearbyQuestLocator from '@/components/Home/NearbyQuestLocator';
-import PacketsButton from '@/components/Home/PacketsButton';
 import BalanceCard from '@/components/Home/PointCard';
 import ProgressBar from '@/components/Home/ProgressBar';
 import RecapsButton from '@/components/Home/RecapsButton';
@@ -325,13 +324,6 @@ export default function HomeTab() {
                   <MotiView
                     from={{ opacity: 0, translateY: 20, scale: 0.8 }}
                     animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2500, damping: 12, stiffness: 120 }}
-                  >
-                    <PacketsButton onPress={() => console.log('Packets pressed!')} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
                     transition={{ type: 'spring', delay: 2600, damping: 12, stiffness: 120 }}
                   >
                     <RecapsButton onPress={() => console.log('Recaps pressed!')} />
@@ -355,7 +347,7 @@ export default function HomeTab() {
                     animate={{ opacity: 1, translateY: 0, scale: 1 }}
                     transition={{ type: 'spring', delay: 2900, damping: 12, stiffness: 120 }}
                   >
-                    <LeaderboardButton onPress={() => console.log('Leaderboard pressed!')} />
+                    <LeaderboardButton onPress={() => router.push("/leaderboard")} />
                   </MotiView>
                   <MotiView
                     from={{ opacity: 0, translateY: 20, scale: 0.8 }}

@@ -1,10 +1,50 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts } from '../../constants';
+
+// Custom animated tab icon component
+const AnimatedTabIcon = ({ name, focused, color }: { name: string; focused: boolean; color: string }) => {
+  const scaleValue = React.useRef(new Animated.Value(focused ? 1 : 0.9)).current;
+  const opacityValue = React.useRef(new Animated.Value(focused ? 1 : 0.7)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scaleValue, {
+        toValue: focused ? 1 : 0.9,
+        tension: 300,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityValue, {
+        toValue: focused ? 1 : 0.7,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [focused]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.iconContainer,
+        focused && styles.activeIconContainer,
+        {
+          transform: [{ scale: scaleValue }],
+          opacity: opacityValue,
+        },
+      ]}
+    >
+      <Ionicons
+        name={focused ? name : `${name}-outline` as any}
+        size={24}
+        color={focused ? Colors.primary : color}
+      />
+    </Animated.View>
+  );
+};
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -14,48 +54,50 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.onSurfaceVariant,
+        tabBarInactiveTintColor: Colors.onSurfaceVariant + '70',
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: Colors.outline + '30',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
           paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 10 : 8),
-          paddingTop: 8,
-          paddingHorizontal: Math.max(insets.left, 20),
-          paddingRight: Math.max(insets.right, 20),
-          height: 60 + Math.max(insets.bottom, Platform.OS === 'ios' ? 25 : 15),
+          paddingTop: 12,
+          paddingHorizontal: Math.max(insets.left, 24),
+          paddingRight: Math.max(insets.right, 24),
+          height: 70 + Math.max(insets.bottom, Platform.OS === 'ios' ? 25 : 15),
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          elevation: 12,
-          shadowColor: Colors.primary,
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          borderRadius: 0,
+          bottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 12 : 10),
+          left: 24,
+          right: 24,
+          elevation: 0,
+          shadowColor: 'transparent',
+          borderRadius: 28,
+          marginHorizontal: 10,
         },
         tabBarLabelStyle: {
-          fontFamily: Fonts.display.medium,
-          fontSize: 12,
+          fontFamily: Fonts.text.bold,
+          fontSize: 11,
           marginTop: 4,
-          fontWeight: '600',
+          fontWeight: '700',
+          letterSpacing: 0.3,
         },
+        tabBarLabelPosition: 'below-icon',
+        tabBarHideOnKeyboard: true,
         tabBarIconStyle: {
-          marginBottom: 2,
+          marginBottom: 0,
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
-          borderRadius: 12,
-          marginHorizontal: 2,
+          paddingVertical: 8,
+          paddingHorizontal: 6,
+          borderRadius: 18,
+          marginHorizontal: 6,
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         tabBarBackground: () => (
-          <LinearGradient
-            colors={[Colors.surface, Colors.surfaceContainerLowest]}
-            style={StyleSheet.absoluteFillObject}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
+          <View style={styles.tabBarContainer}>
+            <View style={styles.tabBarBackground} />
+            <View style={styles.tabBarBorder} />
+          </View>
         ),
       }}
     >
@@ -64,24 +106,16 @@ export default function TabLayout() {
         options={{
           title: 'Beranda',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "home" : "home-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
-            />
+            <AnimatedTabIcon name="home" focused={focused} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="packet"
         options={{
-          title: 'Packet',
+          title: 'Packets',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "folder" : "folder-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
-            />
+            <AnimatedTabIcon name="folder" focused={focused} color={color} />
           ),
         }}
       />
@@ -90,11 +124,7 @@ export default function TabLayout() {
         options={{
           title: 'Tersimpan',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "bookmark" : "bookmark-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
-            />
+            <AnimatedTabIcon name="bookmark" focused={focused} color={color} />
           ),
         }}
       />
@@ -103,14 +133,49 @@ export default function TabLayout() {
         options={{
           title: 'Profil',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "person" : "person-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
-            />
+            <AnimatedTabIcon name="person" focused={focused} color={color} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarContainer: {
+    flex: 1,
+    borderRadius: 28,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+  },
+  tabBarBackground: {
+    flex: 1,
+    borderRadius: 28,
+    backgroundColor: Colors.surface,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  tabBarBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: Colors.outline + '25',
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  activeIconContainer: {
+    backgroundColor: Colors.primaryContainer + '40',
+  },
+});

@@ -5,17 +5,20 @@ import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 type Props = {
   onPress?: () => void;
+  iconName: string;
+  title: string;
+  iconColor?: string;
 };
 
-export default function LeaderboardButton({ onPress }: Props) {
+export default function SimpleQuickButton({ onPress, iconName, title, iconColor = Colors.primary }: Props) {
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
       style={styles.container}
     >
-      <FontAwesome5 name="medal" size={24} color={Colors.tertiary} style={styles.icon} />
-      <Text style={styles.title}>Leaderboard</Text>
+      <FontAwesome5 name={iconName} size={24} color={iconColor} style={styles.icon} />
+      <Text style={styles.title}>{title}</Text>
     </TouchableOpacity>
   );
 }
@@ -41,7 +44,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: Fonts.display.bold,
-    fontSize: 13,
+    fontSize: 15,
     color: Colors.primary,
     textAlign: 'center',
   },

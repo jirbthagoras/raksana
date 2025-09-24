@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CongratulationPopup } from '../../../components/CongratulationPopup';
 import CustomPacketCard from '../../../components/CustomPacketCard';
+import { EcoachInfoModal } from '../../../components/EcoachInfoModal';
 import { SkeletonCircle, SkeletonText } from '../../../components/SkeletonLoader';
 import TaskCheckbox from '../../../components/TaskCheckbox';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -21,6 +22,9 @@ import { TaskCompletionResponse } from '../../../types/auth';
 
 export default function PacketScreen() {
   const { user } = useAuth();
+  
+  // Modal states
+  const [showInfoModal, setShowInfoModal] = useState(false);
   
   // Congratulation popup queue system
   const [congratulationQueue, setCongratulationQueue] = useState<Array<{
@@ -229,8 +233,16 @@ export default function PacketScreen() {
                 Kelola paket dan tugas harianmu
               </Text>
             </View>
-            <View style={styles.headerIcon}>
-              <FontAwesome5 name="box-open" size={24} color={Colors.primary} />
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={styles.headerInfoButton}
+                onPress={() => setShowInfoModal(true)}
+              >
+                <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+              </TouchableOpacity>
+              <View style={styles.headerIcon}>
+                <FontAwesome5 name="box-open" size={24} color={Colors.primary} />
+              </View>
             </View>
           </View>
         </View>
@@ -381,6 +393,12 @@ export default function PacketScreen() {
           </Text>
         </View>
       )}
+      
+      {/* Ecoach Info Modal */}
+      <EcoachInfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -429,6 +447,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.onSurfaceVariant,
     lineHeight: 18,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerInfoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerIcon: {
     width: 48,

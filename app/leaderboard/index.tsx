@@ -14,9 +14,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import LeaderboardSkeleton from '../../components/LeaderboardSkeleton';
 import { useLeaderboard } from '../../hooks/useApiQueries';
 import { LeaderboardEntry, LeaderboardResponse } from '../../types/auth';
-import LeaderboardSkeleton from '../../components/LeaderboardSkeleton';
 
 const UserAvatar = React.memo(({ imageUrl, size = 50, style }: { imageUrl: string; size?: number; style?: any }) => {
   const [imageError, setImageError] = useState(false);
@@ -44,7 +44,7 @@ const UserAvatar = React.memo(({ imageUrl, size = 50, style }: { imageUrl: strin
   const isValidUrl = imageUrl && imageUrl.trim() !== '' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
 
   return (
-    <View style={[{ width: size, height: size, borderRadius: size / 2, position: 'relative' }, style]}>
+    <View style={[{ width: size, height: size, position: 'relative' }, style]}>
       {!imageError && isValidUrl ? (
         <Image
           source={{ uri: imageUrl }}
@@ -52,7 +52,7 @@ const UserAvatar = React.memo(({ imageUrl, size = 50, style }: { imageUrl: strin
             width: size,
             height: size,
             borderRadius: size / 2,
-            borderWidth: 2,
+            // borderWidth: 2,
             borderColor: Colors.outline + '40',
           }}
           onError={handleImageError}

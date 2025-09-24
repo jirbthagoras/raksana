@@ -122,3 +122,39 @@ export interface LeaderboardResponse {
     leaderboard: LeaderboardEntry[];
   };
 }
+
+// Recap types
+export interface WeeklyRecap {
+  summary: string;
+  tips: string;
+  assigned_task: number;
+  completed_task: number;
+  completion_rate: string;
+  growth_rating: string;
+  created_at: string;
+}
+
+export interface MonthlyRecap {
+  summary: string;
+  tips: string;
+  completion_rate: string;
+  growth_rating: string;
+  created_at: string;
+  challenges: number;
+  events: number;
+  quests: number;
+  treasures: number;
+  longest_streak: number;
+}
+
+export interface WeeklyRecapResponse {
+  data: {
+    recaps: WeeklyRecap[];
+  };
+}
+
+export interface MonthlyRecapResponse {
+  data: {
+    monthly_recaps: MonthlyRecap[];
+  };
+}
