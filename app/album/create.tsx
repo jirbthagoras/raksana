@@ -48,7 +48,7 @@ function CreateMemoryScreenContent() {
       case 'png':
         return 'image/png';
       case 'mp4':
-        return 'video/mp4';
+        return 'videos/mp4';
       default:
         return 'image/jpeg';
     }
@@ -149,12 +149,20 @@ function CreateMemoryScreenContent() {
   const openVideoPicker = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'video/mp4',
+        type: 'video/*',
         copyToCacheDirectory: true,
       });
 
       if (!result.canceled && result.assets[0]) {
-        setSelectedFile(result.assets[0]);
+        const file = result.assets[0];
+        // Ensure we have the right properties for video files
+        setSelectedFile({
+          ...file,
+          uri: file.uri,
+          name: file.name,
+          size: file.size,
+          mimeType: file.mimeType || 'video/mp4'
+        });
       }
     } catch (error) {
       showPopUp('Gagal memilih video', 'Error', 'error');
