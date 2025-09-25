@@ -211,9 +211,19 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "recaps": [...] } }
   }
 
+  async createWeeklyRecap(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.post('/recap/weekly');
+    return response.data; // Based on your API response format: { "data": { "recap": {...} } }
+  }
+
   async getMonthlyRecaps(): Promise<any> {
     const response: AxiosResponse<any> = await this.api.get('/recap/monthly/me');
     return response.data; // Based on your API response format: { "data": { "monthly_recaps": [...] } }
+  }
+
+  async createMonthlyRecap(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.post('/recap/monthly');
+    return response.data; // Based on your API response format: { "data": { ... } }
   }
 
   async saveAuthToken(token: string): Promise<void> {

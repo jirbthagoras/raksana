@@ -134,6 +134,22 @@ export interface WeeklyRecap {
   created_at: string;
 }
 
+export interface WeeklyRecapData {
+  assigned_tasks: number;
+  completed_tasks: number;
+  date: string;
+  growth_rating: string;
+  summary: string;
+  task_completion_rate: string;
+  tips: string;
+}
+
+export interface CreateWeeklyRecapResponse {
+  data: {
+    recap: WeeklyRecapData;
+  };
+}
+
 export interface MonthlyRecap {
   summary: string;
   tips: string;

@@ -17,9 +17,6 @@ export default function LevelBar({ level, currentExp, neededExp, neededExpPrevio
   const [prevLevel, setPrevLevel] = useState(level);
   const [shouldResetProgress, setShouldResetProgress] = useState(false);
   
-  // Debug: Let's understand what values we're getting
-  console.log('ProgressBar Debug:', { level, currentExp, neededExp, prevLevel });
-  
   // Detect level up
   useEffect(() => {
     if (level > prevLevel) {

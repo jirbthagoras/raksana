@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, LeaderboardResponse, MonthlyRecapResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
+import { ApiError, CreateWeeklyRecapResponse, LeaderboardResponse, MonthlyRecapResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -215,6 +215,20 @@ export const useWeeklyRecaps = () => {
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Create Weekly Recap Mutation
+export const useCreateWeeklyRecap = () => {
+  return useMutation<CreateWeeklyRecapResponse, ApiError, void>({
+    mutationFn: () => apiService.createWeeklyRecap(),
+  });
+};
+
+// Create Monthly Recap Mutation
+export const useCreateMonthlyRecap = () => {
+  return useMutation<any, ApiError, void>({
+    mutationFn: () => apiService.createMonthlyRecap(),
   });
 };
 

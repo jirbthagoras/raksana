@@ -1,26 +1,36 @@
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { ErrorProvider, useError } from "../../contexts/ErrorContext";
+import { useCreateMonthlyRecap } from "../../hooks/useApiQueries";
+import { MonthlyRecapModal } from "../MonthlyRecapModal";
 
 type Props = {
   onPress?: () => void;
 };
 
-export default function MonthlyRecapButton({ onPress }: Props) {
+function MonthlyRecapButtonContent({ onPress }: Props) {
   // Check if today is the 1st of the month
   const today = new Date();
-  const isFirstOfMonth = today.getDate() === 1;
+  const isFirstOfMonth = today.getDate() === 1; // Set to true for testing, change to: today.getDate() === 1;
   
+  const [showModal, setShowModal] = useState(false);
+  const [recapData, setRecapData] = useState<any>(null);
   const scaleValue = useRef(new Animated.Value(1)).current;
   const glowOpacity = useRef(new Animated.Value(0.3)).current;
+  const { showPopUp } = useError();
+  
+  // Monthly recap mutation
+  const createMonthlyRecapMutation = useCreateMonthlyRecap();
 
   useEffect(() => {
     if (isFirstOfMonth) {
@@ -43,24 +53,41 @@ export default function MonthlyRecapButton({ onPress }: Props) {
     }
   }, [isFirstOfMonth]);
   
-  const handlePress = () => {
-    if (isFirstOfMonth) {
-      // Gentle press animation
-      Animated.sequence([
-        Animated.timing(scaleValue, {
-          toValue: 0.97,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleValue, {
-          toValue: 1,
-          tension: 200,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start();
+  const handlePress = async () => {
+    // Gentle press animation
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 0.97,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        tension: 200,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    try {
+      // Create monthly recap
+      const response = await createMonthlyRecapMutation.mutateAsync();
+      console.log('Monthly recap response:', response);
+      console.log('Response data:', response.data);
+      setRecapData(response.data);
+      setShowModal(true);
       onPress?.();
+    } catch (error: any) {
+      showPopUp(
+        error.message || 'Gagal memuat recap bulanan',
+        'Error',
+        'error'
+      );
     }
+  };
+  
+  const handleCloseModal = () => {
+    setShowModal(false);
   };
 
   return (
@@ -76,7 +103,7 @@ export default function MonthlyRecapButton({ onPress }: Props) {
         style={styles.touchable}
         onPress={handlePress}
         activeOpacity={isFirstOfMonth ? 0.9 : 1}
-        disabled={!isFirstOfMonth}
+        disabled={!isFirstOfMonth || createMonthlyRecapMutation.isPending}
       >
         {/* Glow effect for active state */}
         {isFirstOfMonth && (
@@ -105,22 +132,45 @@ export default function MonthlyRecapButton({ onPress }: Props) {
         >
           <View style={styles.buttonContent}>
             <View style={styles.iconContainer}>
-              <FontAwesome5 
-                name="calendar-alt" 
-                size={18} 
-                color={isFirstOfMonth ? 'white' : Colors.onSurfaceVariant}
-              />
+              {createMonthlyRecapMutation.isPending ? (
+                <ActivityIndicator 
+                  size="small" 
+                  color={isFirstOfMonth ? 'white' : Colors.onSurfaceVariant} 
+                />
+              ) : (
+                <FontAwesome5 
+                  name="calendar-alt" 
+                  size={18} 
+                  color={isFirstOfMonth ? 'white' : Colors.onSurfaceVariant}
+                />
+              )}
             </View>
             <Text style={[
               styles.buttonText,
               isFirstOfMonth ? styles.activeText : styles.inactiveText
             ]}>
-              Get Monthly Recap
+              {createMonthlyRecapMutation.isPending ? 'Loading...' : 'Get Monthly Recap'}
             </Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
+      
+      {/* Monthly Recap Modal */}
+      <MonthlyRecapModal
+        visible={showModal}
+        onClose={handleCloseModal}
+        recapData={recapData}
+        loading={false}
+      />
     </Animated.View>
+  );
+}
+
+export default function MonthlyRecapButton({ onPress }: Props) {
+  return (
+    <ErrorProvider>
+      <MonthlyRecapButtonContent onPress={onPress} />
+    </ErrorProvider>
   );
 }
 
