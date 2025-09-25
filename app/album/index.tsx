@@ -176,20 +176,7 @@ export default function AlbumScreen() {
           <View style={styles.descriptionContainer}>
             <Text style={styles.description}>{item.description}</Text>
           </View>
-        )}
-
-        {/* Engagement Bar */}
-        <View style={styles.engagementBar}>
-          <TouchableOpacity style={styles.engagementButton}>
-            <FontAwesome5 name="heart" size={16} color={Colors.onSurfaceVariant} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.engagementButton}>
-            <FontAwesome5 name="comment" size={16} color={Colors.onSurfaceVariant} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.engagementButton}>
-            <FontAwesome5 name="share" size={16} color={Colors.onSurfaceVariant} />
-          </TouchableOpacity>
-        </View>
+        )} 
       </MotiView>
     );
   };
