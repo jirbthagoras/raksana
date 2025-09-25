@@ -2,7 +2,7 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -14,8 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Video } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import VideoPlayer from '../../components/VideoPlayer';
 import { useMemories } from '../../hooks/useApiQueries';
 import { Memory } from '../../types/auth';
 
@@ -29,10 +29,32 @@ export default function AlbumScreen() {
     data: memoriesData,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useMemories();
 
   const memories = memoriesData?.data?.memories || [];
+
+  const getFileType = (url: string) => {
+    console.log('Checking file type for URL:', url);
+    const extension = url.split('.').pop()?.toLowerCase();
+    console.log('Extracted extension:', extension);
+    const isVideo = ['mp4', 'mov', 'avi', 'mkv'].includes(extension || '');
+    console.log('Is video:', isVideo);
+    return isVideo ? 'video' : 'image';
+  };
+
+  // Create video players for video memories at component level
+  const videoPlayers = useMemo(() => {
+    const players: { [key: number]: any } = {};
+    memories.forEach((memory: Memory) => {
+      const fileType = getFileType(memory.file_url);
+      if (fileType === 'video') {
+        // We'll create the player when needed, not here to avoid hooks rule violation
+        players[memory.memory_id] = memory.file_url;
+      }
+    });
+    return players;
+  }, [memories]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -63,14 +85,6 @@ export default function AlbumScreen() {
       case 'hard': return '#F44336';
       default: return Colors.primary;
     }
-  };
-
-  const getFileType = (url: string) => {
-    const extension = url.split('.').pop()?.toLowerCase();
-    if (['mp4', 'mov', 'avi', 'mkv'].includes(extension || '')) {
-      return 'video';
-    }
-    return 'image';
   };
 
   const renderMemoryPost = ({ item, index }: { item: Memory; index: number }) => {
@@ -144,12 +158,9 @@ export default function AlbumScreen() {
         {/* Media Content */}
         <View style={styles.mediaContainer}>
           {fileType === 'video' ? (
-            <Video
-              source={{ uri: item.file_url }}
+            <VideoPlayer
+              videoUrl={item.file_url}
               style={styles.media}
-              useNativeControls
-              resizeMode="cover"
-              shouldPlay={false}
             />
           ) : (
             <Image
@@ -157,12 +168,6 @@ export default function AlbumScreen() {
               style={styles.media}
               resizeMode="cover"
             />
-          )}
-          
-          {fileType === 'video' && (
-            <View style={styles.videoOverlay}>
-              <FontAwesome5 name="play-circle" size={48} color="rgba(255, 255, 255, 0.8)" />
-            </View>
           )}
         </View>
 
