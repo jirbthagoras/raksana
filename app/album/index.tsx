@@ -1,10 +1,8 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import VideoPlayer from '../../components/VideoPlayer';
-import { AlbumInfoModal } from '../../components/AlbumInfoModal';
 import { MotiView } from 'moti';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -17,6 +15,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AlbumInfoModal } from '../../components/AlbumInfoModal';
+import VideoPlayer from '../../components/VideoPlayer';
 import { useMemories } from '../../hooks/useApiQueries';
 import { Memory } from '../../types/auth';
 
@@ -37,11 +37,8 @@ export default function AlbumScreen() {
   const memories = memoriesData?.data?.memories || [];
 
   const getFileType = (url: string) => {
-    console.log('Checking file type for URL:', url);
     const extension = url.split('.').pop()?.toLowerCase();
-    console.log('Extracted extension:', extension);
     const isVideo = ['mp4', 'mov', 'avi', 'mkv'].includes(extension || '');
-    console.log('Is video:', isVideo);
     return isVideo ? 'video' : 'image';
   };
 
@@ -247,6 +244,13 @@ export default function AlbumScreen() {
           <Text style={styles.emptySubtitle}>
             Mulai berbagi momen berharga Anda dengan komunitas
           </Text>
+          <TouchableOpacity 
+            style={styles.createMemoryButton}
+            onPress={() => router.push('/album/create')}
+          >
+            <FontAwesome5 name="plus" size={16} color={Colors.onPrimary} />
+            <Text style={styles.createMemoryButtonText}>Buat Memory Pertama</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -264,6 +268,24 @@ export default function AlbumScreen() {
             />
           }
         />
+      )}
+
+      {/* Floating Action Button */}
+      {memories.length > 0 && (
+        <MotiView 
+          style={styles.floatingButton}
+          from={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', damping: 15, stiffness: 200 }}
+        >
+          <TouchableOpacity 
+            style={styles.fabButton}
+            onPress={() => router.push('/album/create')}
+            activeOpacity={0.8}
+          >
+            <FontAwesome5 name="plus" size={24} color={Colors.onPrimary} />
+          </TouchableOpacity>
+        </MotiView>
       )}
 
       {/* Album Info Modal */}
@@ -376,7 +398,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.onSurfaceVariant,
     textAlign: 'center',
-    opacity: 0.7,
+    marginBottom: 16,
+  },
+  createMemoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    gap: 8,
+    marginTop: 16,
+  },
+  createMemoryButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.onPrimary,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    zIndex: 1000,
+  },
+  fabButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
   },
   listContent: {
     paddingVertical: 20,
