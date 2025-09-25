@@ -1,5 +1,6 @@
 import { FontAwesome5 } from '@expo/vector-icons';
-import React from 'react';
+import * as Speech from 'expo-speech';
+import React, { useState } from 'react';
 import {
   Dimensions,
   Modal,
@@ -27,6 +28,8 @@ export const RecapDetailModal: React.FC<RecapDetailModalProps> = ({
   recap,
   type,
 }) => {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  
   if (!recap) return null;
 
   const isWeekly = type === 'weekly';
@@ -76,6 +79,50 @@ export const RecapDetailModal: React.FC<RecapDetailModalProps> = ({
     return 'Perlu Perbaikan';
   };
 
+  const handleTTSPress = async () => {
+    if (isSpeaking) {
+      // Stop speaking
+      Speech.stop();
+      setIsSpeaking(false);
+    } else {
+      // Start speaking
+      setIsSpeaking(true);
+      
+      // Format date for speech
+      const formatDateForSpeech = (dateString: string) => {
+        const date = new Date(dateString);
+        const options: Intl.DateTimeFormatOptions = {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        };
+        return date.toLocaleDateString('id-ID', options);
+      };
+
+      // Combine recap type, date, summary and tips for reading
+      const recapType = isWeekly ? 'mingguan' : 'bulanan';
+      const formattedDate = formatDateForSpeech(recap.created_at);
+      let textToSpeak = `Rekap ${recapType} ${formattedDate}. Ringkasan: ${recap.summary}`;
+      if (recap.tips) {
+        textToSpeak += `. Tips dan Saran: ${recap.tips}`;
+      }
+
+      try {
+        await Speech.speak(textToSpeak, {
+          language: 'id-ID', // Indonesian language
+          pitch: 1.0,
+          rate: 1.0, // Normal speed for better flow
+          onDone: () => setIsSpeaking(false),
+          onStopped: () => setIsSpeaking(false),
+          onError: () => setIsSpeaking(false),
+        });
+      } catch (error) {
+        console.log('TTS Error:', error);
+        setIsSpeaking(false);
+      }
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -87,6 +134,26 @@ export const RecapDetailModal: React.FC<RecapDetailModalProps> = ({
         <View style={styles.modal}>
           {/* Header */}
           <View style={styles.header}>
+            <View style={styles.headerTop}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={onClose}
+                activeOpacity={0.7}
+              >
+                <FontAwesome5 name="times" size={18} color={Colors.onSurfaceVariant} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.ttsButton, isSpeaking && styles.ttsButtonActive]}
+                onPress={handleTTSPress}
+                activeOpacity={0.7}
+              >
+                <FontAwesome5 
+                  name={isSpeaking ? 'stop' : 'volume-up'} 
+                  size={18} 
+                  color={isSpeaking ? Colors.onPrimary : Colors.primary} 
+                />
+              </TouchableOpacity>
+            </View>
             <View style={[styles.headerIcon, isWeekly ? styles.weeklyHeaderIcon : styles.monthlyHeaderIcon]}>
               <FontAwesome5 
                 name={isWeekly ? 'calendar-week' : 'calendar-alt'} 
@@ -443,5 +510,37 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.text.bold,
     fontSize: 16,
     color: Colors.onPrimary,
+  },
+  headerTop: {
+    position: 'absolute',
+    top: 16,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    zIndex: 1,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.surfaceVariant,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ttsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  ttsButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
 });

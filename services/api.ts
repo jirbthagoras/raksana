@@ -226,6 +226,11 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { ... } }
   }
 
+  async getMemories(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/memory/me');
+    return response.data; // Based on your API response format: { "data": { "memories": [...] } }
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

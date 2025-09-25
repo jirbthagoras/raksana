@@ -1,6 +1,7 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
-import React from 'react';
+import * as Speech from 'expo-speech';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MonthlyRecap, WeeklyRecap } from '../types/auth';
 
@@ -11,6 +12,7 @@ interface RecapCardProps {
 }
 
 export const RecapCard: React.FC<RecapCardProps> = ({ recap, type, onPress }) => {
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const isWeekly = type === 'weekly';
   const weeklyRecap = isWeekly ? recap as WeeklyRecap : null;
   const monthlyRecap = !isWeekly ? recap as MonthlyRecap : null;
@@ -49,6 +51,50 @@ export const RecapCard: React.FC<RecapCardProps> = ({ recap, type, onPress }) =>
     return '#F44336';
   };
 
+  const handleTTSPress = async () => {
+    if (isSpeaking) {
+      // Stop speaking
+      Speech.stop();
+      setIsSpeaking(false);
+    } else {
+      // Start speaking
+      setIsSpeaking(true);
+      
+      // Format date for speech
+      const formatDateForSpeech = (dateString: string) => {
+        const date = new Date(dateString);
+        const options: Intl.DateTimeFormatOptions = {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        };
+        return date.toLocaleDateString('id-ID', options);
+      };
+
+      // Combine recap type, date, summary and tips for reading
+      const recapType = isWeekly ? 'mingguan' : 'bulanan';
+      const formattedDate = formatDateForSpeech(recap.created_at);
+      let textToSpeak = `Rekap ${recapType} ${formattedDate}. Ringkasan: ${recap.summary}`;
+      if (recap.tips) {
+        textToSpeak += `. Tips: ${recap.tips}`;
+      }
+
+      try {
+        await Speech.speak(textToSpeak, {
+          language: 'id-ID', // Indonesian language
+          pitch: 1.0,
+          rate: 1.0, // Normal speed for better flow
+          onDone: () => setIsSpeaking(false),
+          onStopped: () => setIsSpeaking(false),
+          onError: () => setIsSpeaking(false),
+        });
+      } catch (error) {
+        console.log('TTS Error:', error);
+        setIsSpeaking(false);
+      }
+    }
+  };
+
   return (
     <TouchableOpacity 
       style={[styles.card, isWeekly ? styles.weeklyCard : styles.monthlyCard]}
@@ -72,15 +118,28 @@ export const RecapCard: React.FC<RecapCardProps> = ({ recap, type, onPress }) =>
             {formatDate(recap.created_at)}
           </Text>
         </View>
-        <View style={[styles.growthBadge, { backgroundColor: getGrowthRatingColor(recap.growth_rating) + '20' }]}>
-          <FontAwesome5 
-            name={getGrowthRatingIcon(recap.growth_rating)} 
-            size={12} 
-            color={getGrowthRatingColor(recap.growth_rating)} 
-          />
-          <Text style={[styles.growthText, { color: getGrowthRatingColor(recap.growth_rating) }]}>
-            {recap.growth_rating}/5
-          </Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.ttsButton, isSpeaking && styles.ttsButtonActive]}
+            onPress={handleTTSPress}
+            activeOpacity={0.7}
+          >
+            <FontAwesome5 
+              name={isSpeaking ? 'stop' : 'volume-up'} 
+              size={14} 
+              color={isSpeaking ? Colors.onPrimary : Colors.primary} 
+            />
+          </TouchableOpacity>
+          <View style={[styles.growthBadge, { backgroundColor: getGrowthRatingColor(recap.growth_rating) + '20' }]}>
+            <FontAwesome5 
+              name={getGrowthRatingIcon(recap.growth_rating)} 
+              size={12} 
+              color={getGrowthRatingColor(recap.growth_rating)} 
+            />
+            <Text style={[styles.growthText, { color: getGrowthRatingColor(recap.growth_rating) }]}>
+              {recap.growth_rating}/5
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -286,5 +345,24 @@ const styles = StyleSheet.create({
   arrowContainer: {
     alignSelf: 'flex-end',
     marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ttsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  ttsButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
 });

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, CreateWeeklyRecapResponse, LeaderboardResponse, MonthlyRecapResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
+import { ApiError, CreateWeeklyRecapResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -16,6 +16,7 @@ export const apiKeys = {
   leaderboard: () => ['leaderboard'] as const,
   weeklyRecaps: () => ['weeklyRecaps'] as const,
   monthlyRecaps: () => ['monthlyRecaps'] as const,
+  memories: () => ['memories'] as const,
 };
 
 // Profile queries
@@ -239,6 +240,19 @@ export const useMonthlyRecaps = () => {
   return useQuery<MonthlyRecapResponse, ApiError>({
     queryKey: apiKeys.monthlyRecaps(),
     queryFn: () => apiService.getMonthlyRecaps(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Memories Query
+export const useMemories = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<MemoriesResponse, ApiError>({
+    queryKey: apiKeys.memories(),
+    queryFn: () => apiService.getMemories(),
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes

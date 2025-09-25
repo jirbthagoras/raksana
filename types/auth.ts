@@ -174,3 +174,25 @@ export interface MonthlyRecapResponse {
     monthly_recaps: MonthlyRecap[];
   };
 }
+
+// Memory types
+export interface Memory {
+  memory_id: number;
+  file_url: string;
+  description: string;
+  created_at: string;
+  user_id: number;
+  user_name: string;
+  is_participation?: boolean;
+  challenge_id?: number;
+  day?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  challenge_name?: string;
+  point_gain?: number;
+}
+
+export interface MemoriesResponse {
+  data: {
+    memories: Memory[];
+  };
+}

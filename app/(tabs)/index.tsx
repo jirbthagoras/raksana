@@ -312,7 +312,7 @@ export default function HomeTab() {
                     animate={{ opacity: 1, translateY: 0, scale: 1 }}
                     transition={{ type: 'spring', delay: 2300, damping: 12, stiffness: 120 }}
                   >
-                    <MemoryButton onPress={() => console.log('Album pressed!')} />
+                    <MemoryButton onPress={() => router.push('/album')} />
                   </MotiView>
                   <MotiView
                     from={{ opacity: 0, translateY: 20, scale: 0.8 }}
