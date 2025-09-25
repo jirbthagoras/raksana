@@ -8,6 +8,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -84,28 +85,8 @@ function CreateMemoryScreenContent() {
   };
 
   const handleSelectMedia = () => {
-    Alert.alert(
-      'Pilih Media',
-      'Pilih jenis media yang ingin Anda upload',
-      [
-        {
-          text: 'Foto dari Kamera',
-          onPress: () => openCamera(),
-        },
-        {
-          text: 'Foto dari Galeri',
-          onPress: () => openImagePicker(),
-        },
-        {
-          text: 'Video',
-          onPress: () => openVideoPicker(),
-        },
-        {
-          text: 'Batal',
-          style: 'cancel',
-        },
-      ]
-    );
+    console.log('handleSelectMedia called, current showActions:', showActions);
+    setShowActions(true);
   };
 
   const openCamera = async () => {
@@ -241,39 +222,30 @@ function CreateMemoryScreenContent() {
   const descriptionCharCount = description.length;
   const isFormValid = description.trim().length >= 10 && selectedFile;
 
-  // Show actions when form becomes valid
-  useEffect(() => {
-    if (isFormValid && !showActions) {
-      const timer = setTimeout(() => {
-        setShowActions(true);
-      }, 300);
-      return () => clearTimeout(timer);
-    } else if (!isFormValid && showActions) {
-      setShowActions(false);
-    }
-  }, [isFormValid, showActions]);
+  // Remove the auto-show logic that was interfering
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
-            <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Buat Memory Baru</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
         <ScrollView 
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
+              <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Buat Memory Baru</Text>
+            <View style={styles.headerSpacer} />
+          </View>
+
           {/* Introduction */}
           <View style={styles.introSection}>
             <View style={styles.introIcon}>
@@ -353,10 +325,15 @@ function CreateMemoryScreenContent() {
         {/* Floating Action Button */}
         <MotiView 
           style={styles.floatingButton}
+          from={{
+            opacity: 0,
+            scale: 0,
+            rotate: '180deg',
+          }}
           animate={{
-            opacity: showActions ? 1 : 0,
-            scale: showActions ? 1 : 0,
-            rotate: showActions ? '0deg' : '180deg',
+            opacity: isFormValid ? 1 : 0,
+            scale: isFormValid ? 1 : 0,
+            rotate: isFormValid ? '0deg' : '180deg',
           }}
           transition={{
             type: 'spring',
@@ -379,6 +356,92 @@ function CreateMemoryScreenContent() {
       </KeyboardAvoidingView>
       
       <LoadingOverlay visible={isSubmitting} />
+      
+      {/* Custom Action Sheet Modal */}
+      <Modal
+        visible={showActions}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowActions(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowActions(false)}
+        >
+          <TouchableOpacity 
+            style={styles.actionSheet}
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            <View style={styles.actionSheetHeader}>
+              <View style={styles.actionSheetHandle} />
+              <Text style={styles.actionSheetTitle}>Pilih Media</Text>
+              <Text style={styles.actionSheetSubtitle}>Pilih jenis media yang ingin Anda upload</Text>
+            </View>
+            
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => {
+                  setShowActions(false);
+                  openCamera();
+                }}
+              >
+                <View style={styles.actionButtonIcon}>
+                  <FontAwesome5 name="camera" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.actionButtonContent}>
+                  <Text style={styles.actionButtonTitle}>Foto dari Kamera</Text>
+                  <Text style={styles.actionButtonSubtitle}>Ambil foto langsung</Text>
+                </View>
+                <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => {
+                  setShowActions(false);
+                  openImagePicker();
+                }}
+              >
+                <View style={styles.actionButtonIcon}>
+                  <FontAwesome5 name="images" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.actionButtonContent}>
+                  <Text style={styles.actionButtonTitle}>Foto dari Galeri</Text>
+                  <Text style={styles.actionButtonSubtitle}>Pilih dari galeri</Text>
+                </View>
+                <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => {
+                  setShowActions(false);
+                  openVideoPicker();
+                }}
+              >
+                <View style={styles.actionButtonIcon}>
+                  <FontAwesome5 name="video" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.actionButtonContent}>
+                  <Text style={styles.actionButtonTitle}>Video</Text>
+                  <Text style={styles.actionButtonSubtitle}>Pilih file video MP4</Text>
+                </View>
+                <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => setShowActions(false)}
+            >
+              <Text style={styles.cancelButtonText}>Batal</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -540,6 +603,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.text.bold,
     fontSize: 14,
     color: Colors.primary,
+    marginLeft: 8,
   },
   inputContainer: {
     backgroundColor: Colors.surface,
@@ -598,5 +662,94 @@ const styles = StyleSheet.create({
   },
   fabButtonLoading: {
     opacity: 0.8,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  actionSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 34,
+    maxHeight: '80%',
+  },
+  actionSheetHeader: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.outline + '20',
+  },
+  actionSheetHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: Colors.onSurfaceVariant + '40',
+    borderRadius: 2,
+    marginBottom: 16,
+  },
+  actionSheetTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 20,
+    color: Colors.onSurface,
+    marginBottom: 8,
+  },
+  actionSheetSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  actionButtons: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.surfaceVariant + '40',
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  actionButtonIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  actionButtonContent: {
+    flex: 1,
+  },
+  actionButtonTitle: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onSurface,
+    marginBottom: 2,
+  },
+  actionButtonSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 13,
+    color: Colors.onSurfaceVariant,
+  },
+  cancelButton: {
+    marginHorizontal: 24,
+    marginTop: 16,
+    paddingVertical: 16,
+    backgroundColor: Colors.errorContainer,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onErrorContainer,
   },
 });
