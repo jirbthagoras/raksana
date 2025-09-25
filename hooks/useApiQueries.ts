@@ -101,7 +101,7 @@ export const useUpdateTaskCompletion = (onCongratulation?: (response: TaskComple
     onSuccess: (data) => {
       // Handle congratulation popups
       console.log(data)
-      if ((data.leveled_up || data.packet_completed)) {
+      if ((data.leveled_up || data.packet_completed || (data.unlock && data.unlock.is_unlocked))) {
         onCongratulation?.(data);
       }
     },
