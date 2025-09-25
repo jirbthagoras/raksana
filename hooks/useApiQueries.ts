@@ -259,6 +259,18 @@ export const useMemories = () => {
   });
 };
 
+// Create Memory Mutation
+export const useCreateMemory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<{ data: { presigned_url: string } }, ApiError, { content_type: string; filename: string; description: string }>({
+    mutationFn: (data) => apiService.createMemory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: apiKeys.memories() });
+    },
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,

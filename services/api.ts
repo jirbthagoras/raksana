@@ -231,6 +231,11 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "memories": [...] } }
   }
 
+  async createMemory(data: { content_type: string; filename: string; description: string }): Promise<{ data: { presigned_url: string } }> {
+    const response: AxiosResponse<{ data: { presigned_url: string } }> = await this.api.post('/memory', data);
+    return response.data;
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

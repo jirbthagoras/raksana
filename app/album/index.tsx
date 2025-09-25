@@ -1,8 +1,10 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import VideoPlayer from '../../components/VideoPlayer';
+import { AlbumInfoModal } from '../../components/AlbumInfoModal';
 import { MotiView } from 'moti';
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -15,7 +17,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import VideoPlayer from '../../components/VideoPlayer';
 import { useMemories } from '../../hooks/useApiQueries';
 import { Memory } from '../../types/auth';
 
@@ -24,6 +25,7 @@ const ITEM_WIDTH = width - 40;
 
 export default function AlbumScreen() {
   const [refreshing, setRefreshing] = useState(false);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
   
   const {
     data: memoriesData,
@@ -188,8 +190,15 @@ export default function AlbumScreen() {
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Album</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Album</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.headerInfoButton} 
+            onPress={() => setInfoModalVisible(true)}
+          >
+            <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+          </TouchableOpacity>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -211,8 +220,15 @@ export default function AlbumScreen() {
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Album</Text>
-        <View style={styles.headerSpacer} />
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Album</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.headerInfoButton} 
+          onPress={() => setInfoModalVisible(true)}
+        >
+          <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+        </TouchableOpacity>
       </MotiView>
 
       {error ? (
@@ -249,6 +265,12 @@ export default function AlbumScreen() {
           }
         />
       )}
+
+      {/* Album Info Modal */}
+      <AlbumInfoModal
+        visible={infoModalVisible}
+        onClose={() => setInfoModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -270,16 +292,26 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitleContainer: {
+    flex: 1,
     alignItems: 'center',
   },
   headerTitle: {
     fontFamily: Fonts.display.bold,
     fontSize: 18,
     color: Colors.onSurface,
-    flex: 1,
-    textAlign: 'center',
+  },
+  headerInfoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerSpacer: {
     width: 40,
