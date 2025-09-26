@@ -1,7 +1,7 @@
+import { Colors } from '@/constants';
 import React from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { Skeleton, SkeletonCircle } from './SkeletonLoader';
-import { Colors } from '../constants';
 
 export default function LeaderboardSkeleton() {
   return (

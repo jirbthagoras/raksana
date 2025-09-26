@@ -1,4 +1,10 @@
+import CustomPacketCard from '@/components/Cards/CustomPacketCard';
+import { EcoachInfoModal } from '@/components/Modals/EcoachInfoModal';
+import { CongratulationPopup } from '@/components/Popups/CongratulationPopup';
+import { SkeletonCircle, SkeletonText } from '@/components/Screens/SkeletonLoader';
+import TaskCheckbox from '@/components/Screens/TaskCheckbox';
 import { Colors, Fonts } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -11,12 +17,6 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CongratulationPopup } from '../../../components/CongratulationPopup';
-import CustomPacketCard from '../../../components/CustomPacketCard';
-import { EcoachInfoModal } from '../../../components/EcoachInfoModal';
-import { SkeletonCircle, SkeletonText } from '../../../components/SkeletonLoader';
-import TaskCheckbox from '../../../components/TaskCheckbox';
-import { useAuth } from '../../../contexts/AuthContext';
 import { useMyPackets, useTodayTasks, useUpdateTaskCompletion } from '../../../hooks/useApiQueries';
 import { TaskCompletionResponse } from '../../../types/auth';
 

@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
+import { Colors } from '@/constants';
 import { MotiView } from 'moti';
-import { Colors } from '../constants';
+import React from 'react';
+import { DimensionValue, StyleSheet, View, ViewStyle } from 'react-native';
 
 interface SkeletonProps {
   width?: DimensionValue;

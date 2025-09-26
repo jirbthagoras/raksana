@@ -7,7 +7,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -21,10 +20,10 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LoadingOverlay from '../../components/LoadingComponent';
+import { ChallengeParticipationPopup } from '../../components/Popups/ChallengeParticipationPopup';
+import LoadingOverlay from '../../components/Screens/LoadingComponent';
 import { ErrorProvider, useError } from '../../contexts/ErrorContext';
 import { useChallengeParticipation, useCreateMemory } from '../../hooks/useApiQueries';
-import { ChallengeParticipationPopup } from '../../components/ChallengeParticipationPopup';
 
 function CreateMemoryScreenContent() {
   const params = useLocalSearchParams();

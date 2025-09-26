@@ -1,4 +1,5 @@
-import { HistoryInfoModal } from '@/components/HistoryInfoModal';
+import { HistoryInfoModal } from '@/components/Modals/HistoryInfoModal';
+import { SkeletonCircle, SkeletonText } from '@/components/Screens/SkeletonLoader';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,7 +15,6 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkeletonCircle, SkeletonText } from '../../components/SkeletonLoader';
 import { usePointHistory } from '../../hooks/useApiQueries';
 import { PointHistoryItem } from '../../types/auth';
 

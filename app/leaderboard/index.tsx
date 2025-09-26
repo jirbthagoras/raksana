@@ -1,3 +1,4 @@
+import LeaderboardSkeleton from '@/components/Screens/LeaderboardSkeleton';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,7 +16,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LeaderboardSkeleton from '../../components/LeaderboardSkeleton';
 import { useLeaderboard } from '../../hooks/useApiQueries';
 import { LeaderboardEntry, LeaderboardResponse } from '../../types/auth';
 

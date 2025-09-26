@@ -1,3 +1,4 @@
+import { WeeklyRecapModal } from "@/components/Modals/WeeklyRecapModal";
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,7 +13,6 @@ import {
 } from "react-native";
 import { ErrorProvider, useError } from "../../contexts/ErrorContext";
 import { useCreateWeeklyRecap } from "../../hooks/useApiQueries";
-import { WeeklyRecapModal } from "../WeeklyRecapModal";
 
 type Props = {
   onPress?: () => void;

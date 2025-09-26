@@ -1,9 +1,9 @@
+import { Colors, Fonts } from '@/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Fonts } from '../../constants';
 
 // Custom animated tab icon component
 const AnimatedTabIcon = ({ name, focused, color }: { name: string; focused: boolean; color: string }) => {

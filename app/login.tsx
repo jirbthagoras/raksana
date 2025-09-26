@@ -1,11 +1,11 @@
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
+import { Colors, Fonts } from '@/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useSegments } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Keyboard, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Colors, Fonts } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorProvider, useError } from '../contexts/ErrorContext';
-import LoadingOverlay from '../components/LoadingComponent';
 
 export default function LoginScreen() {
   const router = useRouter();

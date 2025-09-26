@@ -1,15 +1,15 @@
+import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import React from 'react';
 import {
-     Dimensions,
-     Modal,
-     ScrollView,
-     StyleSheet,
-     Text,
-     TouchableOpacity,
-     View,
+    Dimensions,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Colors, Fonts } from '../constants';
 
 const { width } = Dimensions.get('window');
 

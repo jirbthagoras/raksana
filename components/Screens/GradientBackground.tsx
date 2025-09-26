@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { Colors } from '@/constants';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '../constants';
+import React from 'react';
+import { StyleSheet } from 'react-native';
 
 interface GradientBackgroundProps {
   children: React.ReactNode;

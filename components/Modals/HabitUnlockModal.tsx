@@ -1,27 +1,60 @@
+import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import React from 'react';
 import {
-  Dimensions,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Colors, Fonts } from '../constants';
 
 const { width } = Dimensions.get('window');
 
-interface JournalInfoModalProps {
+interface HabitUnlockModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-export const JournalInfoModal: React.FC<JournalInfoModalProps> = ({
+export const HabitUnlockModal: React.FC<HabitUnlockModalProps> = ({
   visible,
   onClose,
 }) => {
+  const unlockRequirements = [
+    {
+      difficulty: 'Mudah',
+      difficultyKey: 'easy',
+      color: '#4CAF50',
+      icon: 'leaf',
+      requirements: 'Habit mudah terbuka secara otomatis',
+      completionRate: 'Tidak ada syarat khusus',
+      streak: 'Tidak ada syarat streak',
+      description: 'Habit dengan tingkat kesulitan mudah dapat langsung diakses tanpa persyaratan tambahan.'
+    },
+    {
+      difficulty: 'Sedang',
+      difficultyKey: 'normal',
+      color: '#FF9800',
+      icon: 'star',
+      requirements: 'Completion Rate ≥ 50% + Streak ≥ 3 hari',
+      completionRate: '≥ 50%',
+      streak: '≥ 3 hari berturut-turut',
+      description: 'Untuk membuka habit sedang, kamu perlu menunjukkan konsistensi dengan tingkat penyelesaian minimal 50% dan streak 3 hari berturut-turut.'
+    },
+    {
+      difficulty: 'Sulit',
+      difficultyKey: 'hard',
+      color: '#F44336',
+      icon: 'fire',
+      requirements: 'Completion Rate ≥ 70% + Streak ≥ 5 hari',
+      completionRate: '≥ 70%',
+      streak: '≥ 5 hari berturut-turut',
+      description: 'Habit sulit membutuhkan dedikasi tinggi dengan tingkat penyelesaian minimal 70% dan streak 5 hari berturut-turut.'
+    }
+  ];
+
   return (
     <Modal
       visible={visible}
@@ -34,110 +67,68 @@ export const JournalInfoModal: React.FC<JournalInfoModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <FontAwesome5 name="journal-whills" size={32} color={Colors.onPrimary} />
+              <FontAwesome5 name="unlock-alt" size={32} color={Colors.onPrimary} />
             </View>
-            <Text style={styles.title}>Tentang Journal</Text>
+            <Text style={styles.title}>Ketentuan Unlock Habit</Text>
             <Text style={styles.subtitle}>
-              Refleksikan hari Anda dan catat perkembangan dengan sistem journaling Raksana
+              Setiap habit memiliki persyaratan berbeda untuk dapat dibuka berdasarkan tingkat kesulitannya
             </Text>
           </View>
 
           {/* Content */}
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            
-            {/* What is Journal */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoHeader}>
-                <View style={[styles.infoIcon, { backgroundColor: Colors.primary }]}>
-                  <FontAwesome5 name="book-open" size={20} color={Colors.onPrimary} />
+
+            {unlockRequirements.map((requirement, index) => (
+              <View key={requirement.difficultyKey} style={styles.requirementCard}>
+                <View style={styles.requirementHeader}>
+                  <View style={[styles.difficultyIcon, { backgroundColor: requirement.color }]}>
+                    <FontAwesome5 name={requirement.icon} size={20} color={Colors.onPrimary} />
+                  </View>
+                  <View style={styles.requirementTitleContainer}>
+                    <Text style={styles.difficultyTitle}>{requirement.difficulty}</Text>
+                    <Text style={styles.requirementSummary}>{requirement.requirements}</Text>
+                  </View>
                 </View>
-                <View style={styles.infoTitleContainer}>
-                  <Text style={styles.infoTitle}>Apa itu Journal?</Text>
-                </View>
+
+                <Text style={styles.requirementDescription}>
+                  {requirement.description}
+                </Text>
+
+                {requirement.difficultyKey !== 'easy' && (
+                  <View style={styles.requirementDetails}>
+                    <View style={styles.requirementRow}>
+                      <FontAwesome5 name="percentage" size={14} color={requirement.color} />
+                      <Text style={styles.requirementLabel}>Completion Rate:</Text>
+                      <Text style={[styles.requirementValue, { color: requirement.color }]}>{requirement.completionRate}</Text>
+                    </View>
+                    <View style={styles.requirementRow}>
+                      <FontAwesome5 name="calendar-check" size={14} color={requirement.color} />
+                      <Text style={styles.requirementLabel}>Streak:</Text>
+                      <Text style={[styles.requirementValue, { color: requirement.color }]}>{requirement.streak}</Text>
+                    </View>
+                  </View>
+                )}
               </View>
-
-              <Text style={styles.infoDescription}>
-                Journal adalah cara bagi anda untuk merefleksikan hari anda. 
-                Setiap harinya Anda dapat mencatat perkembangan, pengalaman, dan 
-                pembelajaran yang didapat. Tentu dalam bentuk log.
-              </Text>
-            </View>
-
-            {/* Auto Logging */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoHeader}>
-                <View style={[styles.infoIcon, { backgroundColor: Colors.secondary }]}>
-                  <FontAwesome5 name="magic" size={20} color={Colors.onPrimary} />
-                </View>
-                <View style={styles.infoTitleContainer}>
-                  <Text style={styles.infoTitle}>Logging Otomatis</Text>
-                </View>
-              </View>
-
-              <Text style={styles.infoDescription}>
-                Sistem akan secara otomatis membuat log ketika Anda melakukan aktivitas 
-                seperti menghadiri event, berkontribusi pada quest, dan berpartisipasi 
-                dalam challenge.
-              </Text>
-            </View>
-
-            {/* Recap Integration */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoHeader}>
-                <View style={[styles.infoIcon, { backgroundColor: Colors.tertiary }]}>
-                  <FontAwesome5 name="chart-line" size={20} color={Colors.onPrimary} />
-                </View>
-                <View style={styles.infoTitleContainer}>
-                  <Text style={styles.infoTitle}>Integrasi Recap</Text>
-                </View>
-              </View>
-
-              <Text style={styles.infoDescription}>
-                Journaling berperan besar pada fitur Recap karena menjadi acuan 
-                bagi kecerdasan buatan untuk membuat rekap bulanan yang personal 
-                dan bermakna.
-              </Text>
-            </View>
-
-            {/* Log Unit */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoHeader}>
-                <View style={[styles.infoIcon, { backgroundColor: Colors.error }]}>
-                  <FontAwesome5 name="file-alt" size={20} color={Colors.onPrimary} />
-                </View>
-                <View style={styles.infoTitleContainer}>
-                  <Text style={styles.infoTitle}>Unit Log</Text>
-                </View>
-              </View>
-
-              <Text style={styles.infoDescription}>
-                Unit terkecil dari journal disebut "log". Setiap log dapat berupa 
-                catatan pribadi (private) atau dapat dibagikan kepada komunitas (public). Log yang sudah dibuat tidak dapat dihapus.
-              </Text>
-            </View>
+            ))}
 
             {/* Tips Section */}
             <View style={styles.tipsSection}>
               <View style={styles.tipsHeader}>
                 <FontAwesome5 name="lightbulb" size={18} color={Colors.onPrimary} />
-                <Text style={styles.tipsTitle}>Tips Journaling</Text>
+                <Text style={styles.tipsTitle}>Tips Unlock Habit</Text>
               </View>
               <View style={styles.tipsList}>
                 <View style={styles.tipItem}>
                   <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.tipText}>Tulis secara konsisten setiap hari</Text>
+                  <Text style={styles.tipText}>Konsisten menyelesaikan tugas harian</Text>
                 </View>
                 <View style={styles.tipItem}>
                   <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.tipText}>Refleksikan pembelajaran dan pengalaman</Text>
+                  <Text style={styles.tipText}>Jaga streak dengan tidak melewatkan hari</Text>
                 </View>
                 <View style={styles.tipItem}>
                   <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.tipText}>Gunakan private log untuk catatan personal</Text>
-                </View>
-                <View style={styles.tipItem}>
-                  <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.tipText}>Bagikan inspirasi melalui public log</Text>
+                  <Text style={styles.tipText}>Fokus pada completion rate yang tinggi</Text>
                 </View>
               </View>
             </View>
@@ -208,7 +199,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
   },
-  infoCard: {
+  requirementCard: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 20,
@@ -224,12 +215,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  infoHeader: {
+  requirementHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  infoIcon: {
+  difficultyIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -237,19 +228,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  infoTitleContainer: {
+  requirementTitleContainer: {
     flex: 1,
   },
-  infoTitle: {
+  difficultyTitle: {
     fontFamily: Fonts.display.bold,
     fontSize: 18,
     color: Colors.onSurface,
+    marginBottom: 4,
   },
-  infoDescription: {
+  requirementSummary: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 13,
+    color: Colors.primary,
+  },
+  requirementDescription: {
     fontFamily: Fonts.text.regular,
     fontSize: 14,
     color: Colors.onSurfaceVariant,
     lineHeight: 20,
+    marginBottom: 16,
+  },
+  requirementDetails: {
+    gap: 12,
+    backgroundColor: Colors.surfaceVariant + '30',
+    padding: 12,
+    borderRadius: 12,
+  },
+  requirementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  requirementLabel: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 13,
+    color: Colors.onSurfaceVariant,
+    flex: 1,
+  },
+  requirementValue: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
   },
   tipsSection: {
     backgroundColor: Colors.secondary,

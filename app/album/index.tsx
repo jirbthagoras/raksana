@@ -15,11 +15,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AlbumInfoModal } from '../../components/AlbumInfoModal';
-import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModal';
-import VideoPlayer from '../../components/VideoPlayer';
+import { AlbumInfoModal } from '../../components/Modals/AlbumInfoModal';
+import { DeleteConfirmationModal } from '../../components/Modals/DeleteConfirmationModal';
+import VideoPlayer from '../../components/Screens/VideoPlayer';
 import { ErrorProvider, useError } from '../../contexts/ErrorContext';
-import { useMemories, useDeleteMemory } from '../../hooks/useApiQueries';
+import { useDeleteMemory, useMemories } from '../../hooks/useApiQueries';
 import { Memory } from '../../types/auth';
 
 const { width } = Dimensions.get('window');

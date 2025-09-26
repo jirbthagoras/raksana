@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, StatusBar, Dimensions } from 'react-native';
-import { Skeleton, SkeletonCircle, SkeletonText } from './SkeletonLoader';
-import GradientBackground from './GradientBackground';
+import { Dimensions, SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import FloatingElements from './FloatingElements';
-import { Colors } from '../constants';
+import GradientBackground from './GradientBackground';
+import { Skeleton, SkeletonCircle } from './SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 

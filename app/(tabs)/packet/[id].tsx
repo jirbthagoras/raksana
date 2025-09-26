@@ -1,4 +1,5 @@
-import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/SkeletonLoader';
+import { HabitUnlockModal } from '@/components/Modals/HabitUnlockModal';
+import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/Screens/SkeletonLoader';
 import { Colors, Fonts } from '@/constants';
 import { usePacketDetail } from '@/hooks/useApiQueries';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -16,7 +17,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
-import { HabitUnlockModal } from '../../../components/HabitUnlockModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 

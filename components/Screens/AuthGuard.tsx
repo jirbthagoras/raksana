@@ -1,9 +1,9 @@
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
+import { useError } from '@/contexts/ErrorContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSegments } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import { useError } from '../contexts/ErrorContext';
-import { useAuth } from '../hooks/useAuth';
-import LoadingOverlay from './LoadingComponent';
 
 interface AuthGuardProps {
   children: React.ReactNode;

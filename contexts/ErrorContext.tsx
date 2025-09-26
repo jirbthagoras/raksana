@@ -1,5 +1,5 @@
+import { ErrorPopup } from '@/components/Popups/ErrorPopup';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
-import { ErrorPopup } from '../components/ErrorPopup';
 
 interface ErrorState {
   visible: boolean;

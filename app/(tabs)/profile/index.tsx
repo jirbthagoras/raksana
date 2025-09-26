@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/GradientBackground';
+import GradientBackground from '@/components/Screens/GradientBackground';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -22,7 +22,7 @@ import {
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import FloatingElements from '../../../components/FloatingElements';
+import FloatingElements from '../../../components/Screens/FloatingElements';
 import { useProfileMe } from '../../../hooks/useApiQueries';
 import apiService from '../../../services/api';
 

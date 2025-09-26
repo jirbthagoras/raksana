@@ -1,6 +1,6 @@
+import { Colors } from '@/constants';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
-import { Colors } from '../constants';
 
 interface AnimatedLogoProps {
   size?: number;
@@ -87,7 +87,7 @@ export default function AnimatedLogo({ size = 200, style }: AnimatedLogoProps) {
         ]}
       >
         <Animated.Image
-          source={require('../assets/images/raksana.png')}
+          source={require('@/assets/images/raksana.png')}
           style={[
             styles.image,
             {

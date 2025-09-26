@@ -1,6 +1,6 @@
+import { Colors } from '@/constants';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
-import { Colors } from '../constants';
 
 interface Props {
   visible: boolean;
@@ -63,7 +63,7 @@ export default function LoadingComponent({ visible }: Props) {
       {/* Card-like container around the logo */}
       <View style={styles.logoContainer}>
         <Animated.Image
-          source={require('../assets/images/raksana.png')}
+          source={require('@/assets/images/raksana.png')}
           style={[
             styles.image,
             {

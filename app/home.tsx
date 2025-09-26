@@ -1,3 +1,6 @@
+import FloatingElements from '@/components/Screens/FloatingElements';
+import GradientBackground from '@/components/Screens/GradientBackground';
+import { Colors, Fonts } from '@/constants';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import {
@@ -10,9 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import FloatingElements from '../components/FloatingElements';
-import GradientBackground from '../components/GradientBackground';
-import { Colors, Fonts } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');

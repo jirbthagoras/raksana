@@ -1,10 +1,10 @@
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -16,9 +16,8 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCreatePacket } from '../../../hooks/useApiQueries';
 import { ErrorProvider, useError } from '../../../contexts/ErrorContext';
-import LoadingOverlay from '../../../components/LoadingComponent';
+import { useCreatePacket } from '../../../hooks/useApiQueries';
 
 function CreatePacketScreenContent() {
   const [target, setTarget] = useState('');

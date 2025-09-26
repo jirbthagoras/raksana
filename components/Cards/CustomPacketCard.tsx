@@ -1,9 +1,9 @@
+import ProgressRing from '@/components/Screens/ProgresRing';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import ProgressRing from './ProgresRing';
 
 interface PacketCardProps {
   packet: {

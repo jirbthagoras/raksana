@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCreateLog } from '../../hooks/useApiQueries';
 import { ErrorProvider, useError } from '../../contexts/ErrorContext';
-import LoadingOverlay from '../../components/LoadingComponent';
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
 
 function CreateJournalScreenContent() {
   const [text, setText] = useState('');

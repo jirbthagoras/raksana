@@ -1,3 +1,7 @@
+import AnimatedLogo from '@/components/Screens/AnimatedLogo';
+import FloatingElements from '@/components/Screens/FloatingElements';
+import GradientBackground from '@/components/Screens/GradientBackground';
+import { Colors, Fonts } from '@/constants';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -11,10 +15,6 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import AnimatedLogo from '../components/AnimatedLogo';
-import FloatingElements from '../components/FloatingElements';
-import GradientBackground from '../components/GradientBackground';
-import { Colors, Fonts } from '../constants';
 
 const { width, height } = Dimensions.get('window');
 

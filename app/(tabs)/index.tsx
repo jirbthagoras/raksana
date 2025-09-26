@@ -1,3 +1,4 @@
+import { Colors, Fonts } from '@/constants';
 import { MotiText, MotiView } from 'moti';
 import React from 'react';
 import {
@@ -11,28 +12,27 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import FloatingElements from '../../components/FloatingElements';
-import GradientBackground from '../../components/GradientBackground';
-import { Colors, Fonts } from '../../constants';
+import FloatingElements from '../../components/Screens/FloatingElements';
+import GradientBackground from '../../components/Screens/GradientBackground';
 
-import BackyardButton from '@/components/Home/BackyardButton';
-import ChallengesButton from '@/components/Home/ChallengesButton';
-import DailyChallenge from '@/components/Home/DailyChallenge';
-import EventsButton from '@/components/Home/EventsButton';
-import JournalButton from '@/components/Home/JournalButton';
-import LeaderboardButton from '@/components/Home/LeaderboardButton';
-import MemoryButton from '@/components/Home/MemoryButton';
-import MonthlyRecapButton from '@/components/Home/MonthlyRecapButton';
-import NearbyQuestLocator from '@/components/Home/NearbyQuestLocator';
-import BalanceCard from '@/components/Home/PointCard';
-import ProgressBar from '@/components/Home/ProgressBar';
-import RecapsButton from '@/components/Home/RecapsButton';
-import RecyclopediaButton from '@/components/Home/RecyclopediaButton';
-import RegionCard from '@/components/Home/RegionCard';
-import StreakButton from '@/components/Home/StreakButton';
-import WeeklyRecapButton from '@/components/Home/WeeklyRecapButton';
+import BackyardButton from '@/components/Buttons/BackyardButton';
+import ChallengesButton from '@/components/Buttons/ChallengesButton';
+import EventsButton from '@/components/Buttons/EventsButton';
+import JournalButton from '@/components/Buttons/JournalButton';
+import LeaderboardButton from '@/components/Buttons/LeaderboardButton';
+import MemoryButton from '@/components/Buttons/MemoryButton';
+import MonthlyRecapButton from '@/components/Buttons/MonthlyRecapButton';
+import RecapsButton from '@/components/Buttons/RecapsButton';
+import RecyclopediaButton from '@/components/Buttons/RecyclopediaButton';
+import StreakButton from '@/components/Buttons/StreakButton';
+import WeeklyRecapButton from '@/components/Buttons/WeeklyRecapButton';
+import BalanceCard from '@/components/Cards/PointCard';
+import RegionCard from '@/components/Cards/RegionCard';
+import DailyChallenge from '@/components/Screens/DailyChallenge';
+import NearbyQuestLocator from '@/components/Screens/NearbyQuestLocator';
+import ProgressBar from '@/components/Screens/ProgressBar';
 import { useRouter } from 'expo-router';
-import HomePageSkeleton from '../../components/HomePageSkeleton';
+import HomePageSkeleton from '../../components/Screens/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfileMe, useRegions } from '../../hooks/useApiQueries';
 

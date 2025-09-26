@@ -1,24 +1,23 @@
+import { RecapCard } from '@/components/Cards/RecapCard';
+import { RecapDetailModal } from '@/components/Modals/RecapDetailModal';
+import { RecapsInfoModal } from '@/components/Modals/RecapsInfoModal';
+import { SkeletonCircle, SkeletonText } from '@/components/Screens/SkeletonLoader';
 import { Colors, Fonts } from '@/constants';
+import { useMonthlyRecaps, useWeeklyRecaps } from '@/hooks/useApiQueries';
+import { MonthlyRecap, WeeklyRecap } from '@/types/auth';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RecapCard } from '../../components/RecapCard';
-import { RecapDetailModal } from '../../components/RecapDetailModal';
-import { RecapsInfoModal } from '../../components/RecapsInfoModal';
-import { SkeletonCircle, SkeletonText } from '../../components/SkeletonLoader';
-import { useMonthlyRecaps, useWeeklyRecaps } from '../../hooks/useApiQueries';
-import { MonthlyRecap, WeeklyRecap } from '../../types/auth';
 
 export default function RecapsScreen() {
   const [selectedRecap, setSelectedRecap] = useState<WeeklyRecap | MonthlyRecap | null>(null);

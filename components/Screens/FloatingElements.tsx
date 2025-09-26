@@ -1,6 +1,6 @@
+import { Colors } from '@/constants';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, StyleSheet, View } from 'react-native';
-import { Colors } from '../constants';
 
 const { width, height } = Dimensions.get('window');
 

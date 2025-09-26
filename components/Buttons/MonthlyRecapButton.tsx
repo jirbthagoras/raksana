@@ -1,3 +1,4 @@
+import { MonthlyRecapModal } from "@/components/Modals/MonthlyRecapModal";
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,7 +13,6 @@ import {
 } from "react-native";
 import { ErrorProvider, useError } from "../../contexts/ErrorContext";
 import { useCreateMonthlyRecap } from "../../hooks/useApiQueries";
-import { MonthlyRecapModal } from "../MonthlyRecapModal";
 
 type Props = {
   onPress?: () => void;

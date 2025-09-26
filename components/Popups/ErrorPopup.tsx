@@ -1,7 +1,7 @@
+import { Colors, Fonts } from '@/constants';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Fonts } from '../constants';
 
 interface ErrorPopupProps {
   visible: boolean;

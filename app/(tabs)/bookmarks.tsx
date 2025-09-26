@@ -1,3 +1,6 @@
+import FloatingElements from '@/components/Screens/FloatingElements';
+import GradientBackground from '@/components/Screens/GradientBackground';
+import { Colors, Fonts } from '@/constants';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
@@ -9,9 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import FloatingElements from '../../components/FloatingElements';
-import GradientBackground from '../../components/GradientBackground';
-import { Colors, Fonts } from '../../constants';
 
 export default function BookmarksTab() {
   return (

@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { JournalInfoModal } from '../../components/JournalInfoModal';
+import { JournalInfoModal } from '../../components/Modals/JournalInfoModal';
 import { useLogs } from '../../hooks/useApiQueries';
 
 interface LogEntry {
