@@ -1,6 +1,7 @@
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -15,6 +16,10 @@ export default function BalanceCard({
   currency = "Rp",
   onPress,
 }: Props) {
+  
+  const handlePress = () => {
+      router.push('/history');
+  };
   const scaleValue = useRef(new Animated.Value(0.9)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
   const glowOpacity = useRef(new Animated.Value(0.3)).current;
@@ -93,7 +98,7 @@ export default function BalanceCard({
       >
         <TouchableOpacity
           style={styles.cardContent}
-          onPress={onPress}
+          onPress={handlePress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           activeOpacity={0.8}

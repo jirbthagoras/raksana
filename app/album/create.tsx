@@ -1,6 +1,9 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router, useLocalSearchParams } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
 import {
@@ -18,19 +21,32 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
-import { useCreateMemory } from '../../hooks/useApiQueries';
-import { ErrorProvider, useError } from '../../contexts/ErrorContext';
 import LoadingOverlay from '../../components/LoadingComponent';
+import { ErrorProvider, useError } from '../../contexts/ErrorContext';
+import { useChallengeParticipation, useCreateMemory } from '../../hooks/useApiQueries';
 
 function CreateMemoryScreenContent() {
+  const params = useLocalSearchParams();
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPointsPopup, setShowPointsPopup] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
   const [showActions, setShowActions] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  // Challenge mode detection
+  const isChallengeMode = params.challengeMode === 'true';
+  const challengeData = isChallengeMode ? {
+    id: parseInt(params.challengeId as string),
+    name: params.challengeName as string,
+    difficulty: params.challengeDifficulty as string,
+    day: parseInt(params.challengeDay as string),
+    points: parseInt(params.challengePoints as string)
+  } : null;
 
   const createMemoryMutation = useCreateMemory();
+  const challengeParticipationMutation = useChallengeParticipation();
   const { showPopUp } = useError();
 
   // Dismiss keyboard when loading starts
@@ -174,18 +190,38 @@ function CreateMemoryScreenContent() {
       const contentType = getContentType(selectedFile.uri);
       const filename = getFileName(selectedFile.uri);
 
-      const presignedResponse = await createMemoryMutation.mutateAsync({
-        content_type: contentType,
-        filename: filename,
-        description: description.trim()
-      });
+      let presignedResponse;
+      
+      if (isChallengeMode && challengeData) {
+        // Challenge participation
+        presignedResponse = await challengeParticipationMutation.mutateAsync({
+          challenge_id: challengeData.id,
+          content_type: contentType,
+          filename: filename,
+          description: description.trim()
+        });
+        // Show points congratulation for challenge participation
+        setEarnedPoints(challengeData.points);
+        setShowPointsPopup(true);
+      } else {
+        // Regular memory creation
+        presignedResponse = await createMemoryMutation.mutateAsync({
+          content_type: contentType,
+          filename: filename,
+          description: description.trim()
+        });
+      }
 
       // Step 2: Upload file to S3
       await uploadFileToPresignedUrl(presignedResponse.data.presigned_url, selectedFile.uri);
 
+      const successMessage = isChallengeMode 
+        ? `Selamat! Anda berhasil berpartisipasi dalam challenge "${challengeData?.name}" dan mendapatkan +${challengeData?.points} poin!`
+        : 'Memory berhasil dibuat dan akan segera muncul di album Anda.';
+      
       showPopUp(
-        'Memory berhasil dibuat dan akan segera muncul di album Anda.',
-        'Berhasil!',
+        successMessage,
+        isChallengeMode ? 'Challenge Completed!' : 'Berhasil!',
         'info'
       );
       
@@ -194,9 +230,13 @@ function CreateMemoryScreenContent() {
         router.back();
       }, 1500);
     } catch (error: any) {
+      const errorMessage = isChallengeMode 
+        ? 'Terjadi kesalahan saat berpartisipasi dalam challenge. Silakan coba lagi.'
+        : 'Terjadi kesalahan saat membuat memory. Silakan coba lagi.';
+      
       showPopUp(
-        error?.message || 'Terjadi kesalahan saat membuat memory. Silakan coba lagi.',
-        'Gagal Membuat Memory',
+        error?.message || errorMessage,
+        isChallengeMode ? 'Gagal Berpartisipasi' : 'Gagal Membuat Memory',
         'error'
       );
     } finally {
@@ -206,17 +246,15 @@ function CreateMemoryScreenContent() {
 
   const handleCancel = () => {
     if (description.trim() || selectedFile) {
-      Alert.alert(
-        'Batalkan Pembuatan Memory?',
-        'Data yang sudah diisi akan hilang. Apakah Anda yakin ingin membatalkan?',
-        [
-          { text: 'Tidak', style: 'cancel' },
-          { text: 'Ya', onPress: () => router.back() }
-        ]
-      );
+      setShowCancelModal(true);
     } else {
       router.back();
     }
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelModal(false);
+    router.back();
   };
 
   const descriptionCharCount = description.length;
@@ -242,20 +280,55 @@ function CreateMemoryScreenContent() {
             <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
               <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Buat Memory Baru</Text>
+            <Text style={styles.headerTitle}>
+              {isChallengeMode ? 'Ikuti Challenge' : 'Buat Memory Baru'}
+            </Text>
             <View style={styles.headerSpacer} />
           </View>
 
           {/* Introduction */}
-          <View style={styles.introSection}>
-            <View style={styles.introIcon}>
-              <FontAwesome5 name="camera" size={24} color={Colors.primary} />
+          {isChallengeMode && challengeData ? (
+            <View style={styles.challengeIntroSection}>
+              <LinearGradient
+                colors={[Colors.primary + '10', Colors.secondary + '10']}
+                style={styles.challengeGradient}
+              >
+                <View style={styles.challengeHeader}>
+                  <View style={styles.challengeIconContainer}>
+                    <FontAwesome5 name="trophy" size={28} color={Colors.primary} />
+                  </View>
+                  <View style={styles.challengeBadge}>
+                    <FontAwesome5 name="coins" size={12} color={Colors.secondary} />
+                    <Text style={styles.challengePoints}>+{challengeData.points}</Text>
+                  </View>
+                </View>
+                <Text style={styles.challengeTitle}>{challengeData.name}</Text>
+                <View style={styles.challengeMeta}>
+                  <View style={styles.challengeMetaItem}>
+                    <FontAwesome5 name="calendar-day" size={12} color={Colors.onSurfaceVariant} />
+                    <Text style={styles.challengeMetaText}>Hari {challengeData.day}</Text>
+                  </View>
+                  <View style={styles.challengeMetaItem}>
+                    <FontAwesome5 name="layer-group" size={12} color={Colors.secondary} />
+                    <Text style={styles.challengeMetaText}>{challengeData.difficulty.toUpperCase()}</Text>
+                  </View>
+                </View>
+                <Text style={styles.challengeSubtitle}>
+                  Bagikan foto/video aktivitas Anda untuk menyelesaikan challenge ini dan dapatkan poin!
+                </Text>
+              </LinearGradient>
             </View>
-            <Text style={styles.introTitle}>Bagikan Momen Eco Centric</Text>
-            <Text style={styles.introSubtitle}>
-              Abadikan pengalaman gaya hidup Eco Centric Anda dan bagikan dengan komunitas
-            </Text>
-          </View>
+          ) : (
+            <View style={styles.introSection}>
+              <View style={styles.introIcon}>
+                <FontAwesome5 name="camera" size={24} color={Colors.primary} />
+              </View>
+              <Text style={styles.introTitle}>Bagikan Momen Eco Centric</Text>
+              <Text style={styles.introSubtitle}>
+                Abadikan pengalaman gaya hidup Eco Centric Anda dan bagikan dengan komunitas
+              </Text>
+            </View>
+          )}
 
           {/* Media Selection */}
           <View style={styles.fieldSection}>
@@ -295,12 +368,18 @@ function CreateMemoryScreenContent() {
           <View style={styles.fieldSection}>
             <Text style={styles.fieldLabel}>Deskripsi</Text>
             <Text style={styles.fieldDescription}>
-              Ceritakan tentang aktivitas Eco Centric yang Anda lakukan
+              {isChallengeMode 
+                ? 'Ceritakan bagaimana Anda menyelesaikan challenge ini'
+                : 'Ceritakan tentang aktivitas Eco Centric yang Anda lakukan'
+              }
             </Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.textInput}
-                placeholder="Contoh: Hari ini saya menanam pohon mangga di halaman belakang rumah. Semoga bisa tumbuh besar dan memberikan manfaat untuk lingkungan..."
+                placeholder={isChallengeMode 
+                  ? `Contoh: Saya berhasil menyelesaikan challenge "${challengeData?.name}". Aktivitas ini sangat menyenangkan dan bermanfaat untuk lingkungan...`
+                  : "Contoh: Hari ini saya menanam pohon mangga di halaman belakang rumah. Semoga bisa tumbuh besar dan memberikan manfaat untuk lingkungan..."
+                }
                 placeholderTextColor={Colors.onSurfaceVariant}
                 value={description}
                 onChangeText={setDescription}
@@ -441,6 +520,88 @@ function CreateMemoryScreenContent() {
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
+      </Modal>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View style={styles.cancelModalOverlay}>
+          <MotiView
+            from={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: 'spring', damping: 15 }}
+            style={styles.cancelModalContainer}
+          >
+            <LinearGradient
+              colors={[Colors.errorContainer, Colors.errorContainer + 'E0']}
+              style={styles.cancelModalGradient}
+            >
+              {/* Warning Icon */}
+              <MotiView
+                from={{ scale: 0, rotate: '-180deg' }}
+                animate={{ scale: 1, rotate: '0deg' }}
+                transition={{ type: 'spring', damping: 12, delay: 200 }}
+                style={styles.cancelModalIconContainer}
+              >
+                <FontAwesome5 name="exclamation-triangle" size={32} color={Colors.error} />
+              </MotiView>
+
+              {/* Title */}
+              <MotiView
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'timing', duration: 300, delay: 400 }}
+              >
+                <Text style={styles.cancelModalTitle}>
+                  {isChallengeMode ? 'Batalkan Partisipasi Challenge?' : 'Batalkan Pembuatan Memory?'}
+                </Text>
+              </MotiView>
+
+              {/* Subtitle */}
+              <MotiView
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'timing', duration: 300, delay: 500 }}
+              >
+                <Text style={styles.cancelModalSubtitle}>
+                  {isChallengeMode 
+                    ? 'Data yang sudah diisi akan hilang dan Anda tidak akan mendapatkan poin challenge.'
+                    : 'Data yang sudah diisi akan hilang. Apakah Anda yakin ingin membatalkan?'
+                  }
+                </Text>
+              </MotiView>
+
+              {/* Action Buttons */}
+              <MotiView
+                from={{ opacity: 0, translateY: 30 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'timing', duration: 300, delay: 600 }}
+                style={styles.cancelModalActions}
+              >
+                <TouchableOpacity
+                  style={styles.cancelModalKeepButton}
+                  onPress={() => setShowCancelModal(false)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.cancelModalKeepText}>Lanjutkan</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.cancelModalConfirmButton}
+                  onPress={handleConfirmCancel}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.cancelModalConfirmText}>Ya, Batalkan</Text>
+                </TouchableOpacity>
+              </MotiView>
+            </LinearGradient>
+          </MotiView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -751,5 +912,153 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.text.bold,
     fontSize: 16,
     color: Colors.onErrorContainer,
+  },
+  // Challenge mode styles
+  challengeIntroSection: {
+    marginBottom: 24,
+    marginTop: 10,
+  },
+  challengeGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    borderRadius: 16,
+    marginHorizontal: 20,
+  },
+  challengeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  challengeIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  challengeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.secondaryContainer,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  challengePoints: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.secondary,
+  },
+  challengeTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 20,
+    color: Colors.primary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  challengeMeta: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
+  challengeMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  challengeMetaText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+  },
+  challengeSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  // Cancel Modal Styles
+  cancelModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  cancelModalContainer: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 24,
+    backgroundColor: Colors.surface,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  cancelModalGradient: {
+    padding: 32,
+    borderRadius: 24,
+    alignItems: 'center',
+  },
+  cancelModalIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.error + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  cancelModalTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 20,
+    color: Colors.onSurface,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  cancelModalSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 16,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  cancelModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  cancelModalKeepButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryContainer,
+    alignItems: 'center',
+  },
+  cancelModalKeepText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onPrimaryContainer,
+  },
+  cancelModalConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+  },
+  cancelModalConfirmText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onError,
   },
 });

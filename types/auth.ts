@@ -151,21 +151,36 @@ export interface CreateWeeklyRecapResponse {
 }
 
 export interface MonthlyRecap {
-  summary: string;
-  tips: string;
-  completion_rate: string;
-  growth_rating: string;
+  id: number;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  total_memories: number;
+  total_tasks_completed: number;
+  total_challenges_completed: number;
+  total_points_earned: number;
   created_at: string;
-  challenges: number;
-  events: number;
-  quests: number;
-  treasures: number;
-  longest_streak: number;
 }
 
 export interface WeeklyRecapResponse {
   data: {
     recaps: WeeklyRecap[];
+  };
+}
+
+export interface PointHistoryItem {
+  name: string;
+  type: string;
+  category: string;
+  amount: number;
+  created_at: string;
+}
+
+export interface PointHistoryResponse {
+  data: {
+    balance: number;
+    histories: PointHistoryItem[];
   };
 }
 

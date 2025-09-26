@@ -241,6 +241,16 @@ class ApiService {
     return response.data;
   }
 
+  async participateInChallenge(data: { challenge_id: number; description: string; filename: string; content_type: string }): Promise<{ data: { presigned_url: string } }> {
+    const response: AxiosResponse<{ data: { presigned_url: string } }> = await this.api.post('/challenge', data);
+    return response.data;
+  }
+
+  async getPointHistory(): Promise<{ data: { balance: number; histories: Array<{ name: string; type: string; category: string; amount: number; created_at: string }> } }> {
+    const response: AxiosResponse<{ data: { balance: number; histories: Array<{ name: string; type: string; category: string; amount: number; created_at: string }> } }> = await this.api.get('/history');
+    return response.data;
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

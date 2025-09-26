@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, CreateWeeklyRecapResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
+import { ApiError, CreateWeeklyRecapResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, PointHistoryResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -17,6 +17,7 @@ export const apiKeys = {
   weeklyRecaps: () => ['weeklyRecaps'] as const,
   monthlyRecaps: () => ['monthlyRecaps'] as const,
   memories: () => ['memories'] as const,
+  pointHistory: () => ['pointHistory'] as const,
 };
 
 // Profile queries
@@ -283,6 +284,36 @@ export const useDeleteMemory = () => {
   });
 };
 
+// Point History Query
+export const usePointHistory = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<PointHistoryResponse, ApiError>({
+    queryKey: apiKeys.pointHistory(),
+    queryFn: () => apiService.getPointHistory(),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+};
+
+// Challenge Participation Mutation
+export const useChallengeParticipation = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<{ data: { presigned_url: string } }, ApiError, { challenge_id: number; description: string; filename: string; content_type: string }>({
+    mutationFn: (data: { challenge_id: number; description: string; filename: string; content_type: string }) => 
+      apiService.participateInChallenge(data),
+    onSuccess: () => {
+      // Invalidate and refetch memories, daily challenge, and recaps data
+      queryClient.invalidateQueries({ queryKey: ['memories'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyChallenge'] });
+      queryClient.invalidateQueries({ queryKey: ['weeklyRecaps'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyRecaps'] });
+    },
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
@@ -296,4 +327,5 @@ export const apiQueries = {
   useLeaderboard,
   useWeeklyRecaps,
   useMonthlyRecaps,
+  usePointHistory,
 };

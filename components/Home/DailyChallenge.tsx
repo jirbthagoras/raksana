@@ -1,6 +1,7 @@
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { apiService } from "../../services/api";
@@ -97,6 +98,22 @@ export default function WeeklyChallenge({ onPress }: Props) {
         useNativeDriver: true,
       }),
     ]).start();
+    
+    // Navigate to album/create with challenge parameters
+    if (challengeData) {
+      router.push({
+        pathname: '/album/create',
+        params: {
+          challengeMode: 'true',
+          challengeId: challengeData.id.toString(),
+          challengeName: challengeData.name,
+          challengeDifficulty: challengeData.difficulty,
+          challengeDay: challengeData.day.toString(),
+          challengePoints: challengeData.point_gain.toString()
+        }
+      });
+    }
+    
     onPress?.();
   };
 
