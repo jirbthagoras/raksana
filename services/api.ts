@@ -251,6 +251,31 @@ class ApiService {
     return response.data;
   }
 
+  async getProfilePictureUploadUrl(filename: string): Promise<{ data: { presigned_url: string } }> {
+    const response: AxiosResponse<{ data: { presigned_url: string } }> = await this.api.put('/profile/picture', {
+      filename
+    });
+    return response.data;
+  }
+
+  async uploadToPresignedUrl(presignedUrl: string, file: any, contentType: string): Promise<void> {
+    // Get the file as blob
+    const response = await fetch(file.uri);
+    const blob = await response.blob();
+    
+    const uploadResponse = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: blob,
+      headers: {
+        'Content-Type': contentType,
+      },
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error('Failed to upload file to S3');
+    }
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

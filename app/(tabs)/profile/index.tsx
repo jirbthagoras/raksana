@@ -1,24 +1,30 @@
 import GradientBackground from '@/components/GradientBackground';
 import { Colors, Fonts } from '@/constants';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
-     Dimensions,
-     Image,
-     Pressable,
-     RefreshControl,
-     SafeAreaView,
-     ScrollView,
-     StatusBar,
-     StyleSheet,
-     Text,
-     TouchableOpacity,
-     View
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  Modal,
+  Pressable,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FloatingElements from '../../../components/FloatingElements';
 import { useProfileMe } from '../../../hooks/useApiQueries';
+import apiService from '../../../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -55,7 +61,156 @@ interface ProfileData {
 export default function ProfileScreen() {
   const { data: profileData, isLoading, error, refetch } = useProfileMe();
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['Statistics', 'Badges'];
+  const tabs = ['Statistics'];
+  const insets = useSafeAreaInsets();
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  const handleEditProfilePicture = async () => {
+    try {
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions to change your profile picture.');
+        return;
+      }
+
+      // Show custom image picker modal
+      setShowImagePicker(true);
+    } catch (error) {
+      console.error('Error requesting permissions:', error);
+      Alert.alert('Error', 'Failed to open image picker');
+    }
+  };
+
+  const pickImageFromCamera = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant camera permissions to take a photo.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadProfilePicture(result.assets[0]);
+      }
+    } catch (error) {
+      console.error('Error picking image from camera:', error);
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
+  const pickImageFromGallery = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadProfilePicture(result.assets[0]);
+      }
+    } catch (error) {
+      console.error('Error picking image from gallery:', error);
+      Alert.alert('Error', 'Failed to select image');
+    }
+  };
+
+  const uploadProfilePicture = async (imageAsset: any) => {
+    try {
+      setIsUploadingImage(true);
+
+      // Get file extension
+      const fileExtension = imageAsset.uri.split('.').pop() || 'jpg';
+      const filename = `profile_${Date.now()}.${fileExtension}`;
+      const contentType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
+
+      // Get presigned URL
+      const response = await apiService.getProfilePictureUploadUrl(filename);
+      const presignedUrl = response.data.presigned_url;
+
+      // Upload to S3 using fetch with blob
+      const fileResponse = await fetch(imageAsset.uri);
+      const blob = await fileResponse.blob();
+      
+      const uploadResponse = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: blob,
+        headers: {
+          'Content-Type': contentType,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image to S3');
+      }
+
+      // Refresh profile data to get updated image
+      await refetch();
+      setImageError(false); // Reset image error state
+
+      Alert.alert('Success', 'Profile picture updated successfully!');
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      Alert.alert('Error', 'Failed to update profile picture. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const renderProfileImage = () => {
+    const imageUrl = profileData?.profile_url;
+    const isValidUrl = imageUrl && imageUrl.trim() !== '' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
+
+    const handleImageError = (error: any) => {
+      console.log('Profile image loading error:', imageUrl, error);
+      setImageError(true);
+      setImageLoading(false);
+    };
+
+    const handleImageLoad = () => {
+      console.log('Profile image loaded successfully:', imageUrl);
+      setImageLoading(false);
+      setImageError(false);
+    };
+
+    const handleImageLoadStart = () => {
+      console.log('Starting to load profile image:', imageUrl);
+      setImageLoading(true);
+      setImageError(false);
+    };
+
+    if (!imageError && isValidUrl) {
+      return (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.profileImage}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          onLoadStart={handleImageLoadStart}
+          resizeMode="cover"
+        />
+      );
+    } else {
+      // Fallback avatar
+      return (
+        <View style={[styles.profileImage, styles.profileImageFallback]}>
+          <FontAwesome5 name="user" size={32} color={Colors.onSurfaceVariant} />
+        </View>
+      );
+    }
+  };
 
   const getBadgeIcon = (category: string) => {
     switch (category) {
@@ -185,28 +340,10 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 
-  const BadgesTab = () => (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 600, delay: 100 }}
-        style={styles.tabContent}
-      >
-        <Text style={styles.badgesCount}>{profileData?.badges.length || 0} Badges Earned</Text>
-        <View style={styles.badgesContainer}>
-          {profileData?.badges.map((badge: Badge, index: number) => (
-            <BadgeItem key={index} badge={badge} />
-          )) || []}
-        </View>
-      </MotiView>
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
-  );
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
         <GradientBackground>
           <FloatingElements />
           <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -220,7 +357,7 @@ export default function ProfileScreen() {
 
   if (error || !profileData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
         <GradientBackground>
           <FloatingElements />
           <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -236,7 +373,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
       <GradientBackground>
         <FloatingElements />
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -253,16 +390,6 @@ export default function ProfileScreen() {
           />
         }
       >
-        {/* Header Section */}
-        <View style={styles.header}>
-          <MotiView
-            from={{ opacity: 0, translateY: -20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 600 }}
-          >
-            <Text style={styles.headerTitle}>Profile</Text>
-          </MotiView>
-        </View>
 
         {/* Profile Card */}
         <MotiView
@@ -278,38 +405,53 @@ export default function ProfileScreen() {
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.profileHeader}>
-              <Image source={{ uri: profileData.profile_url }} style={styles.profileImage} />
+              <View style={styles.profileImageContainer}>
+                {renderProfileImage()}
+                <TouchableOpacity 
+                  style={styles.editImageButton}
+                  onPress={handleEditProfilePicture}
+                  disabled={isUploadingImage}
+                >
+                  {isUploadingImage ? (
+                    <ActivityIndicator size="small" color={Colors.onPrimary} />
+                  ) : (
+                    <Ionicons name="camera" size={16} color={Colors.onPrimary} />
+                  )}
+                </TouchableOpacity>
+              </View>
               <View style={styles.profileInfo}>
                 <Text style={styles.profileName}>{profileData.name}</Text>
                 <Text style={styles.profileUsername}>@{profileData.username}</Text>
                 <View style={styles.levelContainer}>
-                  <FontAwesome5 name="star" size={12} color={Colors.secondary} />
-                  <Text style={styles.levelText}>Level {profileData.level}</Text>
-                  <Text style={styles.rankText}>Rank #{profileData.rank}</Text>
+                  <View style={styles.levelBadge}>
+                    <FontAwesome5 name="star" size={12} color={Colors.secondary} />
+                    <Text style={styles.levelText}>Level {profileData.level}</Text>
+                  </View>
+                  <View style={styles.rankBadge}>
+                    <FontAwesome5 name="trophy" size={12} color={Colors.primary} />
+                    <Text style={styles.rankText}>Rank #{profileData.rank}</Text>
+                  </View>
                 </View>
               </View>
             </View>
 
-            {/* Experience Progress */}
-            <View style={styles.expSection}>
-              <View style={styles.expHeader}>
-                <Text style={styles.expLabel}>Experience</Text>
-                <Text style={styles.expText}>
-                  {profileData.current_exp} / {profileData.exp_needed} XP
-                </Text>
-              </View>
-              <View style={styles.expBarContainer}>
-                <View style={styles.expBarBackground}>
-                  <LinearGradient
-                    colors={[Colors.secondary, Colors.tertiary]}
-                    style={[
-                      styles.expBarFill,
-                      { width: `${(profileData.current_exp / profileData.exp_needed) * 100}%` }
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  />
-                </View>
+            {/* Badges Section */}
+            <View style={styles.badgesInProfile}>
+              <View style={styles.badgesInProfileContainer}>
+                {profileData.badges.slice(0, 3).map((badge: Badge, index: number) => (
+                  <View key={index} style={styles.badgeInProfileItem}>
+                    <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
+                      <FontAwesome5 name={getBadgeIcon(badge.category)} size={12} color={getBadgeColor(badge.category)} />
+                    </View>
+                    <Text style={styles.badgeInProfileName}>{badge.name}</Text>
+                    <Text style={styles.badgeInProfileFreq}>×{badge.frequency}</Text>
+                  </View>
+                ))}
+                {profileData.badges.length > 3 && (
+                  <View style={styles.badgeInProfileMore}>
+                    <Text style={styles.badgeInProfileMoreText}>+{profileData.badges.length - 3}</Text>
+                  </View>
+                )}
               </View>
             </View>
 
@@ -326,10 +468,79 @@ export default function ProfileScreen() {
 
         {/* Tab Content */}
         <View style={styles.tabContentContainer}>
-          {activeTab === 0 ? <StatisticsTab /> : <BadgesTab />}
+          <StatisticsTab />
         </View>
       </ScrollView>
       </GradientBackground>
+
+      {/* Custom Image Picker Modal */}
+      <Modal
+        visible={showImagePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowImagePicker(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowImagePicker(false)}
+        >
+          <TouchableOpacity 
+            style={styles.imagePickerSheet}
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            <View style={styles.imagePickerHeader}>
+              <View style={styles.imagePickerHandle} />
+              <Text style={styles.imagePickerTitle}>Change Profile Picture</Text>
+              <Text style={styles.imagePickerSubtitle}>Choose how you want to update your profile picture</Text>
+            </View>
+            
+            <View style={styles.imagePickerButtons}>
+              <TouchableOpacity 
+                style={styles.imagePickerButton}
+                onPress={() => {
+                  setShowImagePicker(false);
+                  pickImageFromCamera();
+                }}
+              >
+                <View style={styles.imagePickerButtonIcon}>
+                  <FontAwesome5 name="camera" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.imagePickerButtonContent}>
+                  <Text style={styles.imagePickerButtonTitle}>Take Photo</Text>
+                  <Text style={styles.imagePickerButtonSubtitle}>Use camera to take a new photo</Text>
+                </View>
+                <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.imagePickerButton}
+                onPress={() => {
+                  setShowImagePicker(false);
+                  pickImageFromGallery();
+                }}
+              >
+                <View style={styles.imagePickerButtonIcon}>
+                  <FontAwesome5 name="images" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.imagePickerButtonContent}>
+                  <Text style={styles.imagePickerButtonTitle}>Choose from Gallery</Text>
+                  <Text style={styles.imagePickerButtonSubtitle}>Select from your photo library</Text>
+                </View>
+                <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.imagePickerCancelButton}
+              onPress={() => setShowImagePicker(false)}
+            >
+              <Text style={styles.imagePickerCancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -338,7 +549,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    marginTop: 20,
   },
   scrollView: {
     flex: 1,
@@ -405,7 +615,13 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    marginRight: 16,
+  },
+  profileImageFallback: {
+    backgroundColor: Colors.surfaceVariant,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.outline + '40',
   },
   profileInfo: {
     flex: 1,
@@ -425,18 +641,39 @@ const styles = StyleSheet.create({
   levelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.secondaryContainer,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.secondary + '40',
   },
   levelText: {
     fontFamily: Fonts.text.bold,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.secondary,
+  },
+  rankBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primaryContainer,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.primary + '40',
   },
   rankText: {
     fontFamily: Fonts.text.bold,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.primary,
-    marginLeft: 8,
   },
   expSection: {
     marginBottom: 16,
@@ -611,7 +848,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: Colors.surface,
     marginHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 20,
     borderRadius: 12,
     padding: 4,
     borderWidth: 1,
@@ -619,8 +856,8 @@ const styles = StyleSheet.create({
   },
   tabItem: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 17,
     borderRadius: 8,
     alignItems: 'center',
     position: 'relative',
@@ -651,7 +888,7 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 30,
   },
   badgesCount: {
     fontFamily: Fonts.text.bold,
@@ -659,5 +896,177 @@ const styles = StyleSheet.create({
     color: Colors.onSurface,
     marginBottom: 16,
     textAlign: 'center',
+  },
+  // Badges in Profile Styles
+  badgesInProfile: {
+    marginBottom: 16,
+  },
+  badgesInProfileTitle: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.onSurface,
+    marginBottom: 12,
+  },
+  badgesInProfileContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  badgeInProfileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.secondaryContainer,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
+    flex: 1,
+    minWidth: 0,
+  },
+  badgeInProfileIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeInProfileName: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 11,
+    color: Colors.onSurface,
+    flex: 1,
+  },
+  badgeInProfileFreq: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 10,
+    color: Colors.secondary,
+  },
+  badgeInProfileMore: {
+    backgroundColor: Colors.outline + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeInProfileMoreText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 11,
+    color: Colors.secondary,
+  },
+  // Profile Image Container Styles
+  profileImageContainer: {
+    position: 'relative',
+    marginRight: 16,
+  },
+  editImageButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: Colors.primary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.surface,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  // Image Picker Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  imagePickerSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 34,
+    maxHeight: '80%',
+  },
+  imagePickerHeader: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.outline + '20',
+  },
+  imagePickerHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: Colors.onSurfaceVariant + '40',
+    borderRadius: 2,
+    marginBottom: 16,
+  },
+  imagePickerTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 20,
+    color: Colors.onSurface,
+    marginBottom: 8,
+  },
+  imagePickerSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  imagePickerButtons: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.surfaceVariant + '40',
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  imagePickerButtonIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  imagePickerButtonContent: {
+    flex: 1,
+  },
+  imagePickerButtonTitle: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onSurface,
+    marginBottom: 2,
+  },
+  imagePickerButtonSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 13,
+    color: Colors.onSurfaceVariant,
+  },
+  imagePickerCancelButton: {
+    marginHorizontal: 24,
+    marginTop: 16,
+    paddingVertical: 16,
+    backgroundColor: Colors.errorContainer,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  imagePickerCancelButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onErrorContainer,
   },
 });
