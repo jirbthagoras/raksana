@@ -24,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LoadingOverlay from '../../components/LoadingComponent';
 import { ErrorProvider, useError } from '../../contexts/ErrorContext';
 import { useChallengeParticipation, useCreateMemory } from '../../hooks/useApiQueries';
+import { ChallengeParticipationPopup } from '../../components/ChallengeParticipationPopup';
 
 function CreateMemoryScreenContent() {
   const params = useLocalSearchParams();
@@ -200,7 +201,7 @@ function CreateMemoryScreenContent() {
           filename: filename,
           description: description.trim()
         });
-        // Show points congratulation for challenge participation
+        // Show challenge participation popup
         setEarnedPoints(challengeData.points);
         setShowPointsPopup(true);
       } else {
@@ -215,20 +216,20 @@ function CreateMemoryScreenContent() {
       // Step 2: Upload file to S3
       await uploadFileToPresignedUrl(presignedResponse.data.presigned_url, selectedFile.uri);
 
-      const successMessage = isChallengeMode 
-        ? `Selamat! Anda berhasil berpartisipasi dalam challenge "${challengeData?.name}" dan mendapatkan +${challengeData?.points} poin!`
-        : 'Memory berhasil dibuat dan akan segera muncul di album Anda.';
-      
-      showPopUp(
-        successMessage,
-        isChallengeMode ? 'Challenge Completed!' : 'Berhasil!',
-        'info'
-      );
-      
-      // Navigate back after a short delay
-      setTimeout(() => {
-        router.back();
-      }, 1500);
+      if (!isChallengeMode) {
+        // Only show success popup for regular memory creation
+        showPopUp(
+          'Memory berhasil dibuat dan akan segera muncul di album Anda.',
+          'Berhasil!',
+          'info'
+        );
+        
+        // Navigate back after a short delay for regular memory
+        setTimeout(() => {
+          router.back();
+        }, 1500);
+      }
+      // For challenge mode, the popup and navigation are handled by the ChallengeParticipationPopup component
     } catch (error: any) {
       const errorMessage = isChallengeMode 
         ? 'Terjadi kesalahan saat berpartisipasi dalam challenge. Silakan coba lagi.'
@@ -436,6 +437,23 @@ function CreateMemoryScreenContent() {
       
       <LoadingOverlay visible={isSubmitting} />
       
+      {/* Challenge Participation Popup */}
+      {isChallengeMode && challengeData && (
+        <ChallengeParticipationPopup
+          visible={showPointsPopup}
+          onClose={() => {
+            setShowPointsPopup(false);
+            setTimeout(() => {
+              router.back();
+            }, 500);
+          }}
+          challengeName={challengeData.name}
+          points={earnedPoints}
+          difficulty={challengeData.difficulty}
+          day={challengeData.day}
+        />
+      )}
+
       {/* Custom Action Sheet Modal */}
       <Modal
         visible={showActions}

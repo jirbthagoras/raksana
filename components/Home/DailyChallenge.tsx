@@ -3,8 +3,8 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
-import { apiService } from "../../services/api";
+import { ActivityIndicator, Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useDailyChallenge } from "../../hooks/useApiQueries";
 
 interface ChallengeData {
   id: number;
@@ -21,19 +21,13 @@ type Props = {
 };
 
 export default function WeeklyChallenge({ onPress }: Props) {
-  const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: challengeData, isLoading: loading, error, refetch } = useDailyChallenge();
   const [isExpanded, setIsExpanded] = useState(false);
   const scaleValue = useRef(new Animated.Value(0.95)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
   const progressAnimation = useRef(new Animated.Value(0)).current;
   const pulseValue = useRef(new Animated.Value(1)).current;
   const expandAnimation = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fetchDailyChallenge();
-  }, []);
 
   useEffect(() => {
     if (challengeData) {
@@ -70,20 +64,6 @@ export default function WeeklyChallenge({ onPress }: Props) {
       pulse();
     }
   }, [challengeData]);
-
-  const fetchDailyChallenge = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiService.getDailyChallenge();
-      setChallengeData(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch daily challenge');
-      console.error('Error fetching daily challenge:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handlePress = () => {
     Animated.sequence([
@@ -168,8 +148,8 @@ export default function WeeklyChallenge({ onPress }: Props) {
     return (
       <View style={styles.container}>
         <View style={[styles.card, styles.errorCard]}>
-          <Text style={styles.errorText}>{error || 'No challenge available'}</Text>
-          <TouchableOpacity onPress={fetchDailyChallenge} style={styles.retryButton}>
+          <Text style={styles.errorText}>{error?.message || 'No challenge available'}</Text>
+          <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
