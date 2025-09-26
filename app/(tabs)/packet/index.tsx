@@ -1,7 +1,7 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: 20,
-    marginBottom: 32,
+    marginBottom: 50,
   },
   sectionHeader: {
     flexDirection: 'row',
