@@ -2,12 +2,11 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   RefreshControl,
   StyleSheet,
   Text,
@@ -15,9 +14,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MemoryPost from '../../components/Cards/MemoryPost';
 import { AlbumInfoModal } from '../../components/Modals/AlbumInfoModal';
 import { DeleteConfirmationModal } from '../../components/Modals/DeleteConfirmationModal';
-import VideoPlayer from '../../components/Screens/VideoPlayer';
 import { ErrorProvider, useError } from '../../contexts/ErrorContext';
 import { useDeleteMemory, useMemories } from '../../hooks/useApiQueries';
 import { Memory } from '../../types/auth';
@@ -43,25 +42,6 @@ function AlbumScreenContent() {
 
   const memories = memoriesData?.data?.memories || [];
 
-  const getFileType = (url: string) => {
-    const extension = url.split('.').pop()?.toLowerCase();
-    const isVideo = ['mp4', 'mov', 'avi', 'mkv'].includes(extension || '');
-    return isVideo ? 'video' : 'image';
-  };
-
-  // Create video players for video memories at component level
-  const videoPlayers = useMemo(() => {
-    const players: { [key: number]: any } = {};
-    memories.forEach((memory: Memory) => {
-      const fileType = getFileType(memory.file_url);
-      if (fileType === 'video') {
-        // We'll create the player when needed, not here to avoid hooks rule violation
-        players[memory.memory_id] = memory.file_url;
-      }
-    });
-    return players;
-  }, [memories]);
-
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -72,26 +52,6 @@ function AlbumScreenContent() {
     router.back();
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-    return date.toLocaleDateString('id-ID', options);
-  };
-
-  const getDifficultyColor = (difficulty?: string) => {
-    switch (difficulty) {
-      case 'easy': return '#4CAF50';
-      case 'medium': return '#FF9800';
-      case 'hard': return '#F44336';
-      default: return Colors.primary;
-    }
-  };
 
   const handleDeleteMemory = (memory: Memory) => {
     setSelectedMemory(memory);
@@ -126,123 +86,14 @@ function AlbumScreenContent() {
     setSelectedMemory(null);
   };
 
-  const renderMemoryPost = ({ item, index }: { item: Memory; index: number }) => {
-    const isParticipation = item.is_participation;
-    const fileType = getFileType(item.file_url);
-
-    return (
-      <MotiView
-        from={{ opacity: 0, translateY: 50 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ 
-          type: 'timing', 
-          duration: 400, 
-          delay: index * 100 
-        }}
-        style={[
-          styles.memoryPost,
-          isParticipation && styles.participationPost
-        ]}
-      >
-        {/* Header */}
-        <View style={styles.postHeader}>
-          <View style={styles.userInfo}>
-            <View style={[styles.avatar, isParticipation && styles.participationAvatar]}>
-              <FontAwesome5 
-                name="user" 
-                size={16} 
-                color={isParticipation ? Colors.onPrimary : Colors.primary} 
-              />
-            </View>
-            <View style={styles.userDetails}>
-              <Text style={styles.userName}>{item.user_name}</Text>
-              <Text style={styles.postDate}>{formatDate(item.created_at)}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.headerActions}>
-            {isParticipation && (
-              <View style={[styles.challengeBadge, { backgroundColor: getDifficultyColor(item.difficulty) }]}>
-                <FontAwesome5 name="trophy" size={12} color={Colors.onPrimary} />
-                <Text style={styles.challengeBadgeText}>
-                  +{item.point_gain}
-                </Text>
-              </View>
-            )}
-            
-            {!isParticipation && (
-              <TouchableOpacity
-                style={[
-                  styles.deleteButton,
-                  deleteMemoryMutation.isPending && styles.deleteButtonDisabled
-                ]}
-                onPress={() => handleDeleteMemory(item)}
-                disabled={deleteMemoryMutation.isPending}
-                activeOpacity={0.7}
-              >
-                {deleteMemoryMutation.isPending ? (
-                  <ActivityIndicator size="small" color={Colors.onSurfaceVariant} />
-                ) : (
-                  <FontAwesome5 
-                    name="trash" 
-                    size={14} 
-                    color={Colors.error} 
-                  />
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Challenge Info for Participation Posts */}
-        {isParticipation && (
-          <View style={styles.challengeInfo}>
-            <View style={styles.challengeHeader}>
-              <FontAwesome5 name="flag-checkered" size={14} color={Colors.primary} />
-              <Text style={styles.challengeTitle} numberOfLines={2}>
-                {item.challenge_name}
-              </Text>
-            </View>
-            <View style={styles.challengeMeta}>
-              <View style={styles.challengeMetaItem}>
-                <FontAwesome5 name="calendar-day" size={10} color={Colors.onSurfaceVariant} />
-                <Text style={styles.challengeMetaText}>Hari {item.day}</Text>
-              </View>
-              <View style={styles.challengeMetaItem}>
-                <FontAwesome5 name="layer-group" size={10} color={getDifficultyColor(item.difficulty)} />
-                <Text style={[styles.challengeMetaText, { color: getDifficultyColor(item.difficulty) }]}>
-                  {item.difficulty?.toUpperCase()}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Media Content */}
-        <View style={styles.mediaContainer}>
-          {fileType === 'video' ? (
-            <VideoPlayer
-              videoUrl={item.file_url}
-              style={styles.media}
-            />
-          ) : (
-            <Image
-              source={{ uri: item.file_url }}
-              style={styles.media}
-              resizeMode="cover"
-            />
-          )}
-        </View>
-
-        {/* Description */}
-        {item.description && (
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.description}>{item.description}</Text>
-          </View>
-        )} 
-      </MotiView>
-    );
-  };
+  const renderMemoryPost = useCallback(({ item, index }: { item: Memory; index: number }) => (
+    <MemoryPost 
+      item={item} 
+      index={index} 
+      onDelete={handleDeleteMemory}
+      isDeleting={deleteMemoryMutation.isPending}
+    />
+  ), [handleDeleteMemory, deleteMemoryMutation.isPending]);
 
   if (isLoading) {
     return (
@@ -323,6 +174,10 @@ function AlbumScreenContent() {
           keyExtractor={(item) => item.memory_id.toString()}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          windowSize={10}
+          initialNumToRender={3}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -522,178 +377,5 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: 20,
-  },
-  memoryPost: {
-    backgroundColor: Colors.surface,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.outline + '20',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  participationPost: {
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
-    backgroundColor: Colors.primaryContainer + '10',
-  },
-  postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    paddingBottom: 12,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primaryContainer,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  participationAvatar: {
-    backgroundColor: Colors.primary,
-  },
-  userDetails: {
-    flex: 1,
-  },
-  userName: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 14,
-    color: Colors.onSurface,
-    marginBottom: 2,
-  },
-  postDate: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-  },
-  challengeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  challengeBadgeText: {
-    fontFamily: Fonts.text.bold,
-    fontSize: 11,
-    color: Colors.onPrimary,
-  },
-  challengeInfo: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: Colors.primaryContainer + '20',
-    marginHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  challengeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    paddingTop: 12,
-  },
-  challengeTitle: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 13,
-    color: Colors.primary,
-    flex: 1,
-  },
-  challengeMeta: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  challengeMetaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  challengeMetaText: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 11,
-    color: Colors.onSurfaceVariant,
-  },
-  mediaContainer: {
-    position: 'relative',
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  media: {
-    width: '100%',
-    height: 300,
-    backgroundColor: Colors.surfaceVariant,
-  },
-  videoOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  descriptionContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  description: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 14,
-    color: Colors.onSurface,
-    lineHeight: 20,
-  },
-  engagementBar: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.outline + '20',
-    gap: 24,
-  },
-  engagementButton: {
-    padding: 8,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  deleteButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.errorContainer,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.error,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  deleteButtonDisabled: {
-    backgroundColor: Colors.surfaceVariant,
-    shadowOpacity: 0,
-    elevation: 0,
   },
 });
