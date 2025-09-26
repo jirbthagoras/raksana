@@ -236,6 +236,11 @@ class ApiService {
     return response.data;
   }
 
+  async deleteMemory(memoryId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.delete(`/memory/${memoryId}`);
+    return response.data;
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

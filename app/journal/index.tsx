@@ -134,7 +134,7 @@ export default function JournalScreen() {
       <FontAwesome5 name="book-open" size={48} color={Colors.outline} />
       <Text style={styles.emptyTitle}>Tidak ada log</Text>
       <Text style={styles.emptyDescription}>
-        Start documenting your journey by creating your first journal entry.
+        Cetak awal perjalanan mu di Journal ini
       </Text>
       <TouchableOpacity style={styles.emptyButton} onPress={handleCreateJournal}>
         <LinearGradient
@@ -144,7 +144,7 @@ export default function JournalScreen() {
           end={{ x: 1, y: 0 }}
         >
           <FontAwesome5 name="plus" size={14} color="white" />
-          <Text style={styles.emptyButtonText}>Create Entry</Text>
+          <Text style={styles.emptyButtonText}>Buat log</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>

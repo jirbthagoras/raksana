@@ -16,16 +16,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlbumInfoModal } from '../../components/AlbumInfoModal';
+import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModal';
 import VideoPlayer from '../../components/VideoPlayer';
-import { useMemories } from '../../hooks/useApiQueries';
+import { ErrorProvider, useError } from '../../contexts/ErrorContext';
+import { useMemories, useDeleteMemory } from '../../hooks/useApiQueries';
 import { Memory } from '../../types/auth';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width - 40;
 
-export default function AlbumScreen() {
+function AlbumScreenContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
   
   const {
     data: memoriesData,
@@ -33,6 +37,9 @@ export default function AlbumScreen() {
     error,
     refetch,
   } = useMemories();
+
+  const deleteMemoryMutation = useDeleteMemory();
+  const { showPopUp, showApiError } = useError();
 
   const memories = memoriesData?.data?.memories || [];
 
@@ -86,6 +93,39 @@ export default function AlbumScreen() {
     }
   };
 
+  const handleDeleteMemory = (memory: Memory) => {
+    setSelectedMemory(memory);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteMemory = () => {
+    if (!selectedMemory) return;
+    
+    deleteMemoryMutation.mutate(selectedMemory.memory_id, {
+      onSuccess: () => {
+        setDeleteModalVisible(false);
+        setSelectedMemory(null);
+        showPopUp(
+          'Memory berhasil dihapus dari album Anda.',
+          'Berhasil!',
+          'info'
+        );
+        // Refresh the page
+        refetch();
+      },
+      onError: (error) => {
+        setDeleteModalVisible(false);
+        setSelectedMemory(null);
+        showApiError(error);
+      },
+    });
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalVisible(false);
+    setSelectedMemory(null);
+  };
+
   const renderMemoryPost = ({ item, index }: { item: Memory; index: number }) => {
     const isParticipation = item.is_participation;
     const fileType = getFileType(item.file_url);
@@ -120,14 +160,38 @@ export default function AlbumScreen() {
             </View>
           </View>
           
-          {isParticipation && (
-            <View style={[styles.challengeBadge, { backgroundColor: getDifficultyColor(item.difficulty) }]}>
-              <FontAwesome5 name="trophy" size={12} color={Colors.onPrimary} />
-              <Text style={styles.challengeBadgeText}>
-                +{item.point_gain}
-              </Text>
-            </View>
-          )}
+          <View style={styles.headerActions}>
+            {isParticipation && (
+              <View style={[styles.challengeBadge, { backgroundColor: getDifficultyColor(item.difficulty) }]}>
+                <FontAwesome5 name="trophy" size={12} color={Colors.onPrimary} />
+                <Text style={styles.challengeBadgeText}>
+                  +{item.point_gain}
+                </Text>
+              </View>
+            )}
+            
+            {!isParticipation && (
+              <TouchableOpacity
+                style={[
+                  styles.deleteButton,
+                  deleteMemoryMutation.isPending && styles.deleteButtonDisabled
+                ]}
+                onPress={() => handleDeleteMemory(item)}
+                disabled={deleteMemoryMutation.isPending}
+                activeOpacity={0.7}
+              >
+                {deleteMemoryMutation.isPending ? (
+                  <ActivityIndicator size="small" color={Colors.onSurfaceVariant} />
+                ) : (
+                  <FontAwesome5 
+                    name="trash" 
+                    size={14} 
+                    color={Colors.error} 
+                  />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Challenge Info for Participation Posts */}
@@ -293,7 +357,26 @@ export default function AlbumScreen() {
         visible={infoModalVisible}
         onClose={() => setInfoModalVisible(false)}
       />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteMemory}
+        message="Apakah Anda yakin ingin menghapus memory ini?"
+        userName={selectedMemory?.user_name}
+        description={selectedMemory?.description}
+        isLoading={deleteMemoryMutation.isPending}
+      />
     </SafeAreaView>
+  );
+}
+
+export default function AlbumScreen() {
+  return (
+    <ErrorProvider>
+      <AlbumScreenContent />
+    </ErrorProvider>
   );
 }
 
@@ -586,5 +669,31 @@ const styles = StyleSheet.create({
   },
   engagementButton: {
     padding: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.errorContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.error,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  deleteButtonDisabled: {
+    backgroundColor: Colors.surfaceVariant,
+    shadowOpacity: 0,
+    elevation: 0,
   },
 });

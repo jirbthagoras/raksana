@@ -271,6 +271,18 @@ export const useCreateMemory = () => {
   });
 };
 
+// Delete Memory Mutation
+export const useDeleteMemory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<any, ApiError, number>({
+    mutationFn: (memoryId) => apiService.deleteMemory(memoryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: apiKeys.memories() });
+    },
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
