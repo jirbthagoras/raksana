@@ -4,7 +4,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MotiView } from 'moti';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Dimensions,
   Image,
@@ -21,6 +21,8 @@ const { width, height } = Dimensions.get('window');
 
 export default function EventDetailScreen() {
   const params = useLocalSearchParams();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [isMapInteracting, setIsMapInteracting] = useState(false);
   
   // Parse the event data from params
   const event: Event = {
@@ -98,9 +100,13 @@ export default function EventDetailScreen() {
       </MotiView>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!isMapInteracting}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Event Cover Image */}
         <MotiView
@@ -202,46 +208,102 @@ export default function EventDetailScreen() {
           </View>
           <View style={styles.mapContainer}>
             {Platform.OS === 'ios' ? (
-              <AppleMaps.View
-                style={styles.map}
-                cameraPosition={{
-                  coordinates: {
-                    latitude: event.latitude,
-                    longitude: event.longitude,
-                  },
-                  zoom: 15,
-                }}
-                markers={[
-                  {
+              <View
+                style={styles.mapWrapper}
+                onTouchStart={() => setIsMapInteracting(true)}
+                onTouchEnd={() => setIsMapInteracting(false)}
+                onTouchCancel={() => setIsMapInteracting(false)}
+              >
+                <AppleMaps.View
+                  style={[styles.map, { zIndex: 1 }]}
+                  cameraPosition={{
                     coordinates: {
                       latitude: event.latitude,
                       longitude: event.longitude,
                     },
-                    title: event.name,
-                  },
-                ]}
-              />
+                    zoom: 15,
+                  }}
+                  markers={[
+                    {
+                      coordinates: {
+                        latitude: event.latitude,
+                        longitude: event.longitude,
+                      },
+                      title: event.name,
+                    },
+                  ]}
+                  circles={[
+                    {
+                      center: {
+                        latitude: event.latitude,
+                        longitude: event.longitude,
+                      },
+                      radius: 2000, // 2km radius boundary
+                      color: Colors.primary + '20',
+                      lineColor: Colors.primary + '60',
+                      lineWidth: 2,
+                    },
+                  ]}
+                  uiSettings={{
+                    compassEnabled: true,
+                    myLocationButtonEnabled: false,
+                    scaleBarEnabled: true,
+                  }}
+                  onCameraMove={(event) => {
+                  }}
+                />
+              </View>
             ) : Platform.OS === 'android' ? (
-              <GoogleMaps.View
-                style={styles.map}
-                cameraPosition={{
-                  coordinates: {
-                    latitude: event.latitude,
-                    longitude: event.longitude,
-                  },
-                  zoom: 15,
-                }}
-                markers={[
-                  {
+              <View
+                style={styles.mapWrapper}
+                onTouchStart={() => setIsMapInteracting(true)}
+                onTouchEnd={() => setIsMapInteracting(false)}
+                onTouchCancel={() => setIsMapInteracting(false)}
+              >
+                <GoogleMaps.View
+                  style={[styles.map, { zIndex: 1 }]}
+                  cameraPosition={{
                     coordinates: {
                       latitude: event.latitude,
                       longitude: event.longitude,
                     },
-                    title: event.name,
-                    snippet: event.location,
-                  },
-                ]}
-              />
+                    zoom: 15,
+                  }}
+                  markers={[
+                    {
+                      coordinates: {
+                        latitude: event.latitude,
+                        longitude: event.longitude,
+                      },
+                      title: event.name,
+                      snippet: event.location,
+                    },
+                  ]}
+                  circles={[
+                    {
+                      center: {
+                        latitude: event.latitude,
+                        longitude: event.longitude,
+                    },
+                      radius: 2000, // 2km radius boundary
+                      color: Colors.primary + '20',
+                      lineColor: Colors.primary + '60',
+                      lineWidth: 2,
+                    },
+                  ]}
+                  uiSettings={{
+                    compassEnabled: true,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: true,
+                    zoomGesturesEnabled: true,
+                    scrollGesturesEnabled: true,
+                    rotationGesturesEnabled: true,
+                    tiltGesturesEnabled: true,
+                  }}
+                  onCameraMove={(event) => {
+                  }}
+                />
+              </View>
             ) : (
               <View style={styles.mapPlaceholder}>
                 <FontAwesome5 name="map-marked-alt" size={48} color={Colors.primary} />
@@ -452,10 +514,20 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: Colors.outline + '20',
+    elevation: 5, // Android
+    shadowColor: '#000', // iOS
+    shadowOffset: { width: 0, height: 2 }, // iOS
+    shadowOpacity: 0.1, // iOS
+    shadowRadius: 4, // iOS
+  },
+  mapWrapper: {
+    width: '100%',
+    height: 250,
   },
   map: {
     width: '100%',
     height: 250,
+    backgroundColor: 'transparent',
   },
   mapPlaceholder: {
     width: '100%',
