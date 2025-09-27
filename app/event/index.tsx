@@ -1,10 +1,11 @@
 import { EventCard } from '@/components/Cards/EventCard';
+import { EventsInfoModal } from '@/components/Screens/EventsInfoModal';
 import { Colors, Fonts } from '@/constants';
 import { Event } from '@/types/auth';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -17,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEvents } from '../../hooks/useApiQueries';
 
 export default function EventScreen() {
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const { data: eventsData, isLoading, error, refetch } = useEvents();
 
   const events: Event[] = eventsData?.data?.events || [];
@@ -26,9 +28,25 @@ export default function EventScreen() {
   };
 
   const handleEventPress = (event: Event) => {
-    console.log('Event pressed:', event.id);
-    // TODO: Navigate to event detail screen
-    // router.push(`/event/${event.id}`);
+    // Navigate to event detail screen with event data as params
+    router.push({
+      pathname: `/event/[id]` as any,
+      params: {
+        id: event.id.toString(),
+        location: event.location,
+        latitude: event.latitude.toString(),
+        longitude: event.longitude.toString(),
+        contact: event.contact,
+        starts_at: event.starts_at,
+        ends_at: event.ends_at,
+        cover_url: event.cover_url,
+        name: event.name,
+        description: event.description,
+        point_gain: event.point_gain.toString(),
+        created_at: event.created_at,
+        Participated: event.Participated.toString(),
+      },
+    });
   };
 
   if (isLoading) {
@@ -41,7 +59,12 @@ export default function EventScreen() {
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>Events</Text>
           </View>
-          <View style={styles.headerSpacer} />
+          <TouchableOpacity 
+            style={styles.headerInfoButton}
+            onPress={() => setShowInfoModal(true)}
+          >
+            <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+          </TouchableOpacity>
         </View>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.loadingContainer}>
@@ -67,7 +90,12 @@ export default function EventScreen() {
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>Events</Text>
         </View>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity 
+          style={styles.headerInfoButton}
+          onPress={() => setShowInfoModal(true)}
+        >
+          <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+        </TouchableOpacity>
       </MotiView>
 
       <ScrollView
@@ -115,6 +143,12 @@ export default function EventScreen() {
           )}
         </View>
       </ScrollView>
+      
+      {/* Events Info Modal */}
+      <EventsInfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -149,8 +183,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: Colors.onSurface,
   },
-  headerSpacer: {
-    width: 40,
+  headerInfoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
