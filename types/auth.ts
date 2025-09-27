@@ -226,7 +226,7 @@ export interface Event {
   description: string;
   point_gain: number;
   created_at: string;
-  Participated: boolean;
+  participated: boolean;
 }
 
 export interface EventsResponse {

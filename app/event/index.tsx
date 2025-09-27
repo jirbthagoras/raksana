@@ -44,7 +44,7 @@ export default function EventScreen() {
         description: event.description || '',
         point_gain: event.point_gain?.toString() || '0',
         created_at: event.created_at || '',
-        Participated: event.Participated?.toString() || 'false',
+        participated: event.participated?.toString() || 'false',
       },
     });
   };
@@ -144,6 +144,22 @@ export default function EventScreen() {
         </View>
       </ScrollView>
       
+      {/* Floating Action Button for Pending Attendances */}
+      <MotiView
+        from={{ opacity: 0, scale: 0.8, translateY: 20 }}
+        animate={{ opacity: 1, scale: 1, translateY: 0 }}
+        transition={{ type: 'spring', delay: 600, damping: 15, stiffness: 100 }}
+        style={styles.floatingButton}
+      >
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/event/pending')}
+          activeOpacity={0.8}
+        >
+          <FontAwesome5 name="hourglass-half" size={20} color={Colors.onSecondary} />
+        </TouchableOpacity>
+      </MotiView>
+
       {/* Events Info Modal */}
       <EventsInfoModal
         visible={showInfoModal}
@@ -182,6 +198,18 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display.bold,
     fontSize: 20,
     color: Colors.onSurface,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.secondaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerInfoButton: {
     width: 32,
@@ -253,5 +281,27 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.text.regular,
     fontSize: 16,
     color: Colors.onSurfaceVariant,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    zIndex: 1000,
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

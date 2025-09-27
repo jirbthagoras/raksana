@@ -2,13 +2,13 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import React from 'react';
 import {
-     Dimensions,
-     Modal,
-     ScrollView,
-     StyleSheet,
-     Text,
-     TouchableOpacity,
-     View,
+  Dimensions,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -98,7 +98,7 @@ export const EventsInfoModal: React.FC<EventsInfoModalProps> = ({
             </View>
             <Text style={styles.title}>Tentang Events</Text>
             <Text style={styles.subtitle}>
-              Event adalah aktivitas kolektif yang memenuhi trinitas Activity di Raksana bersama Challenge dan Quest
+              Event adalah salah satu aktivitas kolektif yang memenuhi trinitas Activity di Raksana
             </Text>
           </View>
 

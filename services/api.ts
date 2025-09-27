@@ -261,6 +261,18 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "events": [...] } }
   }
 
+  async getPendingAttendances(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/event/pending');
+    return response.data; // Based on your API response format: { "data": { "events": [...] } }
+  }
+
+  async registerForEvent(eventId: number, contactNumber: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.post(`/event/${eventId}`, {
+      contact_number: contactNumber
+    });
+    return response.data;
+  }
+
   async getProfilePictureUploadUrl(filename: string): Promise<{ data: { presigned_url: string } }> {
     const response: AxiosResponse<{ data: { presigned_url: string } }> = await this.api.put('/profile/picture', {
       filename

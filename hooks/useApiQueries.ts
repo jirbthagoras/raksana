@@ -19,6 +19,7 @@ export const apiKeys = {
   memories: () => ['memories'] as const,
   pointHistory: () => ['pointHistory'] as const,
   events: () => ['events'] as const,
+  pendingAttendances: () => ['pendingAttendances'] as const,
 };
 
 // Profile queries
@@ -333,6 +334,33 @@ export const useEvents = () => {
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Pending Attendances Query
+export const usePendingAttendances = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<EventsResponse, ApiError>({
+    queryKey: apiKeys.pendingAttendances(),
+    queryFn: () => apiService.getPendingAttendances(),
+    enabled: isAuthenticated,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Event Registration Mutation
+export const useEventRegistration = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<any, ApiError, { eventId: number; contactNumber: string }>({
+    mutationFn: ({ eventId, contactNumber }) => apiService.registerForEvent(eventId, contactNumber),
+    onSuccess: () => {
+      // Invalidate events and pending attendances to refresh data
+      queryClient.invalidateQueries({ queryKey: apiKeys.events() });
+      queryClient.invalidateQueries({ queryKey: apiKeys.pendingAttendances() });
+    },
   });
 };
 

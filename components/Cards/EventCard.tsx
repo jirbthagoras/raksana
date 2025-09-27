@@ -1,6 +1,7 @@
 import { Colors, Fonts } from '@/constants';
 import { Event } from '@/types/auth';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { MotiView } from 'moti';
 import React from 'react';
 import {
@@ -10,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface EventCardProps {
   event: Event;
@@ -49,6 +51,19 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
 
   const status = getEventStatus();
 
+  const handleRegisterPress = (e: any) => {
+    e.stopPropagation(); // Prevent triggering the card's onPress
+    router.push({
+      pathname: '/event/register',
+      params: { eventId: event.id.toString() }
+    });
+  };
+
+  const isEventActive = status.text === 'Berlangsung' || status.text === 'Akan Datang';
+
+  // Debug log to check participation status
+  console.log(`Event ${event.id} - participated: ${event.participated}, Active: ${isEventActive}`);
+
   return (
     <MotiView
       from={{ opacity: 0, translateY: 30, scale: 0.95 }}
@@ -64,13 +79,22 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
       <TouchableOpacity
         style={[
           styles.card,
-          event.Participated && styles.participatedCard,
+          event.participated && styles.participatedCardBorder,
         ]}
         onPress={() => onPress(event)}
         activeOpacity={0.8}
       >
+        {/* Participated Gradient Overlay */}
+        {event.participated && (
+          <LinearGradient
+            colors={[Colors.primary + '15', Colors.secondary + '10']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.participatedGradient}
+          />
+        )}
         {/* Cover Image */}
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { zIndex: 2 }]}>
           <Image
             source={{ uri: event.cover_url }}
             style={styles.coverImage}
@@ -83,7 +107,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
           </View>
 
           {/* Participation Badge */}
-          {event.Participated && (
+          {event.participated && (
             <View style={styles.participationBadge}>
               <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
               <Text style={styles.participationText}>Participated</Text>
@@ -92,7 +116,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
         </View>
 
         {/* Content */}
-        <View style={styles.content}>
+        <View style={[styles.content, { zIndex: 2 }]}>
           {/* Event Name and Points */}
           <View style={styles.headerRow}>
             <Text style={styles.eventName} numberOfLines={1}>
@@ -119,6 +143,31 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
               {formatDateRange()}
             </Text>
           </View>
+
+          {/* Register Button */}
+          {isEventActive && (
+            <TouchableOpacity
+              style={[
+                styles.registerButton,
+                event.participated && styles.registerButtonDisabled
+              ]}
+              onPress={event.participated ? undefined : handleRegisterPress}
+              disabled={event.participated}
+              activeOpacity={event.participated ? 1 : 0.8}
+            >
+              <FontAwesome5 
+                name={event.participated ? "check-circle" : "user-plus"} 
+                size={12} 
+                color={event.participated ? Colors.primary : Colors.onPrimary} 
+              />
+              <Text style={[
+                styles.registerButtonText,
+                event.participated && styles.registerButtonTextDisabled
+              ]}>
+                {event.participated ? 'Terdaftar' : 'Daftar'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
     </MotiView>
@@ -144,13 +193,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.outline + '20',
   },
-  participatedCard: {
-    borderColor: Colors.primary + '40',
-    backgroundColor: Colors.primaryContainer + '10',
+  participatedCardBorder: {
+    borderColor: Colors.primary + '60',
+    borderWidth: 2,
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  participatedGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12,
+    zIndex: 1,
   },
   imageContainer: {
     position: 'relative',
     height: 120,
+    zIndex: 2,
   },
   coverImage: {
     width: '100%',
@@ -189,6 +252,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 12,
     gap: 8,
+    zIndex: 2,
   },
   headerRow: {
     flexDirection: 'row',
@@ -233,5 +297,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.onSurfaceVariant,
     flex: 1,
+  },
+  registerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 8,
+    gap: 6,
+  },
+  registerButtonDisabled: {
+    backgroundColor: Colors.primaryContainer,
+    borderWidth: 1,
+    borderColor: Colors.primary + '40',
+    opacity: 1,
+  },
+  registerButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
+    color: Colors.onPrimary,
+  },
+  registerButtonTextDisabled: {
+    color: Colors.primary,
+    fontFamily: Fonts.text.bold,
   },
 });

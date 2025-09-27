@@ -8,6 +8,7 @@ import React, { useRef, useState } from 'react';
 import {
   Dimensions,
   Image,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -38,7 +39,7 @@ export default function EventDetailScreen() {
     description: params.description as string,
     point_gain: Number(params.point_gain),
     created_at: params.created_at as string,
-    Participated: params.Participated === 'true',
+    participated: params.participated === 'true',
   };
 
   const handleBack = () => {
@@ -81,6 +82,62 @@ export default function EventDetailScreen() {
 
   const eventStatus = getEventStatus();
 
+  const handleRegisterPress = () => {
+    router.push({
+      pathname: '/event/register',
+      params: { eventId: event.id.toString() }
+    });
+  };
+
+  const isEventActive = eventStatus.status === 'upcoming' || eventStatus.status === 'ongoing';
+
+  // Debug log to check participation status
+  console.log(`Event Detail ${event.id} - participated: ${event.participated}, Active: ${isEventActive}`);
+
+  const openInMaps = async () => {
+    const latitude = event.latitude;
+    const longitude = event.longitude;
+    const label = encodeURIComponent(event.name);
+    
+    // Platform-specific map URLs
+    const iosUrl = `maps:0,0?q=${latitude},${longitude}`;
+    const androidUrl = `geo:${latitude},${longitude}?q=${latitude},${longitude}(${label})`;
+    const webUrl = `https://maps.google.com/maps?q=${latitude},${longitude}`;
+    
+    try {
+      if (Platform.OS === 'ios') {
+        // Try Apple Maps first
+        const supported = await Linking.canOpenURL(iosUrl);
+        if (supported) {
+          await Linking.openURL(iosUrl);
+        } else {
+          // Fallback to Google Maps web
+          await Linking.openURL(webUrl);
+        }
+      } else if (Platform.OS === 'android') {
+        // Try native Android maps
+        const supported = await Linking.canOpenURL(androidUrl);
+        if (supported) {
+          await Linking.openURL(androidUrl);
+        } else {
+          // Fallback to Google Maps web
+          await Linking.openURL(webUrl);
+        }
+      } else {
+        // Web fallback
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error('Error opening maps:', error);
+      // Final fallback - try Google Maps web URL
+      try {
+        await Linking.openURL(webUrl);
+      } catch (fallbackError) {
+        console.error('Failed to open maps:', fallbackError);
+      }
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -121,7 +178,7 @@ export default function EventDetailScreen() {
               {eventStatus.text}
             </Text>
           </View>
-          {event.Participated && (
+          {event.participated && (
             <View style={styles.participatedBadge}>
               <FontAwesome5 name="check-circle" size={16} color={Colors.onPrimary} />
               <Text style={styles.participatedText}>Sudah Berpartisipasi</Text>
@@ -316,17 +373,51 @@ export default function EventDetailScreen() {
             )}
             <TouchableOpacity 
               style={styles.openMapButton}
-              onPress={() => {
-                // Open in external map app
-                const url = `https://maps.google.com/?q=${event.latitude},${event.longitude}`;
-                console.log('Open map:', url);
-              }}
+              onPress={openInMaps}
             >
               <FontAwesome5 name="external-link-alt" size={14} color={Colors.onPrimary} />
               <Text style={styles.openMapButtonText}>Buka di Maps</Text>
             </TouchableOpacity>
           </View>
         </MotiView>
+
+        {/* Register Button Section */}
+        {isEventActive && (
+          <MotiView
+            from={{ opacity: 0, translateY: 30 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 600 }}
+            style={styles.registerSection}
+          >
+            <TouchableOpacity
+              style={[
+                styles.registerButton,
+                event.participated && styles.registerButtonDisabled
+              ]}
+              onPress={event.participated ? undefined : handleRegisterPress}
+              disabled={event.participated}
+              activeOpacity={event.participated ? 1 : 0.8}
+            >
+              <FontAwesome5 
+                name={event.participated ? "check-circle" : "user-plus"} 
+                size={18} 
+                color={event.participated ? Colors.primary : Colors.onPrimary} 
+              />
+              <Text style={[
+                styles.registerButtonText,
+                event.participated && styles.registerButtonTextDisabled
+              ]}>
+                {event.participated ? 'Sudah Terdaftar' : 'Daftar Event'}
+              </Text>
+            </TouchableOpacity>
+            
+            {event.participated && (
+              <Text style={styles.registeredNote}>
+                Anda sudah terdaftar untuk event ini
+              </Text>
+            )}
+          </MotiView>
+        )}
 
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
@@ -510,7 +601,7 @@ const styles = StyleSheet.create({
     color: Colors.onSurface,
   },
   mapContainer: {
-    borderRadius: 16,
+   borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: Colors.outline + '20',
@@ -569,5 +660,51 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  registerSection: {
+    paddingHorizontal: 20,
+    marginTop: 24,
+  },
+  registerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  registerButtonDisabled: {
+    backgroundColor: Colors.primaryContainer,
+    borderWidth: 2,
+    borderColor: Colors.primary + '60',
+    opacity: 1,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  registerButtonText: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 16,
+    color: Colors.onPrimary,
+  },
+  registerButtonTextDisabled: {
+    color: Colors.primary,
+    fontFamily: Fonts.display.bold,
+  },
+  registeredNote: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+    marginTop: 12,
   },
 });
