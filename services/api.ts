@@ -256,6 +256,18 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "users": [...] } }
   }
 
+  async getNearestQuest(latitude: number, longitude: number): Promise<any> {
+    console.log('Sending nearest quest request with:', { latitude, longitude });
+    const response: AxiosResponse<any> = await this.api.get('/quest/nearest', {
+      params: {
+        latitude,
+        longitude
+      }
+    });
+    console.log('Nearest quest response:', response.data);
+    return response.data; // Based on your API response format: { "data": { "clue": "..." } }
+  }
+
   async getEvents(): Promise<any> {
     const response: AxiosResponse<any> = await this.api.get('/event');
     console.log('Raw API Response for getEvents:', response.data);

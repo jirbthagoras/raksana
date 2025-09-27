@@ -1,7 +1,7 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { MotiText, MotiView } from 'moti';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dimensions,
   RefreshControl,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { QuestCluePopup } from '@/components/Popups/QuestCluePopup';
 import FloatingElements from '../../components/Screens/FloatingElements';
 import GradientBackground from '../../components/Screens/GradientBackground';
 
@@ -33,9 +34,63 @@ import ProgressBar from '@/components/Screens/ProgressBar';
 import { useRouter } from 'expo-router';
 import HomePageSkeleton from '../../components/Screens/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
+import { ErrorProvider } from '../../contexts/ErrorContext';
 import { useProfileMe, useRegions } from '../../hooks/useApiQueries';
 
 const { width } = Dimensions.get('window');
+
+// Simple Wiggle Animation Component
+interface WiggleButtonProps {
+  children: React.ReactNode;
+  onPress: () => void;
+  style?: any;
+  from?: any;
+  animate?: any;
+  transition?: any;
+  buttonStyle?: any;
+}
+
+const WiggleButton: React.FC<WiggleButtonProps> = ({ 
+  children, 
+  onPress, 
+  style, 
+  from, 
+  animate, 
+  transition,
+  buttonStyle
+}) => {
+  const [wiggle, setWiggle] = useState(false);
+
+  const handlePress = () => {
+    setWiggle(true);
+    setTimeout(() => setWiggle(false), 200);
+    onPress();
+  };
+
+  return (
+    <MotiView
+      from={from}
+      animate={{
+        ...animate,
+        rotateZ: wiggle ? '2deg' : '0deg',
+      }}
+      transition={{
+        ...transition,
+        type: wiggle ? 'timing' : (transition?.type || 'spring'),
+        duration: wiggle ? 100 : (transition?.duration || 300),
+      }}
+      style={style}
+    >
+      <TouchableOpacity
+        style={buttonStyle}
+        onPress={handlePress}
+        activeOpacity={0.8}
+      >
+        {children}
+      </TouchableOpacity>
+    </MotiView>
+  );
+};
 
 interface ProfileData {
   id: number;
@@ -68,6 +123,8 @@ interface ProfileData {
 
 export default function HomeTab() {
   const { user } = useAuth();
+  const [questClue, setQuestClue] = useState<string>('');
+  const [showQuestPopup, setShowQuestPopup] = useState(false);
   
   // Use TanStack Query for profile data
   const { 
@@ -90,6 +147,18 @@ export default function HomeTab() {
   const handleRefresh = React.useCallback(async () => {
     await Promise.all([refetch(), refetchRegions()]);
   }, [refetch, refetchRegions]);
+
+  // Handle quest found
+  const handleQuestFound = (clue: string) => {
+    setQuestClue(clue);
+    setShowQuestPopup(true);
+  };
+
+  // Handle quest popup close
+  const handleQuestPopupClose = () => {
+    setShowQuestPopup(false);
+    setQuestClue('');
+  };
 
   // Loading state
   if (loading) {
@@ -117,10 +186,11 @@ export default function HomeTab() {
   }
 
   return (
-    <GradientBackground>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-        <FloatingElements count={6} />
+    <ErrorProvider>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+          <FloatingElements count={6} />
         
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
@@ -260,53 +330,45 @@ export default function HomeTab() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: 'spring', delay: 1800, damping: 15, stiffness: 100 }}
               >
-                <MotiView
+                <WiggleButton
                   from={{ opacity: 0, translateY: 20, scale: 0.9 }}
                   animate={{ opacity: 1, translateY: 0, scale: 1 }}
                   transition={{ type: 'spring', delay: 2000, damping: 12, stiffness: 120 }}
                   style={styles.primaryActionCard}
+                  buttonStyle={styles.primaryActionButton}
+                  onPress={() => router.push('/journal')}
                 >
-                  <TouchableOpacity 
-                    style={styles.primaryActionButton}
-                    onPress={() => router.push('/journal')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.primaryActionContent}>
-                      <View style={[styles.primaryActionIcon, { backgroundColor: Colors.primary + '15' }]}>
-                        <FontAwesome5 name="book" size={24} color={Colors.primary} />
-                      </View>
-                      <View style={styles.primaryActionText}>
-                        <Text style={styles.primaryActionTitle}>Journal</Text>
-                        <Text style={styles.primaryActionSubtitle}>Write your thoughts</Text>
-                      </View>
-                      <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                  <View style={styles.primaryActionContent}>
+                    <View style={[styles.primaryActionIcon, { backgroundColor: Colors.primary + '15' }]}>
+                      <FontAwesome5 name="book" size={24} color={Colors.primary} />
                     </View>
-                  </TouchableOpacity>
-                </MotiView>
+                    <View style={styles.primaryActionText}>
+                      <Text style={styles.primaryActionTitle}>Journal</Text>
+                      <Text style={styles.primaryActionSubtitle}>Write your thoughts</Text>
+                    </View>
+                    <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                  </View>
+                </WiggleButton>
                 
-                <MotiView
+                <WiggleButton
                   from={{ opacity: 0, translateY: 20, scale: 0.9 }}
                   animate={{ opacity: 1, translateY: 0, scale: 1 }}
                   transition={{ type: 'spring', delay: 2100, damping: 12, stiffness: 120 }}
                   style={styles.primaryActionCard}
+                  buttonStyle={styles.primaryActionButton}
+                  onPress={() => router.push('/album')}
                 >
-                  <TouchableOpacity 
-                    style={styles.primaryActionButton}
-                    onPress={() => router.push('/album')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.primaryActionContent}>
-                      <View style={[styles.primaryActionIcon, { backgroundColor: Colors.secondary + '15' }]}>
-                        <FontAwesome5 name="images" size={24} color={Colors.secondary} />
-                      </View>
-                      <View style={styles.primaryActionText}>
-                        <Text style={styles.primaryActionTitle}>Memory</Text>
-                        <Text style={styles.primaryActionSubtitle}>Capture moments</Text>
-                      </View>
-                      <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                  <View style={styles.primaryActionContent}>
+                    <View style={[styles.primaryActionIcon, { backgroundColor: Colors.secondary + '15' }]}>
+                      <FontAwesome5 name="images" size={24} color={Colors.secondary} />
                     </View>
-                  </TouchableOpacity>
-                </MotiView>
+                    <View style={styles.primaryActionText}>
+                      <Text style={styles.primaryActionTitle}>Memory</Text>
+                      <Text style={styles.primaryActionSubtitle}>Capture moments</Text>
+                    </View>
+                    <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                  </View>
+                </WiggleButton>
               </MotiView>
               
               {/* Secondary Actions - Medium Cards */}
@@ -316,41 +378,33 @@ export default function HomeTab() {
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ type: 'spring', delay: 2200, damping: 15, stiffness: 100 }}
               >
-                <MotiView
+                <WiggleButton
                   from={{ opacity: 0, translateX: -20, scale: 0.9 }}
                   animate={{ opacity: 1, translateX: 0, scale: 1 }}
                   transition={{ type: 'spring', delay: 2300, damping: 12, stiffness: 120 }}
                   style={styles.secondaryActionCard}
+                  buttonStyle={styles.secondaryActionButton}
+                  onPress={() => router.push('/event')}
                 >
-                  <TouchableOpacity 
-                    style={styles.secondaryActionButton}
-                    onPress={() => router.push('/event')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
-                      <FontAwesome5 name="calendar-alt" size={20} color={Colors.tertiary} />
-                    </View>
-                    <Text style={styles.secondaryActionTitle}>Events</Text>
-                  </TouchableOpacity>
-                </MotiView>
+                  <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
+                    <FontAwesome5 name="calendar-alt" size={20} color={Colors.tertiary} />
+                  </View>
+                  <Text style={styles.secondaryActionTitle}>Events</Text>
+                </WiggleButton>
                 
-                <MotiView
+                <WiggleButton
                   from={{ opacity: 0, translateX: 20, scale: 0.9 }}
                   animate={{ opacity: 1, translateX: 0, scale: 1 }}
                   transition={{ type: 'spring', delay: 2400, damping: 12, stiffness: 120 }}
                   style={styles.secondaryActionCard}
+                  buttonStyle={styles.secondaryActionButton}
+                  onPress={() => console.log('Challenges pressed!')}
                 >
-                  <TouchableOpacity 
-                    style={styles.secondaryActionButton}
-                    onPress={() => console.log('Challenges pressed!')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.secondary + '15' }]}>
-                      <FontAwesome5 name="trophy" size={20} color={Colors.secondary} />
-                    </View>
-                    <Text style={styles.secondaryActionTitle}>Challenges</Text>
-                  </TouchableOpacity>
-                </MotiView>
+                  <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.secondary + '15' }]}>
+                    <FontAwesome5 name="trophy" size={20} color={Colors.secondary} />
+                  </View>
+                  <Text style={styles.secondaryActionTitle}>Challenges</Text>
+                </WiggleButton>
               </MotiView>
               
               {/* Utility Actions - Consistent Medium Cards */}
@@ -360,41 +414,33 @@ export default function HomeTab() {
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ type: 'spring', delay: 2500, damping: 15, stiffness: 100 }}
               >
-                <MotiView
+                <WiggleButton
                   from={{ opacity: 0, translateX: -20, scale: 0.9 }}
                   animate={{ opacity: 1, translateX: 0, scale: 1 }}
                   transition={{ type: 'spring', delay: 2600, damping: 12, stiffness: 120 }}
                   style={styles.utilityActionCard}
+                  buttonStyle={styles.utilityActionButton}
+                  onPress={() => router.push('/leaderboard')}
                 >
-                  <TouchableOpacity 
-                    style={styles.utilityActionButton}
-                    onPress={() => router.push('/leaderboard')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.utilityActionIcon, { backgroundColor: Colors.primary + '15' }]}>
-                      <FontAwesome5 name="crown" size={20} color={Colors.primary} />
-                    </View>
-                    <Text style={styles.utilityActionTitle}>Leaderboard</Text>
-                  </TouchableOpacity>
-                </MotiView>
+                  <View style={[styles.utilityActionIcon, { backgroundColor: Colors.primary + '15' }]}>
+                    <FontAwesome5 name="crown" size={20} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.utilityActionTitle}>Leaderboard</Text>
+                </WiggleButton>
                 
-                <MotiView
+                <WiggleButton
                   from={{ opacity: 0, translateX: 20, scale: 0.9 }}
                   animate={{ opacity: 1, translateX: 0, scale: 1 }}
                   transition={{ type: 'spring', delay: 2700, damping: 12, stiffness: 120 }}
                   style={styles.utilityActionCard}
+                  buttonStyle={styles.utilityActionButton}
+                  onPress={() => router.push('/recaps')}
                 >
-                  <TouchableOpacity 
-                    style={styles.utilityActionButton}
-                    onPress={() => router.push('/recaps')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.utilityActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
-                      <FontAwesome5 name="chart-line" size={20} color={Colors.tertiary} />
-                    </View>
-                    <Text style={styles.utilityActionTitle}>Recaps</Text>
-                  </TouchableOpacity>
-                </MotiView>
+                  <View style={[styles.utilityActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
+                    <FontAwesome5 name="chart-line" size={20} color={Colors.tertiary} />
+                  </View>
+                  <Text style={styles.utilityActionTitle}>Recaps</Text>
+                </WiggleButton>
               </MotiView>
             </MotiView>
 
@@ -489,7 +535,7 @@ export default function HomeTab() {
                 transition={{ type: 'spring', delay: 4200, damping: 15, stiffness: 100 }}
               >
                 <NearbyQuestLocator
-                  onLocatePress={() => console.log('Locate quests pressed!')}
+                  onQuestFound={handleQuestFound}
                 />
               </MotiView>
             </MotiView>
@@ -497,7 +543,15 @@ export default function HomeTab() {
           </MotiView>
         </ScrollView>
       </SafeAreaView>
-    </GradientBackground>
+      
+        {/* Quest Clue Popup */}
+        <QuestCluePopup
+          visible={showQuestPopup}
+          onClose={handleQuestPopupClose}
+          clue={questClue}
+        />
+      </GradientBackground>
+    </ErrorProvider>
   );
 }
 

@@ -20,6 +20,7 @@ export const apiKeys = {
   pointHistory: () => ['pointHistory'] as const,
   events: () => ['events'] as const,
   pendingAttendances: () => ['pendingAttendances'] as const,
+  nearestQuest: (latitude: number, longitude: number) => ['nearestQuest', latitude, longitude] as const,
 };
 
 // Profile queries
@@ -302,8 +303,19 @@ export const usePointHistory = () => {
     queryKey: apiKeys.pointHistory(),
     queryFn: () => apiService.getPointHistory(),
     enabled: isAuthenticated,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Nearest Quest Mutation
+export const useNearestQuest = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useMutation<any, ApiError, { latitude: number; longitude: number }>({
+    mutationFn: ({ latitude, longitude }) => apiService.getNearestQuest(latitude, longitude),
+    retry: 2,
+    retryDelay: 1000, // 1 second
   });
 };
 
@@ -378,4 +390,5 @@ export const apiQueries = {
   useWeeklyRecaps,
   useMonthlyRecaps,
   usePointHistory,
+  useNearestQuest,
 };

@@ -1,20 +1,28 @@
 import { Colors, Fonts } from "@/constants";
+import { useError } from "@/contexts/ErrorContext";
+import { useNearestQuest } from "@/hooks/useApiQueries";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
-  onLocatePress?: () => void;
+  onQuestFound?: (clue: string) => void;
 };
 
-export default function NearbyQuestLocator({ onLocatePress }: Props) {
+export default function NearbyQuestLocator({ onQuestFound }: Props) {
   const [isActive, setIsActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const scaleValue = useRef(new Animated.Value(0.95)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
   const pulseValue = useRef(new Animated.Value(1)).current;
   const radarAnimation = useRef(new Animated.Value(0)).current;
   const glowAnimation = useRef(new Animated.Value(0)).current;
+  const spinAnimation = useRef(new Animated.Value(0)).current;
+  
+  const nearestQuestMutation = useNearestQuest();
+  const { showPopUp } = useError();
 
   useEffect(() => {
     // Initial entrance animation
@@ -65,8 +73,28 @@ export default function NearbyQuestLocator({ onLocatePress }: Props) {
     startGlowAnimation();
   }, []);
 
-  const handleLocatePress = () => {
+  // Loading spinner animation
+  useEffect(() => {
+    if (isLoading) {
+      spinAnimation.setValue(0);
+      Animated.loop(
+        Animated.timing(spinAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      spinAnimation.stopAnimation();
+      spinAnimation.setValue(0);
+    }
+  }, [isLoading]);
+
+  const handleLocatePress = async () => {
+    if (isLoading) return;
+    
     setIsActive(true);
+    setIsLoading(true);
     
     // Button press animation
     Animated.sequence([
@@ -96,10 +124,53 @@ export default function NearbyQuestLocator({ onLocatePress }: Props) {
       }),
     ]).start();
 
-    onLocatePress?.();
+    try {
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        showPopUp(
+          'Location permission is required to find nearby quests.',
+          'Permission Required',
+          'warning'
+        );
+        return;
+      }
 
-    // Reset active state after animation
-    setTimeout(() => setIsActive(false), 2000);
+      // Get current location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = location.coords;
+
+      // Call the API to get nearest quest
+      const response = await nearestQuestMutation.mutateAsync({
+        latitude,
+        longitude,
+      });
+
+      // Show the quest clue popup
+      if (response?.data?.clue) {
+        onQuestFound?.(response.data.clue);
+      } else {
+        showPopUp(
+          'No quests found in your area. Try again later!',
+          'No Quest Found',
+          'info'
+        );
+      }
+    } catch (error: any) {
+      console.error('Error finding nearest quest:', error);
+      showPopUp(
+        error?.message || 'Failed to find nearby quests. Please try again.',
+        'Error',
+        'error'
+      );
+    } finally {
+      setIsLoading(false);
+      // Reset active state after animation
+      setTimeout(() => setIsActive(false), 2000);
+    }
   };
 
   return (
@@ -166,26 +237,27 @@ export default function NearbyQuestLocator({ onLocatePress }: Props) {
         {/* Content */}
         <View style={styles.content}>
           <Text style={styles.description}>
-            Dapatkan clue mengenai quest terdekat dari lokasimu. Cari lokasinya, taklukkan questnya!
+            Dapatkan clue quest terdekat dari lokasimu. Cari lokasinya, taklukkan questnya!
           </Text>
           
           {/* Quest Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <FontAwesome5 name="compass" size={12} color={Colors.secondary} />
-              <Text style={styles.statText}>5km radius</Text>
+              <Text style={styles.statText}>Radius 1 km</Text>
             </View>
           </View>
         </View>
 
         {/* Action Button */}
         <TouchableOpacity 
-          style={styles.locateButton} 
+          style={[styles.locateButton, isLoading && styles.locateButtonDisabled]} 
           onPress={handleLocatePress}
-          activeOpacity={0.8}
+          activeOpacity={isLoading ? 1 : 0.8}
+          disabled={isLoading}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={isLoading ? [Colors.outline, Colors.outline] : [Colors.primary, Colors.secondary]}
             style={styles.locateButtonGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -196,13 +268,34 @@ export default function NearbyQuestLocator({ onLocatePress }: Props) {
                 { transform: [{ scale: pulseValue }] },
               ]}
             >
-              <FontAwesome5 
-                name={"search-location"} 
-                size={16} 
-                color="white" 
-              />
+              {isLoading ? (
+                <Animated.View
+                  style={{
+                    transform: [
+                      {
+                        rotate: spinAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '360deg'],
+                        }),
+                      },
+                    ],
+                  }}
+                >
+                  <FontAwesome5 
+                    name="spinner" 
+                    size={16} 
+                    color="white" 
+                  />
+                </Animated.View>
+              ) : (
+                <FontAwesome5 
+                  name="search-location" 
+                  size={16} 
+                  color="white" 
+                />
+              )}
               <Text style={styles.locateButtonText}>
-                {'Locate Quest'}
+                {isLoading ? 'Loading...' : 'Lacak Quest'}
               </Text>
             </Animated.View>
           </LinearGradient>
@@ -347,6 +440,9 @@ const styles = StyleSheet.create({
   locateButton: {
     borderRadius: 16,
     overflow: "hidden",
+  },
+  locateButtonDisabled: {
+    opacity: 0.7,
   },
   locateButtonGradient: {
     paddingVertical: 16,
