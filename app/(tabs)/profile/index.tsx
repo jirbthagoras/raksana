@@ -7,7 +7,6 @@ import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   Image,
   Modal,
@@ -26,6 +25,7 @@ import FloatingElements from '../../../components/Screens/FloatingElements';
 import { useProfileMe } from '../../../hooks/useApiQueries';
 import { useLogoutMutation } from '../../../hooks/useAuthQueries';
 import { LogoutConfirmationPopup } from '../../../components/Popups/LogoutConfirmationPopup';
+import { ErrorPopup } from '../../../components/Popups/ErrorPopup';
 import { useRouter } from 'expo-router';
 import apiService from '../../../services/api';
 
@@ -73,6 +73,9 @@ export default function ProfileScreen() {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [errorPopupConfig, setErrorPopupConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'warning' | 'info' });
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const handleLogout = () => {
     setShowLogoutPopup(true);
@@ -100,7 +103,12 @@ export default function ProfileScreen() {
       // Request permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please grant camera roll permissions to change your profile picture.');
+        setErrorPopupConfig({
+          title: 'Permission Required',
+          message: 'Please grant camera roll permissions to change your profile picture.',
+          type: 'warning'
+        });
+        setShowErrorPopup(true);
         return;
       }
 
@@ -108,7 +116,12 @@ export default function ProfileScreen() {
       setShowImagePicker(true);
     } catch (error) {
       console.error('Error requesting permissions:', error);
-      Alert.alert('Error', 'Failed to open image picker');
+      setErrorPopupConfig({
+        title: 'Error',
+        message: 'Failed to open image picker',
+        type: 'error'
+      });
+      setShowErrorPopup(true);
     }
   };
 
@@ -116,12 +129,17 @@ export default function ProfileScreen() {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please grant camera permissions to take a photo.');
+        setErrorPopupConfig({
+          title: 'Permission Required',
+          message: 'Please grant camera permissions to take a photo.',
+          type: 'warning'
+        });
+        setShowErrorPopup(true);
         return;
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -132,14 +150,19 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error('Error picking image from camera:', error);
-      Alert.alert('Error', 'Failed to take photo');
+      setErrorPopupConfig({
+        title: 'Error',
+        message: 'Failed to take photo',
+        type: 'error'
+      });
+      setShowErrorPopup(true);
     }
   };
 
   const pickImageFromGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -150,7 +173,12 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error('Error picking image from gallery:', error);
-      Alert.alert('Error', 'Failed to select image');
+      setErrorPopupConfig({
+        title: 'Error',
+        message: 'Failed to select image',
+        type: 'error'
+      });
+      setShowErrorPopup(true);
     }
   };
 
@@ -187,10 +215,20 @@ export default function ProfileScreen() {
       await refetch();
       setImageError(false); // Reset image error state
 
-      Alert.alert('Success', 'Profile picture updated successfully!');
+      setErrorPopupConfig({
+        title: 'Success',
+        message: 'Profile picture updated successfully!',
+        type: 'info'
+      });
+      setShowSuccessPopup(true);
     } catch (error) {
       console.error('Error uploading profile picture:', error);
-      Alert.alert('Error', 'Failed to update profile picture. Please try again.');
+      setErrorPopupConfig({
+        title: 'Error',
+        message: 'Failed to update profile picture. Please try again.',
+        type: 'error'
+      });
+      setShowErrorPopup(true);
     } finally {
       setIsUploadingImage(false);
     }
@@ -590,6 +628,24 @@ export default function ProfileScreen() {
         onConfirm={handleLogoutConfirm}
         onCancel={handleLogoutCancel}
         isLoading={logoutMutation.isPending}
+      />
+
+      {/* Error/Warning/Info Popup */}
+      <ErrorPopup
+        visible={showErrorPopup}
+        title={errorPopupConfig.title}
+        message={errorPopupConfig.message}
+        type={errorPopupConfig.type}
+        onClose={() => setShowErrorPopup(false)}
+      />
+
+      {/* Success Popup */}
+      <ErrorPopup
+        visible={showSuccessPopup}
+        title={errorPopupConfig.title}
+        message={errorPopupConfig.message}
+        type={errorPopupConfig.type}
+        onClose={() => setShowSuccessPopup(false)}
       />
     </SafeAreaView>
   );
