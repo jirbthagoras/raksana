@@ -258,6 +258,7 @@ class ApiService {
 
   async getEvents(): Promise<any> {
     const response: AxiosResponse<any> = await this.api.get('/event');
+    console.log('Raw API Response for getEvents:', response.data);
     return response.data; // Based on your API response format: { "data": { "events": [...] } }
   }
 

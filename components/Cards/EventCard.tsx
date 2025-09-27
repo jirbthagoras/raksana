@@ -62,7 +62,8 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
   const isEventActive = status.text === 'Berlangsung' || status.text === 'Akan Datang';
 
   // Debug log to check participation status
-  console.log(`Event ${event.id} - participated: ${event.participated}, Active: ${isEventActive}`);
+  console.log(`Event ${event.id} - participated: ${event.participated} (type: ${typeof event.participated}), Active: ${isEventActive}`);
+  console.log('Full event object:', event);
 
   return (
     <MotiView
@@ -87,7 +88,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
         {/* Participated Gradient Overlay */}
         {event.participated && (
           <LinearGradient
-            colors={[Colors.primary + '15', Colors.secondary + '10']}
+            colors={[Colors.primary + '25', Colors.secondary + '20']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.participatedGradient}
@@ -110,7 +111,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, index, onPress }) =
           {event.participated && (
             <View style={styles.participationBadge}>
               <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-              <Text style={styles.participationText}>Participated</Text>
+              <Text style={styles.participationText}>Terdaftar</Text>
             </View>
           )}
         </View>

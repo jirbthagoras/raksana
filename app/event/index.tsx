@@ -23,6 +23,10 @@ export default function EventScreen() {
 
   const events: Event[] = eventsData?.data?.events || [];
 
+  // Debug log to check API response and participated field
+  console.log('Events API Response:', eventsData);
+  console.log('Parsed Events:', events.map(e => ({ id: e.id, name: e.name, participated: e.participated })));
+
   const handleBack = () => {
     router.back();
   };

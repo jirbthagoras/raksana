@@ -223,6 +223,10 @@ export default function PendingAttendancesScreen() {
 
   const pendingEvents: Event[] = attendancesData?.data?.events || [];
 
+  // Debug log to check pending attendances API response
+  console.log('Pending Attendances API Response:', attendancesData);
+  console.log('Parsed Pending Events:', pendingEvents.map(e => ({ id: e.id, name: e.name, participated: e.participated })));
+
   const handleBack = () => {
     router.back();
   };

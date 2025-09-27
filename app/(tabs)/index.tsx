@@ -1,4 +1,5 @@
 import { Colors, Fonts } from '@/constants';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { MotiText, MotiView } from 'moti';
 import React from 'react';
 import {
@@ -22,7 +23,6 @@ import LeaderboardButton from '@/components/Buttons/LeaderboardButton';
 import MemoryButton from '@/components/Buttons/MemoryButton';
 import MonthlyRecapButton from '@/components/Buttons/MonthlyRecapButton';
 import RecapsButton from '@/components/Buttons/RecapsButton';
-import RecyclopediaButton from '@/components/Buttons/RecyclopediaButton';
 import StreakButton from '@/components/Buttons/StreakButton';
 import WeeklyRecapButton from '@/components/Buttons/WeeklyRecapButton';
 import BalanceCard from '@/components/Cards/PointCard';
@@ -244,113 +244,157 @@ export default function HomeTab() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ type: 'spring', delay: 1400, damping: 15, stiffness: 100 }}
             >
-              <MotiView 
-                style={[styles.sectionHeader, { paddingHorizontal: 24 }]}
-                from={{ opacity: 0, translateX: -20 }}
-                animate={{ opacity: 1, translateX: 0 }}
-                transition={{ type: 'timing', duration: 600, delay: 1600 }}
+              <MotiText 
+                style={styles.sectionTitle}
+                from={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', delay: 1600, damping: 12, stiffness: 120 }}
               >
-                <MotiText 
-                  style={styles.sectionTitle}
-                  from={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: 'spring', delay: 1800, damping: 12, stiffness: 120 }}
-                >
-                  Quick Actions
-                </MotiText>
-                <MotiView
-                  style={styles.scrollIndicator}
-                  from={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ type: 'timing', duration: 400, delay: 2000 }}
-                >
-                  <MotiView 
-                    style={styles.scrollDot}
-                    from={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', delay: 2100, damping: 10, stiffness: 150 }}
-                  />
-                  <MotiView 
-                    style={styles.scrollDot}
-                    from={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', delay: 2200, damping: 10, stiffness: 150 }}
-                  />
-                  <MotiView 
-                    style={styles.scrollDot}
-                    from={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', delay: 2300, damping: 10, stiffness: 150 }}
-                  />
-                </MotiView>
-              </MotiView>
+                Quick Actions
+              </MotiText>
+              
+              {/* Primary Actions - Large Cards */}
               <MotiView 
-                style={styles.scrollWrapper}
+                style={styles.primaryActionsContainer}
                 from={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: 'spring', delay: 2000, damping: 15, stiffness: 100 }}
+                transition={{ type: 'spring', delay: 1800, damping: 15, stiffness: 100 }}
               >
-                <ScrollView 
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.scrollContainer}
-                  style={styles.horizontalScroll}
-                  decelerationRate="fast"
-                  snapToInterval={132}
-                  snapToAlignment="start"
+                <MotiView
+                  from={{ opacity: 0, translateY: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                  transition={{ type: 'spring', delay: 2000, damping: 12, stiffness: 120 }}
+                  style={styles.primaryActionCard}
                 >
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2200, damping: 12, stiffness: 120 }}
+                  <TouchableOpacity 
+                    style={styles.primaryActionButton}
+                    onPress={() => router.push('/journal')}
+                    activeOpacity={0.8}
                   >
-                    <JournalButton onPress={() => router.push('/journal')} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2300, damping: 12, stiffness: 120 }}
+                    <View style={styles.primaryActionContent}>
+                      <View style={[styles.primaryActionIcon, { backgroundColor: Colors.primary + '15' }]}>
+                        <FontAwesome5 name="book" size={24} color={Colors.primary} />
+                      </View>
+                      <View style={styles.primaryActionText}>
+                        <Text style={styles.primaryActionTitle}>Journal</Text>
+                        <Text style={styles.primaryActionSubtitle}>Write your thoughts</Text>
+                      </View>
+                      <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                    </View>
+                  </TouchableOpacity>
+                </MotiView>
+                
+                <MotiView
+                  from={{ opacity: 0, translateY: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                  transition={{ type: 'spring', delay: 2100, damping: 12, stiffness: 120 }}
+                  style={styles.primaryActionCard}
+                >
+                  <TouchableOpacity 
+                    style={styles.primaryActionButton}
+                    onPress={() => router.push('/album')}
+                    activeOpacity={0.8}
                   >
-                    <MemoryButton onPress={() => router.push('/album')} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2400, damping: 12, stiffness: 120 }}
+                    <View style={styles.primaryActionContent}>
+                      <View style={[styles.primaryActionIcon, { backgroundColor: Colors.secondary + '15' }]}>
+                        <FontAwesome5 name="images" size={24} color={Colors.secondary} />
+                      </View>
+                      <View style={styles.primaryActionText}>
+                        <Text style={styles.primaryActionTitle}>Memory</Text>
+                        <Text style={styles.primaryActionSubtitle}>Capture moments</Text>
+                      </View>
+                      <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                    </View>
+                  </TouchableOpacity>
+                </MotiView>
+              </MotiView>
+              
+              {/* Secondary Actions - Medium Cards */}
+              <MotiView 
+                style={styles.secondaryActionsContainer}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'spring', delay: 2200, damping: 15, stiffness: 100 }}
+              >
+                <MotiView
+                  from={{ opacity: 0, translateX: -20, scale: 0.9 }}
+                  animate={{ opacity: 1, translateX: 0, scale: 1 }}
+                  transition={{ type: 'spring', delay: 2300, damping: 12, stiffness: 120 }}
+                  style={styles.secondaryActionCard}
+                >
+                  <TouchableOpacity 
+                    style={styles.secondaryActionButton}
+                    onPress={() => router.push('/event')}
+                    activeOpacity={0.8}
                   >
-                    <EventsButton onPress={() => router.push("/event")} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2600, damping: 12, stiffness: 120 }}
+                    <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
+                      <FontAwesome5 name="calendar-alt" size={20} color={Colors.tertiary} />
+                    </View>
+                    <Text style={styles.secondaryActionTitle}>Events</Text>
+                  </TouchableOpacity>
+                </MotiView>
+                
+                <MotiView
+                  from={{ opacity: 0, translateX: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, translateX: 0, scale: 1 }}
+                  transition={{ type: 'spring', delay: 2400, damping: 12, stiffness: 120 }}
+                  style={styles.secondaryActionCard}
+                >
+                  <TouchableOpacity 
+                    style={styles.secondaryActionButton}
+                    onPress={() => console.log('Challenges pressed!')}
+                    activeOpacity={0.8}
                   >
-                    <RecapsButton onPress={() => console.log('Recaps pressed!')} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2700, damping: 12, stiffness: 120 }}
+                    <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.secondary + '15' }]}>
+                      <FontAwesome5 name="trophy" size={20} color={Colors.secondary} />
+                    </View>
+                    <Text style={styles.secondaryActionTitle}>Challenges</Text>
+                  </TouchableOpacity>
+                </MotiView>
+              </MotiView>
+              
+              {/* Utility Actions - Consistent Medium Cards */}
+              <MotiView 
+                style={styles.utilityActionsContainer}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'spring', delay: 2500, damping: 15, stiffness: 100 }}
+              >
+                <MotiView
+                  from={{ opacity: 0, translateX: -20, scale: 0.9 }}
+                  animate={{ opacity: 1, translateX: 0, scale: 1 }}
+                  transition={{ type: 'spring', delay: 2600, damping: 12, stiffness: 120 }}
+                  style={styles.utilityActionCard}
+                >
+                  <TouchableOpacity 
+                    style={styles.utilityActionButton}
+                    onPress={() => router.push('/leaderboard')}
+                    activeOpacity={0.8}
                   >
-                    <RecyclopediaButton onPress={() => console.log('Recyclopedia pressed!')} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2800, damping: 12, stiffness: 120 }}
+                    <View style={[styles.utilityActionIcon, { backgroundColor: Colors.primary + '15' }]}>
+                      <FontAwesome5 name="crown" size={20} color={Colors.primary} />
+                    </View>
+                    <Text style={styles.utilityActionTitle}>Leaderboard</Text>
+                  </TouchableOpacity>
+                </MotiView>
+                
+                <MotiView
+                  from={{ opacity: 0, translateX: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, translateX: 0, scale: 1 }}
+                  transition={{ type: 'spring', delay: 2700, damping: 12, stiffness: 120 }}
+                  style={styles.utilityActionCard}
+                >
+                  <TouchableOpacity 
+                    style={styles.utilityActionButton}
+                    onPress={() => router.push('/recaps')}
+                    activeOpacity={0.8}
                   >
-                    <ChallengesButton onPress={() => console.log('Challenges pressed!')} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 2900, damping: 12, stiffness: 120 }}
-                  >
-                    <LeaderboardButton onPress={() => router.push("/leaderboard")} />
-                  </MotiView>
-                </ScrollView>
-                <View style={styles.scrollGradientLeft} />
-                <View style={styles.scrollGradientRight} />
+                    <View style={[styles.utilityActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
+                      <FontAwesome5 name="chart-line" size={20} color={Colors.tertiary} />
+                    </View>
+                    <Text style={styles.utilityActionTitle}>Recaps</Text>
+                  </TouchableOpacity>
+                </MotiView>
               </MotiView>
             </MotiView>
 
@@ -572,58 +616,129 @@ const styles = StyleSheet.create({
   },
   quickActionsSection: {
     marginVertical: 20,
-    marginHorizontal: -24,
+  },
+  // Primary Actions Styles
+  primaryActionsContainer: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  primaryActionCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: Colors.primary + '10',
+  },
+  primaryActionButton: {
+    padding: 16,
+  },
+  primaryActionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  primaryActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  primaryActionText: {
+    flex: 1,
+  },
+  primaryActionTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 16,
+    color: Colors.onSurface,
+    marginBottom: 2,
+  },
+  primaryActionSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 13,
+    color: Colors.onSurfaceVariant,
+  },
+  // Secondary Actions Styles
+  secondaryActionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  secondaryActionCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+  },
+  secondaryActionButton: {
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  secondaryActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  secondaryActionTitle: {
+    fontFamily: Fonts.display.medium,
+    fontSize: 14,
+    color: Colors.onSurface,
+    textAlign: 'center',
+  },
+  // Utility Actions Styles - Consistent with Secondary
+  utilityActionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  utilityActionCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+  },
+  utilityActionButton: {
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  utilityActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  utilityActionTitle: {
+    fontFamily: Fonts.display.medium,
+    fontSize: 14,
+    color: Colors.onSurface,
+    textAlign: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 16,
-    paddingHorizontal: 0,
-  },
-  scrollIndicator: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  scrollDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.outline + '40',
-  },
-  scrollWrapper: {
-    position: 'relative',
-    height: 120,
-  },
-  horizontalScroll: {
-    height: 120,
-  },
-  scrollContainer: {
-    paddingLeft: 24,
-    paddingRight: 24,
-    gap: 12,
-    alignItems: 'center',
-    height: 120,
-  },
-  scrollGradientLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 20,
-    backgroundColor: 'transparent',
-    zIndex: 1,
-    pointerEvents: 'none',
-  },
-  scrollGradientRight: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 20,
-    backgroundColor: 'transparent',
-    zIndex: 1,
-    pointerEvents: 'none',
   },
   centerContainer: {
     flex: 1,
