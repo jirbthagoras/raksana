@@ -15,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/raksana-icon.png",
-        "backgroundColor": "transparent"
+        "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.j1rb.raksana",
@@ -42,7 +42,12 @@
         }
       ],
       "expo-video",
-      "expo-maps"
+      [
+        "expo-maps",
+        {
+          "googleMapsApiKey": "AIzaSyAqUtVevIw7S9XVbjHakVxgyBIsQNK-hwU"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

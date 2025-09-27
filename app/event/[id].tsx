@@ -1,13 +1,14 @@
 import { Colors, Fonts } from '@/constants';
 import { Event } from '@/types/auth';
 import { FontAwesome5 } from '@expo/vector-icons';
-// import { ExpoMap } from 'expo-maps'; // TODO: Fix expo-maps import
+import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MotiView } from 'moti';
 import React from 'react';
 import {
   Dimensions,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -200,26 +201,68 @@ export default function EventDetailScreen() {
             <Text style={styles.mapTitle}>Lokasi di Peta</Text>
           </View>
           <View style={styles.mapContainer}>
-            {/* Map Placeholder - TODO: Implement expo-maps when import is fixed */}
-            <View style={styles.mapPlaceholder}>
-              <FontAwesome5 name="map-marked-alt" size={48} color={Colors.primary} />
-              <Text style={styles.mapPlaceholderTitle}>Lokasi Event</Text>
-              <Text style={styles.mapPlaceholderText}>{event.location}</Text>
-              <Text style={styles.mapPlaceholderCoords}>
-                {event.latitude.toFixed(6)}, {event.longitude.toFixed(6)}
-              </Text>
-              <TouchableOpacity 
-                style={styles.openMapButton}
-                onPress={() => {
-                  // Open in external map app
-                  const url = `https://maps.google.com/?q=${event.latitude},${event.longitude}`;
-                  console.log('Open map:', url);
+            {Platform.OS === 'ios' ? (
+              <AppleMaps.View
+                style={styles.map}
+                cameraPosition={{
+                  coordinates: {
+                    latitude: event.latitude,
+                    longitude: event.longitude,
+                  },
+                  zoom: 15,
                 }}
-              >
-                <FontAwesome5 name="external-link-alt" size={14} color={Colors.onPrimary} />
-                <Text style={styles.openMapButtonText}>Buka di Maps</Text>
-              </TouchableOpacity>
-            </View>
+                markers={[
+                  {
+                    coordinates: {
+                      latitude: event.latitude,
+                      longitude: event.longitude,
+                    },
+                    title: event.name,
+                  },
+                ]}
+              />
+            ) : Platform.OS === 'android' ? (
+              <GoogleMaps.View
+                style={styles.map}
+                cameraPosition={{
+                  coordinates: {
+                    latitude: event.latitude,
+                    longitude: event.longitude,
+                  },
+                  zoom: 15,
+                }}
+                markers={[
+                  {
+                    coordinates: {
+                      latitude: event.latitude,
+                      longitude: event.longitude,
+                    },
+                    title: event.name,
+                    snippet: event.location,
+                  },
+                ]}
+              />
+            ) : (
+              <View style={styles.mapPlaceholder}>
+                <FontAwesome5 name="map-marked-alt" size={48} color={Colors.primary} />
+                <Text style={styles.mapPlaceholderTitle}>Lokasi Event</Text>
+                <Text style={styles.mapPlaceholderText}>{event.location}</Text>
+                <Text style={styles.mapPlaceholderCoords}>
+                  {event.latitude.toFixed(6)}, {event.longitude.toFixed(6)}
+                </Text>
+              </View>
+            )}
+            <TouchableOpacity 
+              style={styles.openMapButton}
+              onPress={() => {
+                // Open in external map app
+                const url = `https://maps.google.com/?q=${event.latitude},${event.longitude}`;
+                console.log('Open map:', url);
+              }}
+            >
+              <FontAwesome5 name="external-link-alt" size={14} color={Colors.onPrimary} />
+              <Text style={styles.openMapButtonText}>Buka di Maps</Text>
+            </TouchableOpacity>
           </View>
         </MotiView>
 
