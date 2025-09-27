@@ -318,7 +318,7 @@ export default function HomeTab() {
                     animate={{ opacity: 1, translateY: 0, scale: 1 }}
                     transition={{ type: 'spring', delay: 2400, damping: 12, stiffness: 120 }}
                   >
-                    <EventsButton onPress={() => console.log('Events pressed!')} />
+                    <EventsButton onPress={() => router.push("/event")} />
                   </MotiView>
                   <MotiView
                     from={{ opacity: 0, translateY: 20, scale: 0.8 }}

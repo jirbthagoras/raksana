@@ -2,13 +2,13 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import React from 'react';
 import {
-    Dimensions,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -103,7 +103,7 @@ export const HabitUnlockModal: React.FC<HabitUnlockModalProps> = ({
                     </View>
                     <View style={styles.requirementRow}>
                       <FontAwesome5 name="calendar-check" size={14} color={requirement.color} />
-                      <Text style={styles.requirementLabel}>Streak:</Text>
+                      <Text style={styles.requirementLabel}>Streak</Text>
                       <Text style={[styles.requirementValue, { color: requirement.color }]}>{requirement.streak}</Text>
                     </View>
                   </View>

@@ -1,5 +1,6 @@
 import { Colors, Fonts } from "@/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
@@ -8,10 +9,18 @@ type Props = {
 };
 
 export default function EventsButton({ onPress }: Props) {
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.push('/explore');
+    }
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.7}
-      onPress={onPress}
+      onPress={handlePress}
       style={styles.container}
     >
       <FontAwesome5 name="calendar-alt" size={24} color={Colors.tertiary} style={styles.icon} />

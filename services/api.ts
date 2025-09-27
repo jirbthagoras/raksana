@@ -256,6 +256,11 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "users": [...] } }
   }
 
+  async getEvents(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/event');
+    return response.data; // Based on your API response format: { "data": { "events": [...] } }
+  }
+
   async getProfilePictureUploadUrl(filename: string): Promise<{ data: { presigned_url: string } }> {
     const response: AxiosResponse<{ data: { presigned_url: string } }> = await this.api.put('/profile/picture', {
       filename

@@ -2,83 +2,83 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import React from 'react';
 import {
-  Dimensions,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+     Dimensions,
+     Modal,
+     ScrollView,
+     StyleSheet,
+     Text,
+     TouchableOpacity,
+     View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-interface EcoachInfoModalProps {
+interface ExploreInfoModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-export const EcoachInfoModal: React.FC<EcoachInfoModalProps> = ({
+export const ExploreInfoModal: React.FC<ExploreInfoModalProps> = ({
   visible,
   onClose,
 }) => {
-  const ecoachFeatures = [
+  const yardComponents = [
     {
-      title: 'Habit Tracking',
-      icon: 'check-circle',
+      title: 'Album',
+      icon: 'images',
       color: Colors.primary,
-      description: 'Membantu pengguna dalam melakukan habit tracking untuk membentuk Eco Centric Lifestyle'
+      description: 'Kumpulan memory berupa postingan gambar dan teks yang menyimpan kenangan dan pengalaman Anda'
     },
     {
-      title: 'AI Coach Personal',
-      icon: 'robot',
+      title: 'Journal',
+      icon: 'book-open',
       color: Colors.secondary,
-      description: 'AI akan menghasilkan 12 habit relevan dengan tingkat kesulitan berbeda setiap bulannya'
+      description: 'Kumpulan log berupa teks reflektif yang bersifat time-driven untuk mencatat proses perjalanan Anda'
     },
     {
-      title: 'Sistem Level & EXP',
-      icon: 'trophy',
+      title: 'Memory',
+      icon: 'camera',
       color: '#FF9800',
-      description: 'Dapatkan EXP dari menyelesaikan habit harian dan naik level untuk point multiplier'
+      description: 'Postingan individual dalam Album yang berisi gambar dan teks sebagai kenangan pengalaman'
     },
     {
-      title: 'Tantangan Bertahap',
-      icon: 'chart-line',
+      title: 'Log',
+      icon: 'edit',
       color: '#9C27B0',
-      description: 'Setiap hari mendapat 3 habit yang secara bertahap naik level kesulitan'
+      description: 'Catatan individual dalam Journal yang berisi teks reflektif tentang perjalanan waktu'
     }
   ];
 
   const howItWorks = [
     {
       step: '1',
-      title: 'Ceritakan Target Anda',
-      description: 'Setiap bulan, ceritakan target dan kehidupan Anda akhir-akhir ini kepada AI',
-      icon: 'comments'
+      title: 'Ekspresikan Diri',
+      description: 'Pengguna dapat secara bebas mengekspresikan diri atau berbagi pengalaman dan pikiran melalui Yard',
+      icon: 'user-circle'
     },
     {
       step: '2',
-      title: 'AI Menganalisis',
-      description: 'AI akan menganalisis data Anda dan menghasilkan 12 habit relevan dengan tingkat kesulitan berbeda',
-      icon: 'brain'
+      title: 'Buat Album',
+      description: 'Buat Album yang berisi memory (postingan gambar + teks) untuk menyimpan kenangan event-driven',
+      icon: 'images'
     },
     {
       step: '3',
-      title: 'Packet',
-      description: 'Tantangan bulanan ini disebut sebagai "packet" yang berisi habit-habit yang disesuaikan untuk Anda',
-      icon: 'box'
+      title: 'Tulis Journal',
+      description: 'Tulis Journal yang berisi log (teks reflektif) untuk mencatat proses time-driven',
+      icon: 'book-open'
     },
     {
       step: '4',
-      title: 'Habit Harian',
-      description: 'Setiap hari Anda akan mendapat 3 habit yang secara bertahap naik level kesulitan',
-      icon: 'calendar-day'
+      title: 'Tampil di Yard',
+      description: 'Album dan Journal akan terpampang dengan jelas di Yard pengguna untuk dilihat pengunjung',
+      icon: 'eye'
     },
     {
       step: '5',
-      title: 'Dapatkan Reward',
-      description: 'Selesaikan habit untuk mendapat EXP. EXP yang cukup akan menaikkan level dan memberikan point multiplier',
-      icon: 'star'
+      title: 'Jelajahi Yard Lain',
+      description: 'Kunjungi dan jelajahi Yard pengguna lain untuk melihat Album dan Journal mereka',
+      icon: 'compass'
     }
   ];
 
@@ -94,32 +94,32 @@ export const EcoachInfoModal: React.FC<EcoachInfoModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <FontAwesome5 name="seedling" size={32} color={Colors.onPrimary} />
+              <FontAwesome5 name="compass" size={32} color={Colors.onPrimary} />
             </View>
-            <Text style={styles.title}>Tentang Ecoach</Text>
+            <Text style={styles.title}>Tentang Yard</Text>
             <Text style={styles.subtitle}>
-              Fitur yang membantu Anda dalam habit tracking untuk membentuk Eco Centric Lifestyle
+              One-way Narrative Platform untuk mengekspresikan diri dan berbagi pengalaman
             </Text>
           </View>
 
           {/* Content */}
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             
-            {/* Features Section */}
+            {/* Components Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <FontAwesome5 name="star" size={16} color={Colors.primary} />
-                <Text style={styles.sectionTitle}>Fitur Utama</Text>
+                <FontAwesome5 name="puzzle-piece" size={16} color={Colors.primary} />
+                <Text style={styles.sectionTitle}>Komponen Yard</Text>
               </View>
               
-              {ecoachFeatures.map((feature, index) => (
+              {yardComponents.map((component, index) => (
                 <View key={index} style={styles.featureCard}>
-                  <View style={[styles.featureIcon, { backgroundColor: feature.color }]}>
-                    <FontAwesome5 name={feature.icon} size={16} color={Colors.onPrimary} />
+                  <View style={[styles.featureIcon, { backgroundColor: component.color }]}>
+                    <FontAwesome5 name={component.icon} size={16} color={Colors.onPrimary} />
                   </View>
                   <View style={styles.featureContent}>
-                    <Text style={styles.featureTitle}>{feature.title}</Text>
-                    <Text style={styles.featureDescription}>{feature.description}</Text>
+                    <Text style={styles.featureTitle}>{component.title}</Text>
+                    <Text style={styles.featureDescription}>{component.description}</Text>
                   </View>
                 </View>
               ))}
@@ -149,34 +149,35 @@ export const EcoachInfoModal: React.FC<EcoachInfoModalProps> = ({
               ))}
             </View>
 
-            {/* Benefits Section */}
-            <View style={styles.benefitsSection}>
-              <View style={styles.benefitsHeader}>
-                <FontAwesome5 name="heart" size={18} color={Colors.onPrimary} />
-                <Text style={styles.benefitsTitle}>Manfaat Ecoach</Text>
+            {/* Key Differences Section */}
+            <View style={styles.differencesSection}>
+              <View style={styles.differencesHeader}>
+                <FontAwesome5 name="balance-scale" size={18} color={Colors.onPrimary} />
+                <Text style={styles.differencesTitle}>Perbedaan Album & Journal</Text>
               </View>
-              <View style={styles.benefitsList}>
-                <View style={styles.benefitItem}>
-                  <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.benefitText}>Membentuk kebiasaan ramah lingkungan secara konsisten</Text>
+              <View style={styles.differencesList}>
+                <View style={styles.differenceItem}>
+                  <View style={styles.differenceIcon}>
+                    <FontAwesome5 name="images" size={12} color={Colors.primary} />
+                  </View>
+                  <View style={styles.differenceContent}>
+                    <Text style={styles.differenceLabel}>Album (Event-driven)</Text>
+                    <Text style={styles.differenceText}>Hasil dari pengalaman dan kenangan</Text>
+                  </View>
                 </View>
-                <View style={styles.benefitItem}>
-                  <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.benefitText}>Mendapat panduan personal dari AI coach</Text>
-                </View>
-                <View style={styles.benefitItem}>
-                  <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.benefitText}>Sistem gamifikasi yang memotivasi</Text>
-                </View>
-                <View style={styles.benefitItem}>
-                  <FontAwesome5 name="check-circle" size={14} color={Colors.onPrimary} />
-                  <Text style={styles.benefitText}>Tantangan yang disesuaikan dengan kemampuan Anda</Text>
+                <View style={styles.differenceItem}>
+                  <View style={styles.differenceIcon}>
+                    <FontAwesome5 name="book-open" size={12} color={Colors.secondary} />
+                  </View>
+                  <View style={styles.differenceContent}>
+                    <Text style={styles.differenceLabel}>Journal (Time-driven)</Text>
+                    <Text style={styles.differenceText}>Proses reflektif perjalanan waktu</Text>
+                  </View>
                 </View>
               </View>
             </View>
           </ScrollView>
 
-          {/* Footer */}
           <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
             <Text style={styles.closeModalButtonText}>Mengerti</Text>
           </TouchableOpacity>
@@ -346,36 +347,65 @@ const styles = StyleSheet.create({
     height: 12,
     backgroundColor: Colors.secondary + '40',
   },
-  benefitsSection: {
+  differencesSection: {
     backgroundColor: Colors.secondary,
     borderRadius: 16,
     padding: 20,
     marginBottom: 8,
   },
-  benefitsHeader: {
+  differencesHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginBottom: 16,
   },
-  benefitsTitle: {
+  differencesTitle: {
     fontFamily: Fonts.display.bold,
     fontSize: 16,
     color: Colors.onPrimary,
   },
-  benefitsList: {
-    gap: 12,
+  differencesList: {
+    gap: 16,
+    marginBottom: 16,
   },
-  benefitItem: {
+  differenceItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
   },
-  benefitText: {
-    fontFamily: Fonts.text.regular,
+  differenceIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.onPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  differenceContent: {
+    flex: 1,
+  },
+  differenceLabel: {
+    fontFamily: Fonts.display.bold,
     fontSize: 14,
     color: Colors.onPrimary,
-    flex: 1,
+    marginBottom: 2,
+  },
+  differenceText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 13,
+    color: Colors.onPrimary,
+    lineHeight: 18,
+  },
+  analogyContainer: {
+    backgroundColor: Colors.onPrimary + '15',
+    borderRadius: 12,
+    padding: 12,
+  },
+  analogyText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 13,
+    color: Colors.onPrimary,
+    textAlign: 'center',
     lineHeight: 18,
   },
   closeModalButton: {

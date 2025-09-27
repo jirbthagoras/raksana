@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, CreateWeeklyRecapResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, PointHistoryResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
+import { ApiError, CreateWeeklyRecapResponse, EventsResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, PointHistoryResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -18,6 +18,7 @@ export const apiKeys = {
   monthlyRecaps: () => ['monthlyRecaps'] as const,
   memories: () => ['memories'] as const,
   pointHistory: () => ['pointHistory'] as const,
+  events: () => ['events'] as const,
 };
 
 // Profile queries
@@ -319,6 +320,19 @@ export const useChallengeParticipation = () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyRecaps'] });
       queryClient.invalidateQueries({ queryKey: ['monthlyRecaps'] });
     },
+  });
+};
+
+// Events Query
+export const useEvents = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<EventsResponse, ApiError>({
+    queryKey: apiKeys.events(),
+    queryFn: () => apiService.getEvents(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 

@@ -2,7 +2,7 @@ import GradientBackground from '@/components/Screens/GradientBackground';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -11,10 +11,12 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UserCard from '../../../components/Cards/UserCard';
+import { ExploreInfoModal } from '../../../components/Modals/ExploreInfoModal';
 import FloatingElements from '../../../components/Screens/FloatingElements';
 import { useUsers } from '../../../hooks/useApiQueries';
 
@@ -32,6 +34,7 @@ interface User {
 export default function ExploreScreen() {
   const { data: usersData, isLoading, error, refetch } = useUsers();
   const insets = useSafeAreaInsets();
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const users: User[] = usersData?.data?.users || [];
 
@@ -121,10 +124,25 @@ export default function ExploreScreen() {
           transition={{ type: 'spring', delay: 100, damping: 15, stiffness: 100 }}
           style={styles.header}
         >
-          <Text style={styles.headerTitle}>Jelajahi puluhan Yards!</Text>
-          <Text style={styles.headerSubtitle}>
-            Jelajahi dan Kunjungi Yard Pengguna lain! 
-          </Text>
+          <View style={styles.headerContent}>
+            <View style={styles.headerText}>
+              <Text style={styles.headerTitle}>Jelajahi puluhan Yards!</Text>
+              <Text style={styles.headerSubtitle}>
+                Jelajahi dan Kunjungi Yard Pengguna lain! 
+              </Text>
+            </View>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.headerInfoButton}
+                onPress={() => setShowInfoModal(true)}
+              >
+                <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+              </TouchableOpacity>
+              <View style={styles.headerIcon}>
+                <FontAwesome5 name="compass" size={24} color={Colors.primary} />
+              </View>
+            </View>
+          </View>
         </MotiView>
 
         {/* Users Grid */}
@@ -148,6 +166,12 @@ export default function ExploreScreen() {
             }
           />
         </View>
+
+        {/* Info Modal */}
+        <ExploreInfoModal
+          visible={showInfoModal}
+          onClose={() => setShowInfoModal(false)}
+        />
       </GradientBackground>
     </SafeAreaView>
   );
@@ -163,6 +187,15 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 10,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  headerText: {
+    flex: 1,
+    marginRight: 16,
+  },
   headerTitle: {
     fontFamily: Fonts.display.bold,
     fontSize: 32,
@@ -174,6 +207,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.onSurfaceVariant,
     lineHeight: 22,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerInfoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   contentContainer: {
     flex: 1,

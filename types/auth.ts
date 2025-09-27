@@ -211,3 +211,26 @@ export interface MemoriesResponse {
     memories: Memory[];
   };
 }
+
+// Event types
+export interface Event {
+  id: number;
+  location: string;
+  latitude: number;
+  longitude: number;
+  contact: string;
+  starts_at: string;
+  ends_at: string;
+  cover_url: string;
+  name: string;
+  description: string;
+  point_gain: number;
+  created_at: string;
+  Participated: boolean;
+}
+
+export interface EventsResponse {
+  data: {
+    events: Event[];
+  };
+}
