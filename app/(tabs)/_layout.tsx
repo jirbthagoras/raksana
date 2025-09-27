@@ -113,25 +113,25 @@ export default function TabLayout() {
       <Tabs.Screen
         name="packet"
         options={{
-          title: 'Packets',
+          title: 'Habit',
           tabBarIcon: ({ color, size, focused }) => (
             <AnimatedTabIcon name="folder" focused={focused} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="bookmarks"
+        name="explore"
         options={{
-          title: 'Tersimpan',
+          title: 'Explore',
           tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon name="bookmark" focused={focused} color={color} />
+            <AnimatedTabIcon name="compass" focused={focused} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profil',
+          title: 'Yard',
           tabBarIcon: ({ color, size, focused }) => (
             <AnimatedTabIcon name="person" focused={focused} color={color} />
           ),

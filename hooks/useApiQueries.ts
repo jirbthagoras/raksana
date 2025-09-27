@@ -42,6 +42,14 @@ export const useDailyChallenge = () => {
   });
 };
 
+export const useUsers = () => {
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: () => apiService.getUsers(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
 // Today's Tasks Query
 export const useTodayTasks = () => {
   const { isAuthenticated } = useAuthStatus();

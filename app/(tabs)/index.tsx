@@ -15,7 +15,6 @@ import {
 import FloatingElements from '../../components/Screens/FloatingElements';
 import GradientBackground from '../../components/Screens/GradientBackground';
 
-import BackyardButton from '@/components/Buttons/BackyardButton';
 import ChallengesButton from '@/components/Buttons/ChallengesButton';
 import EventsButton from '@/components/Buttons/EventsButton';
 import JournalButton from '@/components/Buttons/JournalButton';
@@ -348,13 +347,6 @@ export default function HomeTab() {
                     transition={{ type: 'spring', delay: 2900, damping: 12, stiffness: 120 }}
                   >
                     <LeaderboardButton onPress={() => router.push("/leaderboard")} />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateY: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    transition={{ type: 'spring', delay: 3000, damping: 12, stiffness: 120 }}
-                  >
-                    <BackyardButton onPress={() => console.log('Backyard pressed!')} />
                   </MotiView>
                 </ScrollView>
                 <View style={styles.scrollGradientLeft} />

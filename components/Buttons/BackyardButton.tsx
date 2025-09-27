@@ -15,7 +15,7 @@ export default function BackyardButton({ onPress }: Props) {
       style={styles.container}
     >
       <FontAwesome5 name="seedling" size={24} color={Colors.tertiary} style={styles.icon} />
-      <Text style={styles.title}>Backyard</Text>
+      <Text style={styles.title}>Yard</Text>
     </TouchableOpacity>
   );
 }
