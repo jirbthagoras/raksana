@@ -88,11 +88,15 @@ export function useLogoutMutation() {
     mutationFn: async () => {
       await apiService.logout();
     },
+    onMutate: async () => {
+      // Immediately clear auth state to trigger navigation
+      queryClient.setQueryData(authKeys.token(), null);
+      queryClient.setQueryData(authKeys.profile(), null);
+      await AsyncStorage.removeItem('auth_state');
+    },
     onSettled: async () => {
       // Clear all auth-related cache on logout (success or failure)
       queryClient.removeQueries({ queryKey: authKeys.all });
-      // Clear AsyncStorage auth state
-      await AsyncStorage.removeItem('auth_state');
       // Clear all other cached data as well since user is logging out
       queryClient.clear();
     },

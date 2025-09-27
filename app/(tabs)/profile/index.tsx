@@ -24,6 +24,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FloatingElements from '../../../components/Screens/FloatingElements';
 import { useProfileMe } from '../../../hooks/useApiQueries';
+import { useLogoutMutation } from '../../../hooks/useAuthQueries';
+import { LogoutConfirmationPopup } from '../../../components/Popups/LogoutConfirmationPopup';
+import { useRouter } from 'expo-router';
 import apiService from '../../../services/api';
 
 const { width } = Dimensions.get('window');
@@ -60,6 +63,8 @@ interface ProfileData {
 
 export default function ProfileScreen() {
   const { data: profileData, isLoading, error, refetch } = useProfileMe();
+  const logoutMutation = useLogoutMutation();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
   const tabs = ['Statistics'];
   const insets = useSafeAreaInsets();
@@ -67,6 +72,28 @@ export default function ProfileScreen() {
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutPopup(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      setShowLogoutPopup(false);
+      // Force navigation to login screen
+      router.replace('/login');
+    } catch (error) {
+      // Even if logout API fails, clear local state and navigate
+      setShowLogoutPopup(false);
+      router.replace('/login');
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutPopup(false);
+  };
 
   const handleEditProfilePicture = async () => {
     try {
@@ -444,7 +471,6 @@ export default function ProfileScreen() {
                       <FontAwesome5 name={getBadgeIcon(badge.category)} size={12} color={getBadgeColor(badge.category)} />
                     </View>
                     <Text style={styles.badgeInProfileName}>{badge.name}</Text>
-                    <Text style={styles.badgeInProfileFreq}>×{badge.frequency}</Text>
                   </View>
                 ))}
                 {profileData.badges.length > 3 && (
@@ -460,6 +486,22 @@ export default function ProfileScreen() {
               <FontAwesome5 name="coins" size={16} color={Colors.secondary} />
               <Text style={styles.pointsText}>{profileData.points.toLocaleString()} Points</Text>
             </View>
+
+            {/* Logout Button */}
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+              disabled={logoutMutation.isPending}
+            >
+              {logoutMutation.isPending ? (
+                <ActivityIndicator size="small" color={Colors.error} />
+              ) : (
+                <FontAwesome5 name="sign-out-alt" size={16} color={Colors.error} />
+              )}
+              <Text style={styles.logoutButtonText}>
+                {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+              </Text>
+            </TouchableOpacity>
           </LinearGradient>
         </MotiView>
 
@@ -541,6 +583,14 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Logout Confirmation Popup */}
+      <LogoutConfirmationPopup
+        visible={showLogoutPopup}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+        isLoading={logoutMutation.isPending}
+      />
     </SafeAreaView>
   );
 }
@@ -1067,6 +1117,25 @@ const styles = StyleSheet.create({
   imagePickerCancelButtonText: {
     fontFamily: Fonts.text.bold,
     fontSize: 16,
-    color: Colors.onErrorContainer,
+    color: Colors.error,
+  },
+  // Logout Button Styles
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.errorContainer,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: Colors.error + '20',
+  },
+  logoutButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.error,
   },
 });

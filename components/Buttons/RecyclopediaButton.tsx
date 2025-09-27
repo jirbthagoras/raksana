@@ -15,7 +15,7 @@ export default function RecyclopediaButton({ onPress }: Props) {
       style={styles.container}
     >
       <FontAwesome5 name="recycle" size={24} color={Colors.tertiary} style={styles.icon} />
-      <Text style={styles.title}>Greenprints</Text>
+      <Text style={styles.title}>Recyclopedia</Text>
     </TouchableOpacity>
   );
 }
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: Fonts.display.bold,
-    fontSize: 15,
+    fontSize: 13,
     color: Colors.primary,
     textAlign: 'center',
   },
