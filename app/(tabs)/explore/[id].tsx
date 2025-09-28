@@ -129,23 +129,12 @@ export default function UserProfileScreen() {
         </View>
         
         {/* Profile content using reusable ProfileView component */}
-        <ScrollView
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={loading}
-              onRefresh={refetch}
-              tintColor={Colors.primary}
-              colors={[Colors.primary]}
-            />
-          }
-        >
+        <View style={{ flex: 1 }}>
           <ProfileView 
             profileData={profileData} 
             isOwnProfile={false}
           />
-        </ScrollView>
+        </View>
       </SafeAreaView>
     </GradientBackground>
   );

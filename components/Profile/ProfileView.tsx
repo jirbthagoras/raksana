@@ -10,8 +10,13 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  FlatList,
+  RefreshControl
 } from 'react-native';
+import { useUserLogs, useUserMemories } from '@/hooks/useApiQueries';
+import LogCard from '@/components/Cards/LogCard';
+import MemoryCard from '@/components/Cards/MemoryCard';
 
 const { width } = Dimensions.get('window');
 
@@ -59,12 +64,29 @@ interface ProfileTab {
 export default function ProfileView({ profileData, isOwnProfile = false, children }: ProfileViewProps) {
   const [selectedTab, setSelectedTab] = useState('statistics');
 
-  const tabs: ProfileTab[] = [
-    { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
-    // Future tabs can be added here, like:
-    // { id: 'reels', name: 'Reels', icon: 'video' },
-    // { id: 'posts', name: 'Posts', icon: 'images' },
-  ];
+  // Fetch user logs and memories only for other users' profiles
+  const { 
+    data: userLogsData, 
+    isLoading: logsLoading, 
+    refetch: refetchLogs 
+  } = useUserLogs(isOwnProfile ? 0 : profileData.id);
+  
+  const { 
+    data: userMemoriesData, 
+    isLoading: memoriesLoading, 
+    refetch: refetchMemories 
+  } = useUserMemories(isOwnProfile ? 0 : profileData.id);
+
+  // Conditional tabs based on profile type
+  const tabs: ProfileTab[] = isOwnProfile 
+    ? [
+        { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
+      ]
+    : [
+        { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
+        { id: 'journals', name: 'Journals', icon: 'book' },
+        { id: 'albums', name: 'Albums', icon: 'images' },
+      ];
 
   const renderProfileImage = () => {
     const imageUrl = profileData?.profile_url;
@@ -187,6 +209,88 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
             </MotiView>
           </>
         );
+      case 'journals':
+        return (
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 600, delay: 100 }}
+            style={styles.tabContentList}
+          >
+            {logsLoading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading journals...</Text>
+              </View>
+            ) : userLogsData?.data?.logs?.length > 0 ? (
+              <FlatList
+                data={userLogsData.data.logs}
+                keyExtractor={(item, index) => `log-${index}`}
+                renderItem={({ item, index }) => (
+                  <LogCard item={item} index={index} />
+                )}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContainer}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={logsLoading}
+                    onRefresh={refetchLogs}
+                    tintColor={Colors.primary}
+                    colors={[Colors.primary]}
+                  />
+                }
+              />
+            ) : (
+              <View style={styles.emptyContainer}>
+                <FontAwesome5 name="book-open" size={48} color={Colors.onSurfaceVariant} />
+                <Text style={styles.emptyText}>No journals yet</Text>
+                <Text style={styles.emptySubtext}>This user hasn't written any journals</Text>
+              </View>
+            )}
+          </MotiView>
+        );
+      case 'albums':
+        return (
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 600, delay: 100 }}
+            style={styles.tabContentList}
+          >
+            {memoriesLoading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading albums...</Text>
+              </View>
+            ) : userMemoriesData?.data?.memories?.length > 0 ? (
+              <FlatList
+                data={userMemoriesData.data.memories}
+                keyExtractor={(item) => `memory-${item.memory_id}`}
+                renderItem={({ item, index }) => (
+                  <MemoryCard 
+                    item={item} 
+                    index={index} 
+                    showDeleteButton={false}
+                  />
+                )}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContainer}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={memoriesLoading}
+                    onRefresh={refetchMemories}
+                    tintColor={Colors.primary}
+                    colors={[Colors.primary]}
+                  />
+                }
+              />
+            ) : (
+              <View style={styles.emptyContainer}>
+                <FontAwesome5 name="images" size={48} color={Colors.onSurfaceVariant} />
+                <Text style={styles.emptyText}>No memories yet</Text>
+                <Text style={styles.emptySubtext}>This user hasn't shared any memories</Text>
+              </View>
+            )}
+          </MotiView>
+        );
       default:
         return (
           <View style={styles.tabContent}>
@@ -196,95 +300,210 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
     }
   };
 
-  return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      {/* Profile Card */}
-      <MotiView
-        from={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'timing', duration: 600, delay: 200 }}
-        style={styles.profileCard}
+  // Render profile header component
+  const renderProfileHeader = () => (
+    <MotiView
+      from={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'timing', duration: 600, delay: 200 }}
+      style={styles.profileCard}
+    >
+      <LinearGradient
+        colors={[Colors.surface, Colors.surfaceContainerHigh]}
+        style={styles.profileCardGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        <LinearGradient
-          colors={[Colors.surface, Colors.surfaceContainerHigh]}
-          style={styles.profileCardGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <View style={styles.profileHeader}>
-            <View style={styles.profileImageContainer}>
-              {renderProfileImage()}
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{profileData.name}</Text>
-              <Text style={styles.profileUsername}>@{profileData.username}</Text>
-              <View style={styles.levelContainer}>
-                <View style={styles.levelBadge}>
-                  <FontAwesome5 name="star" size={12} color={Colors.secondary} />
-                  <Text style={styles.levelText}>Level {profileData.level}</Text>
-                </View>
+        <View style={styles.profileHeader}>
+          <View style={styles.profileImageContainer}>
+            {renderProfileImage()}
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{profileData.name}</Text>
+            <Text style={styles.profileUsername}>@{profileData.username}</Text>
+            <View style={styles.levelContainer}>
+              <View style={styles.levelBadge}>
+                <FontAwesome5 name="star" size={12} color={Colors.secondary} />
+                <Text style={styles.levelText}>Level {profileData.level}</Text>
               </View>
             </View>
           </View>
+        </View>
 
-          {/* Badges Section */}
-          <View style={styles.badgesInProfile}>
-            <View style={styles.badgesInProfileContainer}>
-              {profileData.badges.slice(0, 3).map((badge: Badge, index: number) => (
-                <View key={index} style={styles.badgeInProfileItem}>
-                  <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
-                    <FontAwesome5 name={getBadgeIcon(badge.category)} size={12} color={getBadgeColor(badge.category)} />
-                  </View>
-                  <Text style={styles.badgeInProfileName}>{badge.name}</Text>
+        {/* Badges Section */}
+        <View style={styles.badgesInProfile}>
+          <View style={styles.badgesInProfileContainer}>
+            {profileData.badges.slice(0, 3).map((badge: Badge, index: number) => (
+              <View key={index} style={styles.badgeInProfileItem}>
+                <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
+                  <FontAwesome5 name={getBadgeIcon(badge.category)} size={12} color={getBadgeColor(badge.category)} />
                 </View>
-              ))}
-              {profileData.badges.length > 3 && (
-                <View style={styles.badgeInProfileMore}>
-                  <Text style={styles.badgeInProfileMoreText}>+{profileData.badges.length - 3}</Text>
-                </View>
-              )}
+                <Text style={styles.badgeInProfileName}>{badge.name}</Text>
+              </View>
+            ))}
+            {profileData.badges.length > 3 && (
+              <View style={styles.badgeInProfileMore}>
+                <Text style={styles.badgeInProfileMoreText}>+{profileData.badges.length - 3}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Points */}
+        <View style={styles.pointsContainer}>
+          <FontAwesome5 name="coins" size={16} color={Colors.secondary} />
+          <Text style={styles.pointsText}>{profileData.points.toLocaleString()} Points</Text>
+        </View>
+
+        {/* Additional buttons (logout for own profile) */}
+        {children}
+      </LinearGradient>
+    </MotiView>
+  );
+
+  // Render tab navigation
+  const renderTabNavigation = () => (
+    <View style={styles.tabHeader}>
+      {tabs.map((tab) => (
+        <TouchableOpacity
+          key={tab.id}
+          style={[
+            styles.tabItem,
+            selectedTab === tab.id && styles.activeTabItem,
+          ]}
+          onPress={() => setSelectedTab(tab.id)}
+        >
+          <FontAwesome5 
+            name={tab.icon} 
+            size={16} 
+            color={selectedTab === tab.id ? Colors.primary : Colors.secondary} 
+            style={{ marginBottom: 4 }}
+          />
+          <Text style={[
+            styles.tabText,
+            selectedTab === tab.id && styles.activeTabText,
+          ]}>
+            {tab.name}
+          </Text>
+          {selectedTab === tab.id && <View style={styles.tabIndicator} />}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  // For tabs with FlatList (Journals, Albums), use FlatList as the main container
+  if (selectedTab === 'journals') {
+    const logs = userLogsData?.data?.logs || [];
+    
+    return (
+      <FlatList
+        data={logs}
+        keyExtractor={(item, index) => `log-${index}`}
+        renderItem={({ item, index }) => (
+          <View style={styles.listItemContainer}>
+            <LogCard item={item} index={index} />
+          </View>
+        )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
+        )}
+        ListEmptyComponent={() => (
+          logsLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading journals...</Text>
             </View>
-          </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <FontAwesome5 name="book-open" size={48} color={Colors.onSurfaceVariant} />
+              <Text style={styles.emptyText}>No journals yet</Text>
+              <Text style={styles.emptySubtext}>This user hasn't written any journals</Text>
+            </View>
+          )
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        style={styles.flatListStyle}
+        refreshControl={
+          <RefreshControl
+            refreshing={logsLoading}
+            onRefresh={refetchLogs}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
+      />
+    );
+  }
 
-          {/* Points */}
-          <View style={styles.pointsContainer}>
-            <FontAwesome5 name="coins" size={16} color={Colors.secondary} />
-            <Text style={styles.pointsText}>{profileData.points.toLocaleString()} Points</Text>
-          </View>
+  if (selectedTab === 'albums') {
+    const memories = userMemoriesData?.data?.memories || [];
+    
+    return (
+      <FlatList
+        data={memories}
+        keyExtractor={(item) => `memory-${item.memory_id}`}
+        renderItem={({ item, index }) => (
+          <MemoryCard 
+            item={item} 
+            index={index} 
+            showDeleteButton={false}
+          />
+        )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
+        )}
+        ListEmptyComponent={() => (
+          memoriesLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading albums...</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <FontAwesome5 name="images" size={48} color={Colors.onSurfaceVariant} />
+              <Text style={styles.emptyText}>No memories yet</Text>
+              <Text style={styles.emptySubtext}>This user hasn't shared any memories</Text>
+            </View>
+          )
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        style={styles.flatListStyle}
+        refreshControl={
+          <RefreshControl
+            refreshing={memoriesLoading}
+            onRefresh={refetchMemories}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
+      />
+    );
+  }
 
-          {/* Additional buttons (logout for own profile) */}
-          {children}
-        </LinearGradient>
-      </MotiView>
-
-      {/* Tab Navigation */}
-      <View style={styles.tabHeader}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[
-              styles.tabItem,
-              selectedTab === tab.id && styles.activeTabItem,
-            ]}
-            onPress={() => setSelectedTab(tab.id)}
-          >
-            <FontAwesome5 
-              name={tab.icon} 
-              size={16} 
-              color={selectedTab === tab.id ? Colors.primary : Colors.secondary} 
-              style={{ marginBottom: 4 }}
-            />
-            <Text style={[
-              styles.tabText,
-              selectedTab === tab.id && styles.activeTabText,
-            ]}>
-              {tab.name}
-            </Text>
-            {selectedTab === tab.id && <View style={styles.tabIndicator} />}
-          </TouchableOpacity>
-        ))}
-      </View>
-
+  // For Statistics tab, use ScrollView
+  return (
+    <ScrollView 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={false}
+          onRefresh={() => {}}
+          tintColor={Colors.primary}
+          colors={[Colors.primary]}
+        />
+      }
+    >
+      {renderProfileHeader()}
+      {renderTabNavigation()}
+      
       {/* Tab Content */}
       <View style={styles.tabContentContainer}>
         {renderTabContent()}
@@ -545,5 +764,54 @@ const styles = StyleSheet.create({
     color: Colors.onSurfaceVariant,
     textAlign: 'center',
     marginTop: 40,
+  },
+  tabContentList: {
+    flex: 1,
+    paddingHorizontal: 0,
+    marginBottom: 30,
+  },
+  listContainer: {
+    paddingBottom: 20,
+    paddingHorizontal: 0,
+  },
+  flatListStyle: {
+    flex: 1,
+  },
+  listItemContainer: {
+    paddingHorizontal: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 16,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 18,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });

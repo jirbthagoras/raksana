@@ -23,6 +23,8 @@ export const apiKeys = {
   nearestQuest: (latitude: number, longitude: number) => ['nearestQuest', latitude, longitude] as const,
   challenges: () => ['challenges'] as const,
   challengeParticipants: (challengeId: number) => ['challengeParticipants', challengeId] as const,
+  userLogs: (userId: number) => ['userLogs', userId] as const,
+  userMemories: (userId: number) => ['userMemories', userId] as const,
 };
 
 // Profile queries
@@ -419,6 +421,32 @@ export const useChallengeParticipants = (challengeId: number) => {
     queryKey: apiKeys.challengeParticipants(challengeId),
     queryFn: () => apiService.getChallengeParticipants(challengeId),
     enabled: isAuthenticated && challengeId > 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// User Logs Query
+export const useUserLogs = (userId: number) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery({
+    queryKey: apiKeys.userLogs(userId),
+    queryFn: () => apiService.getUserLogs(userId),
+    enabled: isAuthenticated && userId > 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// User Memories Query
+export const useUserMemories = (userId: number) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery({
+    queryKey: apiKeys.userMemories(userId),
+    queryFn: () => apiService.getUserMemories(userId),
+    enabled: isAuthenticated && userId > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
   });

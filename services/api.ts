@@ -245,6 +245,16 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "memories": [...] } }
   }
 
+  async getUserLogs(userId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get(`/log/${userId}`);
+    return response.data; // Based on your API response format: { "data": { "logs": [...] } }
+  }
+
+  async getUserMemories(userId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get(`/memory/${userId}`);
+    return response.data; // Based on your API response format: { "data": { "memories": [...] } }
+  }
+
   async createMemory(data: { content_type: string; filename: string; description: string }): Promise<{ data: { presigned_url: string } }> {
     const response: AxiosResponse<{ data: { presigned_url: string } }> = await this.api.post('/memory', data);
     return response.data;
