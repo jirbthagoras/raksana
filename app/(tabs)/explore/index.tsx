@@ -158,7 +158,7 @@ export default function ExploreScreen() {
             nestedScrollEnabled={true}
             refreshControl={
               <RefreshControl
-                refreshing={isLoading}
+                refreshing={false}
                 onRefresh={refetch}
                 tintColor={Colors.primary}
                 colors={[Colors.primary]}

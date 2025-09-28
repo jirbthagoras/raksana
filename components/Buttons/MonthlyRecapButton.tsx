@@ -21,7 +21,7 @@ type Props = {
 function MonthlyRecapButtonContent({ onPress }: Props) {
   // Check if today is the 1st of the month
   const today = new Date();
-  const isFirstOfMonth = today.getDate() === 1; // Set to true for testing, change to: today.getDate() === 1;
+  const isFirstOfMonth = true; // Set to true for testing, change to: today.getDate() === 1;
   
   const [showModal, setShowModal] = useState(false);
   const [recapData, setRecapData] = useState<any>(null);

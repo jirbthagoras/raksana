@@ -1,3 +1,4 @@
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -9,16 +10,15 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  Switch
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCreateLog } from '../../hooks/useApiQueries';
 import { ErrorProvider, useError } from '../../contexts/ErrorContext';
-import LoadingOverlay from '@/components/Screens/LoadingComponent';
+import { useCreateLog } from '../../hooks/useApiQueries';
 
 function CreateJournalScreenContent() {
   const [text, setText] = useState('');
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: Fonts.display.bold,
     fontSize: 20,
-    color: Colors.primary,
+    color: "black",
   },
   headerSpacer: {
     width: 40,

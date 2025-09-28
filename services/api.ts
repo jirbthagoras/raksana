@@ -286,6 +286,18 @@ class ApiService {
     return response.data;
   }
 
+  async getChallenges(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/challenge');
+    console.log('Raw API Response for getChallenges:', response.data);
+    return response.data; // Based on your API response format: { "data": { "challenges": [...] } }
+  }
+
+  async getChallengeParticipants(challengeId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get(`/challenge/${challengeId}`);
+    console.log('Raw API Response for getChallengeParticipants:', response.data);
+    return response.data; // Based on your API response format: { "data": { "participants": [...] } }
+  }
+
   async getProfilePictureUploadUrl(filename: string): Promise<{ data: { presigned_url: string } }> {
     const response: AxiosResponse<{ data: { presigned_url: string } }> = await this.api.put('/profile/picture', {
       filename

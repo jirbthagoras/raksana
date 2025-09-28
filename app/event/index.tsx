@@ -7,6 +7,9 @@ import { router } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,14 +17,42 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEvents } from '../../hooks/useApiQueries';
 
+const { width } = Dimensions.get('window');
+
+type EventTab = 'all' | 'upcoming' | 'ongoing' | 'ended';
+
 export default function EventScreen() {
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<EventTab>('all');
   const { data: eventsData, isLoading, error, refetch } = useEvents();
 
   const events: Event[] = eventsData?.data?.events || [];
+
+  // Filter events based on selected tab
+  const getFilteredEvents = () => {
+    const now = new Date();
+    
+    switch (selectedTab) {
+      case 'upcoming':
+        return events.filter(event => new Date(event.starts_at) > now);
+      case 'ongoing':
+        return events.filter(event => {
+          const startDate = new Date(event.starts_at);
+          const endDate = new Date(event.ends_at);
+          return now >= startDate && now <= endDate;
+        });
+      case 'ended':
+        return events.filter(event => new Date(event.ends_at) < now);
+      default:
+        return events;
+    }
+  };
+
+  const filteredEvents = getFilteredEvents();
 
   // Debug log to check API response and participated field
   console.log('Events API Response:', eventsData);
@@ -51,6 +82,101 @@ export default function EventScreen() {
         participated: event.participated?.toString() || 'false',
       },
     });
+  };
+
+  const getTabInfo = (tab: EventTab) => {
+    const now = new Date();
+    let count = 0;
+    let icon = '';
+    let label = '';
+    let color = '';
+
+    switch (tab) {
+      case 'all':
+        count = events.length;
+        icon = 'calendar-alt';
+        label = 'Semua';
+        color = Colors.primary;
+        break;
+      case 'upcoming':
+        count = events.filter(event => new Date(event.starts_at) > now).length;
+        icon = 'clock';
+        label = 'Akan Datang';
+        color = Colors.secondary;
+        break;
+      case 'ongoing':
+        count = events.filter(event => {
+          const startDate = new Date(event.starts_at);
+          const endDate = new Date(event.ends_at);
+          return now >= startDate && now <= endDate;
+        }).length;
+        icon = 'play-circle';
+        label = 'Berlangsung';
+        color = '#FF9800';
+        break;
+      case 'ended':
+        count = events.filter(event => new Date(event.ends_at) < now).length;
+        icon = 'check-circle';
+        label = 'Selesai';
+        color = Colors.onSurfaceVariant;
+        break;
+    }
+
+    return { count, icon, label, color };
+  };
+
+  const renderTabButton = (tab: EventTab) => {
+    const isSelected = selectedTab === tab;
+    const tabInfo = getTabInfo(tab);
+    
+    return (
+      <TouchableOpacity
+        key={tab}
+        style={[
+          styles.tabButton,
+          isSelected && styles.tabButtonActive,
+        ]}
+        onPress={() => setSelectedTab(tab)}
+        activeOpacity={0.7}
+      >
+        {isSelected && (
+          <LinearGradient
+            colors={[tabInfo.color + '25', tabInfo.color + '15']}
+            style={styles.tabGradient}
+          />
+        )}
+        <View style={styles.tabContent}>
+          <View style={styles.tabHeader}>
+            <FontAwesome5 
+              name={tabInfo.icon as any} 
+              size={16} 
+              color={isSelected ? tabInfo.color : Colors.onSurfaceVariant} 
+            />
+            <View style={[
+              styles.tabBadge,
+              { backgroundColor: isSelected ? tabInfo.color : Colors.surfaceVariant }
+            ]}>
+              <Text style={[
+                styles.tabBadgeText,
+                { color: isSelected ? Colors.onPrimary : Colors.onSurfaceVariant }
+              ]}>
+                {tabInfo.count}
+              </Text>
+            </View>
+          </View>
+          <Text 
+            style={[
+              styles.tabLabel,
+              { color: isSelected ? tabInfo.color : Colors.onSurfaceVariant }
+            ]}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {tabInfo.label}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   if (isLoading) {
@@ -102,12 +228,28 @@ export default function EventScreen() {
         </TouchableOpacity>
       </MotiView>
 
+      {/* Tabs */}
+      <MotiView
+        from={{ opacity: 0, translateX: -20 }}
+        animate={{ opacity: 1, translateX: 0 }}
+        transition={{ type: 'timing', duration: 400, delay: 200 }}
+      >
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsContainer}
+          style={styles.tabsScrollView}
+        >
+          {(['all', 'upcoming', 'ongoing', 'ended'] as EventTab[]).map(renderTabButton)}
+        </ScrollView>
+      </MotiView>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading}
+            refreshing={false}
             onRefresh={refetch}
             colors={[Colors.primary]}
             tintColor={Colors.primary}
@@ -117,33 +259,34 @@ export default function EventScreen() {
       >
         {/* Events Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <FontAwesome5 name="calendar-alt" size={18} color={Colors.primary} />
-            <Text style={styles.sectionTitle}>Semua Events</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{events.length}</Text>
-            </View>
-          </View>
-
-          {events.length === 0 ? (
+          {filteredEvents.length === 0 ? (
             <View style={styles.emptyState}>
               <FontAwesome5 name="calendar-times" size={48} color={Colors.onSurfaceVariant} />
-              <Text style={styles.emptyTitle}>Belum Ada Event</Text>
+              <Text style={styles.emptyTitle}>
+                {selectedTab === 'all' ? 'Belum Ada Event' : `Tidak Ada Event ${getTabInfo(selectedTab).label}`}
+              </Text>
               <Text style={styles.emptySubtitle}>
-                Event menarik akan segera hadir!
+                {selectedTab === 'all' 
+                  ? 'Event menarik akan segera hadir!' 
+                  : 'Coba pilih kategori lain atau cek lagi nanti'
+                }
               </Text>
             </View>
           ) : (
-            <View style={styles.eventsContainer}>
-              {events.map((event, index) => (
+            <FlatList
+              data={filteredEvents}
+              renderItem={({ item, index }) => (
                 <EventCard 
-                  key={event.id} 
-                  event={event} 
+                  event={item} 
                   index={index} 
                   onPress={handleEventPress} 
                 />
-              ))}
-            </View>
+              )}
+              keyExtractor={(item) => item.id.toString()}
+              scrollEnabled={false}
+              contentContainerStyle={styles.eventsContainer}
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </View>
       </ScrollView>
@@ -307,5 +450,70 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  // Tab Styles
+  tabsScrollView: {
+    maxHeight: 120,
+  },
+  tabsContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 12,
+  },
+  tabButton: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.outline + '30',
+    padding: 16,
+    width: 120,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tabButtonActive: {
+    borderColor: Colors.primary,
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.2,
+    elevation: 4,
+  },
+  tabGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+    zIndex: -1,
+  },
+  tabContent: {
+    gap: 8,
+    position: 'relative',
+    zIndex: 1,
+  },
+  tabHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  tabBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  tabBadgeText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
+  },
+  tabLabel: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 13,
+    textAlign: 'left',
+    lineHeight: 16,
   },
 });

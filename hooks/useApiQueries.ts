@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ApiError, CreateWeeklyRecapResponse, EventsResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, PointHistoryResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
+import { ApiError, ChallengeParticipantsResponse, ChallengesResponse, CreateWeeklyRecapResponse, EventsResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, PointHistoryResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -21,6 +21,8 @@ export const apiKeys = {
   events: () => ['events'] as const,
   pendingAttendances: () => ['pendingAttendances'] as const,
   nearestQuest: (latitude: number, longitude: number) => ['nearestQuest', latitude, longitude] as const,
+  challenges: () => ['challenges'] as const,
+  challengeParticipants: (challengeId: number) => ['challengeParticipants', challengeId] as const,
 };
 
 // Profile queries
@@ -376,6 +378,32 @@ export const useEventRegistration = () => {
   });
 };
 
+// Challenges Query
+export const useChallenges = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<ChallengesResponse, ApiError>({
+    queryKey: apiKeys.challenges(),
+    queryFn: () => apiService.getChallenges(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Challenge Participants Query
+export const useChallengeParticipants = (challengeId: number) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<ChallengeParticipantsResponse, ApiError>({
+    queryKey: apiKeys.challengeParticipants(challengeId),
+    queryFn: () => apiService.getChallengeParticipants(challengeId),
+    enabled: isAuthenticated && challengeId > 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
@@ -391,4 +419,6 @@ export const apiQueries = {
   useMonthlyRecaps,
   usePointHistory,
   useNearestQuest,
+  useChallenges,
+  useChallengeParticipants,
 };

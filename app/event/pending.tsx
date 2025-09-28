@@ -285,7 +285,7 @@ export default function PendingAttendancesScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading}
+            refreshing={false}
             onRefresh={refetch}
             colors={[Colors.primary]}
             tintColor={Colors.primary}

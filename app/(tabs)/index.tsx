@@ -1,3 +1,4 @@
+import { QuestCluePopup } from '@/components/Popups/QuestCluePopup';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { MotiText, MotiView } from 'moti';
@@ -13,17 +14,10 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { QuestCluePopup } from '@/components/Popups/QuestCluePopup';
 import FloatingElements from '../../components/Screens/FloatingElements';
 import GradientBackground from '../../components/Screens/GradientBackground';
 
-import ChallengesButton from '@/components/Buttons/ChallengesButton';
-import EventsButton from '@/components/Buttons/EventsButton';
-import JournalButton from '@/components/Buttons/JournalButton';
-import LeaderboardButton from '@/components/Buttons/LeaderboardButton';
-import MemoryButton from '@/components/Buttons/MemoryButton';
 import MonthlyRecapButton from '@/components/Buttons/MonthlyRecapButton';
-import RecapsButton from '@/components/Buttons/RecapsButton';
 import StreakButton from '@/components/Buttons/StreakButton';
 import WeeklyRecapButton from '@/components/Buttons/WeeklyRecapButton';
 import BalanceCard from '@/components/Cards/PointCard';
@@ -398,7 +392,7 @@ export default function HomeTab() {
                   transition={{ type: 'spring', delay: 2400, damping: 12, stiffness: 120 }}
                   style={styles.secondaryActionCard}
                   buttonStyle={styles.secondaryActionButton}
-                  onPress={() => console.log('Challenges pressed!')}
+                  onPress={() => router.push('/challenges' as any)}
                 >
                   <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.secondary + '15' }]}>
                     <FontAwesome5 name="trophy" size={20} color={Colors.secondary} />

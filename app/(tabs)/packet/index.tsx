@@ -214,7 +214,7 @@ export default function PacketScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={updateTaskMutation.isPending}
+            refreshing={false}
             onRefresh={handleRefresh}
             colors={[Colors.primary]}
             tintColor={Colors.primary}

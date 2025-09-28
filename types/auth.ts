@@ -234,3 +234,32 @@ export interface EventsResponse {
     events: Event[];
   };
 }
+
+// Challenge types
+export interface Challenge {
+  id: number;
+  day: number;
+  difficulty: string;
+  name: string;
+  description: string;
+}
+
+export interface ChallengesResponse {
+  data: {
+    challenges: Challenge[];
+  };
+}
+
+export interface ChallengeParticipant {
+  file_url: string;
+  description: string;
+  created_at: string;
+  user_id: number;
+  user_name: string;
+}
+
+export interface ChallengeParticipantsResponse {
+  data: {
+    participants: ChallengeParticipant[];
+  };
+}

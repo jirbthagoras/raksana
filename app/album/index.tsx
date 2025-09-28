@@ -14,12 +14,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MemoryPost from '../../components/Cards/MemoryPost';
+import MemoryCard from '../../components/Cards/MemoryCard';
 import { AlbumInfoModal } from '../../components/Modals/AlbumInfoModal';
 import { DeleteConfirmationModal } from '../../components/Modals/DeleteConfirmationModal';
 import { ErrorProvider, useError } from '../../contexts/ErrorContext';
 import { useDeleteMemory, useMemories } from '../../hooks/useApiQueries';
-import { Memory } from '../../types/auth';
+import { ChallengeParticipant, Memory } from '../../types/auth';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width - 40;
@@ -53,9 +53,12 @@ function AlbumScreenContent() {
   };
 
 
-  const handleDeleteMemory = (memory: Memory) => {
-    setSelectedMemory(memory);
-    setDeleteModalVisible(true);
+  const handleDeleteMemory = (item: Memory | ChallengeParticipant) => {
+    // Type guard to ensure it's a Memory
+    if ('memory_id' in item) {
+      setSelectedMemory(item);
+      setDeleteModalVisible(true);
+    }
   };
 
   const confirmDeleteMemory = () => {
@@ -87,11 +90,12 @@ function AlbumScreenContent() {
   };
 
   const renderMemoryPost = useCallback(({ item, index }: { item: Memory; index: number }) => (
-    <MemoryPost 
+    <MemoryCard 
       item={item} 
       index={index} 
       onDelete={handleDeleteMemory}
       isDeleting={deleteMemoryMutation.isPending}
+      showDeleteButton={true}
     />
   ), [handleDeleteMemory, deleteMemoryMutation.isPending]);
 
