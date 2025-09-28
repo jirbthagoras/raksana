@@ -1,11 +1,11 @@
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
   FlatList,
   RefreshControl,
@@ -13,9 +13,8 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import PagerView from 'react-native-pager-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MemoryCard from '../../components/Cards/MemoryCard';
@@ -26,10 +25,27 @@ import { Challenge, ChallengeParticipant } from '../../types/auth';
 
 const { width } = Dimensions.get('window');
 
-function ChallengesScreenContent() {
+// Separate component for modal management to prevent main component re-renders
+function ChallengesWithModal() {
+  const [showInfoModal, setShowInfoModal] = useState(false);
+
+  const handleInfoPress = useCallback(() => setShowInfoModal(true), []);
+  const handleCloseModal = useCallback(() => setShowInfoModal(false), []);
+
+  return (
+    <>
+      <ChallengesScreenContent onInfoPress={handleInfoPress} />
+      <ChallengesInfoModal
+        visible={showInfoModal}
+        onClose={handleCloseModal}
+      />
+    </>
+  );
+}
+
+function ChallengesScreenContent({ onInfoPress }: { onInfoPress: () => void }) {
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const pagerRef = useRef<PagerView>(null);
   
   const {
@@ -52,10 +68,10 @@ function ChallengesScreenContent() {
     router.back();
   };
 
-  const handleTabPress = (index: number) => {
+  const handleTabPress = useCallback((index: number) => {
     setSelectedChallengeIndex(index);
     pagerRef.current?.setPage(index);
-  };
+  }, []);
 
   const handlePageSelected = (event: any) => {
     const { position } = event.nativeEvent;
@@ -149,12 +165,17 @@ function ChallengesScreenContent() {
     return (
       <View style={styles.challengePage}>
         <FlatList
+          key={`challenge-${challenge.id}`}
           data={participants}
           renderItem={renderParticipant}
           keyExtractor={(item, index) => `${item.user_id}-${index}`}
           ListHeaderComponent={renderHeader}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          maintainVisibleContentPosition={{
+            minIndexForVisible: 0,
+            autoscrollToTopThreshold: 10,
+          }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -177,7 +198,7 @@ function ChallengesScreenContent() {
     );
   });
 
-  const renderTabButton = (challenge: Challenge, index: number) => {
+  const renderTabButton = useCallback((challenge: Challenge, index: number) => {
     const isSelected = selectedChallengeIndex === index;
     const difficultyColor = getDifficultyColor(challenge.difficulty);
     
@@ -237,7 +258,7 @@ function ChallengesScreenContent() {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [selectedChallengeIndex, handleTabPress]);
 
   if (challengesLoading) {
     return (
@@ -323,7 +344,7 @@ function ChallengesScreenContent() {
         </View>
         <TouchableOpacity 
           style={styles.headerInfoButton}
-          onPress={() => setShowInfoModal(true)}
+          onPress={onInfoPress}
         >
           <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
         </TouchableOpacity>
@@ -360,16 +381,12 @@ function ChallengesScreenContent() {
           onPageSelected={handlePageSelected}
         >
           {challenges.map((challenge) => (
-            <ChallengePage key={challenge.id} challenge={challenge} />
+            <View key={challenge.id}>
+              <ChallengePage challenge={challenge} />
+            </View>
           ))}
         </PagerView>
       </MotiView>
-
-      {/* Challenges Info Modal */}
-      <ChallengesInfoModal
-        visible={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -377,7 +394,7 @@ function ChallengesScreenContent() {
 export default function ChallengesScreen() {
   return (
     <ErrorProvider>
-      <ChallengesScreenContent />
+      <ChallengesWithModal />
     </ErrorProvider>
   );
 }
@@ -397,8 +414,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.outline + '15',
   },
   tabsSection: {
-    backgroundColor: Colors.background,
     paddingBottom: 8,
+    zIndex: 10,
   },
   backButton: {
     width: 40,
@@ -478,11 +495,13 @@ const styles = StyleSheet.create({
   // Tab Styles
   tabsScrollView: {
     maxHeight: 120,
+    zIndex: 10,
   },
   tabsContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 12,
+    zIndex: 10,
   },
   tabButton: {
     minWidth: 200,
@@ -493,14 +512,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.outline + '20',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: 'transparent',
   },
   tabGradient: {
     padding: 16,
@@ -611,37 +623,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-  // Loading & Error States
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-  },
-  loadingText: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 16,
-    color: Colors.onSurfaceVariant,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    gap: 16,
-  },
-  errorTitle: {
-    fontFamily: Fonts.display.bold,
-    fontSize: 18,
-    color: Colors.error,
-    textAlign: 'center',
-  },
-  errorSubtitle: {
-    fontFamily: Fonts.text.regular,
-    fontSize: 14,
-    color: Colors.onSurfaceVariant,
-    textAlign: 'center',
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -666,6 +647,7 @@ const styles = StyleSheet.create({
   // Pager Styles
   pagerContainer: {
     flex: 1,
+    zIndex: 1,
   },
   pagerView: {
     flex: 1,

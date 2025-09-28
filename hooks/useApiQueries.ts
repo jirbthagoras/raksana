@@ -55,6 +55,26 @@ export const useUsers = () => {
   });
 };
 
+// User Profile by ID Query
+export const useUserProfile = (userId: number) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  console.log('useUserProfile - userId:', userId);
+  console.log('useUserProfile - isAuthenticated:', isAuthenticated);
+  console.log('useUserProfile - enabled:', isAuthenticated && userId > 0);
+  
+  return useQuery({
+    queryKey: ['userProfile', userId],
+    queryFn: () => {
+      console.log('useUserProfile - Calling API for userId:', userId);
+      return apiService.getProfileById(userId);
+    },
+    enabled: isAuthenticated && userId > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
 // Today's Tasks Query
 export const useTodayTasks = () => {
   const { isAuthenticated } = useAuthStatus();
@@ -421,4 +441,5 @@ export const apiQueries = {
   useNearestQuest,
   useChallenges,
   useChallengeParticipants,
+  useUserProfile,
 };

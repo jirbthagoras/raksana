@@ -386,10 +386,25 @@ export default function HomeTab() {
                   <Text style={styles.secondaryActionTitle}>Events</Text>
                 </WiggleButton>
                 
+                
                 <WiggleButton
                   from={{ opacity: 0, translateX: 20, scale: 0.9 }}
                   animate={{ opacity: 1, translateX: 0, scale: 1 }}
                   transition={{ type: 'spring', delay: 2400, damping: 12, stiffness: 120 }}
+                  style={styles.secondaryActionCard}
+                  buttonStyle={styles.secondaryActionButton}
+                  onPress={() => router.push('/recaps')}
+                >
+                  <View style={[styles.secondaryActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
+                    <FontAwesome5 name="chart-line" size={20} color={Colors.tertiary} />
+                  </View>
+                  <Text style={styles.secondaryActionTitle}>Recaps</Text>
+                </WiggleButton>
+                
+                <WiggleButton
+                  from={{ opacity: 0, translateX: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, translateX: 0, scale: 1 }}
+                  transition={{ type: 'spring', delay: 2450, damping: 12, stiffness: 120 }}
                   style={styles.secondaryActionCard}
                   buttonStyle={styles.secondaryActionButton}
                   onPress={() => router.push('/challenges' as any)}
@@ -428,12 +443,12 @@ export default function HomeTab() {
                   transition={{ type: 'spring', delay: 2700, damping: 12, stiffness: 120 }}
                   style={styles.utilityActionCard}
                   buttonStyle={styles.utilityActionButton}
-                  onPress={() => router.push('/recaps')}
+                  onPress={() => console.log('Recyclopedia pressed!')}
                 >
-                  <View style={[styles.utilityActionIcon, { backgroundColor: Colors.tertiary + '15' }]}>
-                    <FontAwesome5 name="chart-line" size={20} color={Colors.tertiary} />
+                  <View style={[styles.utilityActionIcon, { backgroundColor: Colors.primary + '15' }]}>
+                    <FontAwesome5 name="recycle" size={20} color={Colors.primary} />
                   </View>
-                  <Text style={styles.utilityActionTitle}>Recaps</Text>
+                  <Text style={styles.utilityActionTitle}>Recyclopedia</Text>
                 </WiggleButton>
               </MotiView>
             </MotiView>

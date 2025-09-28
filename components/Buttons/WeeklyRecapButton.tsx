@@ -21,7 +21,7 @@ type Props = {
 function WeeklyRecapButtonContent({ onPress }: Props) {
   // Check if today is Sunday (0 = Sunday)
   const today = new Date();
-  const isSunday = today.getDay() === 0;
+  const isSunday = true;
   
   const [showModal, setShowModal] = useState(false);
   const [recapData, setRecapData] = useState<any>(null);

@@ -2,8 +2,6 @@ import GradientBackground from '@/components/Screens/GradientBackground';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,8 +18,11 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FloatingElements from '../../../components/Screens/FloatingElements';
+import ProfileView from '../../../components/Profile/ProfileView';
 import { useProfileMe } from '../../../hooks/useApiQueries';
 import { useLogoutMutation } from '../../../hooks/useAuthQueries';
 import { LogoutConfirmationPopup } from '../../../components/Popups/LogoutConfirmationPopup';
@@ -31,47 +32,14 @@ import apiService from '../../../services/api';
 
 const { width } = Dimensions.get('window');
 
-interface Badge {
-  category: string;
-  name: string;
-  frequency: number;
-}
-
-interface ProfileData {
-  id: number;
-  name: string;
-  username: string;
-  email: string;
-  current_exp: number;
-  exp_needed: number;
-  level: number;
-  points: number;
-  profile_url: string;
-  challenges: number;
-  events: number;
-  quests: number;
-  treasures: number;
-  longest_streak: number;
-  current_Streak: number;
-  tree_grown: number;
-  completed_task: number;
-  assigend_task: number;
-  task_completion_rate: string;
-  rank: number;
-  badges: Badge[];
-}
-
 export default function ProfileScreen() {
   const { data: profileData, isLoading, error, refetch } = useProfileMe();
   const logoutMutation = useLogoutMutation();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['Statistics'];
   const insets = useSafeAreaInsets();
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorPopupConfig, setErrorPopupConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'warning' | 'info' });
@@ -234,176 +202,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const renderProfileImage = () => {
-    const imageUrl = profileData?.profile_url;
-    const isValidUrl = imageUrl && imageUrl.trim() !== '' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
-
-    const handleImageError = (error: any) => {
-      console.log('Profile image loading error:', imageUrl, error);
-      setImageError(true);
-      setImageLoading(false);
-    };
-
-    const handleImageLoad = () => {
-      console.log('Profile image loaded successfully:', imageUrl);
-      setImageLoading(false);
-      setImageError(false);
-    };
-
-    const handleImageLoadStart = () => {
-      console.log('Starting to load profile image:', imageUrl);
-      setImageLoading(true);
-      setImageError(false);
-    };
-
-    if (!imageError && isValidUrl) {
-      return (
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.profileImage}
-          onError={handleImageError}
-          onLoad={handleImageLoad}
-          onLoadStart={handleImageLoadStart}
-          resizeMode="cover"
-        />
-      );
-    } else {
-      // Fallback avatar
-      return (
-        <View style={[styles.profileImage, styles.profileImageFallback]}>
-          <FontAwesome5 name="user" size={32} color={Colors.onSurfaceVariant} />
-        </View>
-      );
-    }
-  };
-
-  const getBadgeIcon = (category: string) => {
-    switch (category) {
-      case 'challenge': return 'trophy';
-      case 'quest': return 'compass';
-      case 'treasure': return 'gem';
-      default: return 'award';
-    }
-  };
-
-  const getBadgeColor = (category: string) => {
-    switch (category) {
-      case 'challenge': return Colors.secondary;
-      case 'quest': return Colors.tertiary;
-      case 'treasure': return Colors.primary;
-      default: return Colors.outline;
-    }
-  };
-
-  const StatCard = ({ icon, label, value, color = Colors.primary }: {
-    icon: string;
-    label: string;
-    value: string | number;
-    color?: string;
-  }) => (
-    <View style={styles.statCard}>
-      <View style={[styles.statIcon, { backgroundColor: color + '20' }]}>
-        <FontAwesome5 name={icon} size={16} color={color} />
-      </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-
-  const BadgeItem = ({ badge }: { badge: Badge }) => (
-    <View style={styles.badgeItem}>
-      <View style={[styles.badgeIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
-        <FontAwesome5 name={getBadgeIcon(badge.category)} size={14} color={getBadgeColor(badge.category)} />
-      </View>
-      <View style={styles.badgeInfo}>
-        <Text style={styles.badgeName}>{badge.name}</Text>
-        <Text style={styles.badgeFrequency}>×{badge.frequency}</Text>
-      </View>
-    </View>
-  );
-
-  const TabHeader = () => (
-    <View style={styles.tabHeader}>
-      {tabs.map((tab, index) => (
-        <Pressable
-          key={index}
-          style={[styles.tabItem, activeTab === index && styles.activeTabItem]}
-          onPress={() => setActiveTab(index)}
-        >
-          <Text style={[styles.tabText, activeTab === index && styles.activeTabText]}>
-            {tab}
-          </Text>
-          {activeTab === index && <View style={styles.tabIndicator} />}
-        </Pressable>
-      ))}
-    </View>
-  );
-
-  const StatisticsTab = () => (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      {/* Statistics Grid */}
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 600, delay: 100 }}
-        style={styles.tabContent}
-      >
-        <View style={styles.statsGrid}>
-          <StatCard icon="trophy" label="Challenges" value={profileData?.challenges || 0} color={Colors.secondary} />
-          <StatCard icon="calendar" label="Events" value={profileData?.events || 0} color={Colors.tertiary} />
-          <StatCard icon="compass" label="Quests" value={profileData?.quests || 0} color={Colors.primary} />
-          <StatCard icon="gem" label="Treasures" value={profileData?.treasures || 0} color={Colors.error} />
-        </View>
-      </MotiView>
-
-      {/* Activity Stats */}
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 600, delay: 200 }}
-        style={styles.tabContent}
-      >
-        <View style={styles.activityGrid}>
-          <View style={styles.activityCard}>
-            <View style={styles.activityHeader}>
-              <FontAwesome5 name="fire" size={16} color={Colors.error} />
-              <Text style={styles.activityLabel}>Longest Streak</Text>
-            </View>
-            <Text style={styles.activityValue}>{profileData?.longest_streak || 0} days</Text>
-            <Text style={styles.activitySubtext}>Personal best</Text>
-          </View>
-          
-          <View style={styles.activityCard}>
-            <View style={styles.activityHeader}>
-              <FontAwesome5 name="seedling" size={16} color={Colors.tertiary} />
-              <Text style={styles.activityLabel}>Trees Grown</Text>
-            </View>
-            <Text style={styles.activityValue}>{profileData?.tree_grown || 0}</Text>
-            <Text style={styles.activitySubtext}>Environmental impact</Text>
-          </View>
-
-          <View style={styles.activityCard}>
-            <View style={styles.activityHeader}>
-              <FontAwesome5 name="fire" size={16} color={Colors.error} />
-              <Text style={styles.activityLabel}>Current Streak</Text>
-            </View>
-            <Text style={styles.activityValue}>{profileData?.current_Streak || 0} days</Text>
-            <Text style={styles.activitySubtext}>Keep it up!</Text>
-          </View>
-
-          <View style={styles.activityCard}>
-            <View style={styles.activityHeader}>
-              <FontAwesome5 name="tasks" size={16} color={Colors.primary} />
-              <Text style={styles.activityLabel}>Tasks</Text>
-            </View>
-            <Text style={styles.activityValue}>{profileData?.completed_task || 0}/{profileData?.assigend_task || 0}</Text>
-            <Text style={styles.activitySubtext}>{profileData?.task_completion_rate || '0%'} completion</Text>
-          </View>
-        </View>
-      </MotiView>
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
-  );
 
 
   if (isLoading) {
@@ -455,101 +253,26 @@ export default function ProfileScreen() {
           />
         }
       >
-
-        {/* Profile Card */}
-        <MotiView
-          from={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'timing', duration: 600, delay: 200 }}
-          style={styles.profileCard}
+        <ProfileView 
+          profileData={profileData} 
+          isOwnProfile={true}
         >
-          <LinearGradient
-            colors={[Colors.surface, Colors.surfaceContainerHigh]}
-            style={styles.profileCardGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          {/* Logout Button */}
+          <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            disabled={logoutMutation.isPending}
           >
-            <View style={styles.profileHeader}>
-              <View style={styles.profileImageContainer}>
-                {renderProfileImage()}
-                <TouchableOpacity 
-                  style={styles.editImageButton}
-                  onPress={handleEditProfilePicture}
-                  disabled={isUploadingImage}
-                >
-                  {isUploadingImage ? (
-                    <ActivityIndicator size="small" color={Colors.onPrimary} />
-                  ) : (
-                    <Ionicons name="camera" size={16} color={Colors.onPrimary} />
-                  )}
-                </TouchableOpacity>
-              </View>
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{profileData.name}</Text>
-                <Text style={styles.profileUsername}>@{profileData.username}</Text>
-                <View style={styles.levelContainer}>
-                  <View style={styles.levelBadge}>
-                    <FontAwesome5 name="star" size={12} color={Colors.secondary} />
-                    <Text style={styles.levelText}>Level {profileData.level}</Text>
-                  </View>
-                  <View style={styles.rankBadge}>
-                    <FontAwesome5 name="trophy" size={12} color={Colors.primary} />
-                    <Text style={styles.rankText}>Rank #{profileData.rank}</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            {/* Badges Section */}
-            <View style={styles.badgesInProfile}>
-              <View style={styles.badgesInProfileContainer}>
-                {profileData.badges.slice(0, 3).map((badge: Badge, index: number) => (
-                  <View key={index} style={styles.badgeInProfileItem}>
-                    <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
-                      <FontAwesome5 name={getBadgeIcon(badge.category)} size={12} color={getBadgeColor(badge.category)} />
-                    </View>
-                    <Text style={styles.badgeInProfileName}>{badge.name}</Text>
-                  </View>
-                ))}
-                {profileData.badges.length > 3 && (
-                  <View style={styles.badgeInProfileMore}>
-                    <Text style={styles.badgeInProfileMoreText}>+{profileData.badges.length - 3}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {/* Points */}
-            <View style={styles.pointsContainer}>
-              <FontAwesome5 name="coins" size={16} color={Colors.secondary} />
-              <Text style={styles.pointsText}>{profileData.points.toLocaleString()} Points</Text>
-            </View>
-
-            {/* Logout Button */}
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={handleLogout}
-              disabled={logoutMutation.isPending}
-            >
-              {logoutMutation.isPending ? (
-                <ActivityIndicator size="small" color={Colors.error} />
-              ) : (
-                <FontAwesome5 name="sign-out-alt" size={16} color={Colors.error} />
-              )}
-              <Text style={styles.logoutButtonText}>
-                {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-              </Text>
-            </TouchableOpacity>
-          </LinearGradient>
-        </MotiView>
-
-        {/* Tab Header */}
-        <TabHeader />
-
-        {/* Tab Content */}
-        <View style={styles.tabContentContainer}>
-          <StatisticsTab />
-        </View>
+            {logoutMutation.isPending ? (
+              <ActivityIndicator size="small" color={Colors.error} />
+            ) : (
+              <FontAwesome5 name="sign-out-alt" size={16} color={Colors.error} />
+            )}
+            <Text style={styles.logoutButtonText}>
+              {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+            </Text>
+          </TouchableOpacity>
+        </ProfileView>
       </ScrollView>
       </GradientBackground>
 

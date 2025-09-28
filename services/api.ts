@@ -154,6 +154,20 @@ class ApiService {
     return response.data.data; // Extract from Go API wrapper
   }
 
+  async getProfileById(userId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get(`/profile/${userId}`);
+    console.log('Raw profile API response:', response.data);
+    
+    // Handle both wrapped and direct response formats
+    if (response.data.data) {
+      console.log('Using wrapped response format');
+      return response.data.data; // Extract from Go API wrapper
+    } else {
+      console.log('Using direct response format');
+      return response.data; // Direct response
+    }
+  }
+
   async getDailyChallenge(): Promise<any> {
     const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/challenge/today');
     return response.data.data; // Extract from Go API wrapper

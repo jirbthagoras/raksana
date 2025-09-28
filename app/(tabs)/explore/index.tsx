@@ -1,6 +1,7 @@
 import GradientBackground from '@/components/Screens/GradientBackground';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
@@ -18,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UserCard from '../../../components/Cards/UserCard';
 import { ExploreInfoModal } from '../../../components/Modals/ExploreInfoModal';
 import FloatingElements from '../../../components/Screens/FloatingElements';
-import { useUsers } from '../../../hooks/useApiQueries';
+import { useProfileMe, useUsers } from '../../../hooks/useApiQueries';
 
 const { width } = Dimensions.get('window');
 
@@ -32,15 +33,35 @@ interface User {
 }
 
 export default function ExploreScreen() {
-  const { data: usersData, isLoading, error, refetch } = useUsers();
+  const { data: usersData, isLoading: usersLoading, error, refetch } = useUsers();
+  const { data: currentUserData, isLoading: profileLoading } = useProfileMe();
   const insets = useSafeAreaInsets();
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const router = useRouter();
 
-  const users: User[] = usersData?.data?.users || [];
+  // Filter out current user from the users list
+  const allUsers: User[] = usersData?.data?.users || [];
+  const currentUserId = currentUserData?.id;
+  
+  const users: User[] = allUsers.filter(user => {
+    if (!currentUserId) {
+      return true;
+    }
+    
+    const isCurrentUser = user.id === currentUserId;
+    if (isCurrentUser) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  console.log(users);
 
   const handleUserPress = (user: User) => {
     console.log('User pressed:', user.username);
-    // TODO: Navigate to user profile or implement user interaction
+    console.log(user.id);
+    router.push(`/explore/${user.id}`);
   };
 
   const renderUserCard = ({ item, index }: { item: User; index: number }) => (
@@ -86,6 +107,8 @@ export default function ExploreScreen() {
       </Text>
     </MotiView>
   );
+
+  const isLoading = usersLoading || profileLoading;
 
   if (isLoading) {
     return (
@@ -158,7 +181,7 @@ export default function ExploreScreen() {
             nestedScrollEnabled={true}
             refreshControl={
               <RefreshControl
-                refreshing={false}
+                refreshing={usersLoading}
                 onRefresh={refetch}
                 tintColor={Colors.primary}
                 colors={[Colors.primary]}
