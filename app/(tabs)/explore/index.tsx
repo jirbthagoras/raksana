@@ -149,7 +149,7 @@ export default function ExploreScreen() {
         >
           <View style={styles.headerContent}>
             <View style={styles.headerText}>
-              <Text style={styles.headerTitle}>Jelajahi puluhan Yards!</Text>
+              <Text style={styles.headerTitle}>Jelajahi banyak Yards!</Text>
               <Text style={styles.headerSubtitle}>
                 Jelajahi dan Kunjungi Yard Pengguna lain! 
               </Text>

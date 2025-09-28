@@ -391,137 +391,135 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
     </View>
   );
 
-  // Render tab content only (without header)
-  const renderTabContentOnly = () => {
-    switch (selectedTab) {
-      case 'journals':
-        const logs = userLogsData?.data?.logs || [];
-        
-        if (logsLoading) {
-          return (
+  // For tabs with FlatList (Journals, Albums), use full-screen FlatList
+  if (selectedTab === 'journals') {
+    const logs = userLogsData?.data?.logs || [];
+    
+    return (
+      <FlatList
+        data={logs}
+        keyExtractor={(item, index) => `log-${index}`}
+        renderItem={({ item, index }) => (
+          <View style={styles.listItemContainer}>
+            <LogCard item={item} index={index} />
+          </View>
+        )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
+        )}
+        ListEmptyComponent={() => (
+          logsLoading ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Loading journals...</Text>
             </View>
-          );
-        }
-        
-        if (logs.length === 0) {
-          return (
+          ) : (
             <View style={styles.emptyContainer}>
               <FontAwesome5 name="book-open" size={48} color={Colors.onSurfaceVariant} />
               <Text style={styles.emptyText}>No journals yet</Text>
               <Text style={styles.emptySubtext}>This user hasn't written any journals</Text>
             </View>
-          );
-        }
-        
-        return (
-          <FlatList
-            data={logs}
-            keyExtractor={(item, index) => `log-${index}`}
-            renderItem={({ item, index }) => (
-              <View style={styles.listItemContainer}>
-                <LogCard item={item} index={index} />
-              </View>
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-            refreshControl={
-              <RefreshControl
-                refreshing={logsLoading}
-                onRefresh={refetchLogs}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
-              />
-            }
+          )
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        style={styles.fullScreenList}
+        refreshControl={
+          <RefreshControl
+            refreshing={logsLoading}
+            onRefresh={refetchLogs}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
           />
-        );
-        
-      case 'albums':
-        const memories = userMemoriesData?.data?.memories || [];
-        
-        if (memoriesLoading) {
-          return (
+        }
+        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
+      />
+    );
+  }
+
+  if (selectedTab === 'albums') {
+    const memories = userMemoriesData?.data?.memories || [];
+    
+    return (
+      <FlatList
+        data={memories}
+        keyExtractor={(item) => `memory-${item.memory_id}`}
+        renderItem={({ item, index }) => (
+          <MemoryCard 
+            item={item} 
+            index={index} 
+            showDeleteButton={false}
+          />
+        )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
+        )}
+        ListEmptyComponent={() => (
+          memoriesLoading ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Loading albums...</Text>
             </View>
-          );
-        }
-        
-        if (memories.length === 0) {
-          return (
+          ) : (
             <View style={styles.emptyContainer}>
               <FontAwesome5 name="images" size={48} color={Colors.onSurfaceVariant} />
               <Text style={styles.emptyText}>No memories yet</Text>
               <Text style={styles.emptySubtext}>This user hasn't shared any memories</Text>
             </View>
-          );
-        }
-        
-        return (
-          <FlatList
-            data={memories}
-            keyExtractor={(item) => `memory-${item.memory_id}`}
-            renderItem={({ item, index }) => (
-              <MemoryCard 
-                item={item} 
-                index={index} 
-                showDeleteButton={false}
-              />
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-            refreshControl={
-              <RefreshControl
-                refreshing={memoriesLoading}
-                onRefresh={refetchMemories}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
-              />
-            }
+          )
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        style={styles.fullScreenList}
+        refreshControl={
+          <RefreshControl
+            refreshing={memoriesLoading}
+            onRefresh={refetchMemories}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
           />
-        );
-        
-      case 'statistics':
-      default:
-        return (
-          <ScrollView 
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={false}
-                onRefresh={() => {}}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
-              />
-            }
-          >
-            {renderTabContent()}
-            <View style={styles.bottomSpacing} />
-          </ScrollView>
-        );
-    }
-  };
+        }
+        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
+      />
+    );
+  }
 
-  // Main component structure with stable header
+  // For Statistics tab, use full-screen ScrollView
   return (
-    <View style={styles.container}>
-      {/* Static Profile Header */}
+    <ScrollView 
+      showsVerticalScrollIndicator={false}
+      style={styles.fullScreenList}
+      refreshControl={
+        <RefreshControl
+          refreshing={false}
+          onRefresh={() => {}}
+          tintColor={Colors.primary}
+          colors={[Colors.primary]}
+        />
+      }
+    >
       {renderProfileHeader()}
-      
-      {/* Static Tab Navigation */}
       {renderTabNavigation()}
       
-      {/* Dynamic Tab Content */}
+      {/* Tab Content */}
       <View style={styles.tabContentContainer}>
-        {renderTabContentOnly()}
+        {renderTabContent()}
       </View>
-    </View>
+      
+      <View style={styles.bottomSpacing} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  fullScreenList: {
     flex: 1,
   },
   profileCard: {
