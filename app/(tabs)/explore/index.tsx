@@ -52,7 +52,7 @@ export default function ExploreScreen() {
     if (isCurrentUser) {
       return false;
     }
-    
+  
     return true;
   });
 
