@@ -26,6 +26,8 @@ export const apiKeys = {
   userLogs: (userId: number) => ['userLogs', userId] as const,
   userMemories: (userId: number) => ['userMemories', userId] as const,
   userActivity: () => ['userActivity'] as const,
+  questDetail: (questId: number) => ['questDetail', questId] as const,
+  eventDetail: (eventId: number) => ['eventDetail', eventId] as const,
 };
 
 // Profile queries
@@ -61,10 +63,6 @@ export const useUsers = () => {
 // User Profile by ID Query
 export const useUserProfile = (userId: number) => {
   const { isAuthenticated } = useAuthStatus();
-  
-  console.log('useUserProfile - userId:', userId);
-  console.log('useUserProfile - isAuthenticated:', isAuthenticated);
-  console.log('useUserProfile - enabled:', isAuthenticated && userId > 0);
   
   return useQuery({
     queryKey: ['userProfile', userId],
@@ -490,6 +488,30 @@ export const useUserActivity = () => {
     queryFn: () => apiService.getUserActivity(),
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+// Quest Detail Query
+export const useQuestDetail = (questId: number | null) => {
+  const { isAuthenticated } = useAuthStatus();
+    
+  return useQuery<any, ApiError>({
+    queryKey: apiKeys.questDetail(questId!),
+    queryFn: () => apiService.getQuestDetail(questId!),
+    enabled: isAuthenticated && questId !== null && questId > 0,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+};
+
+// Event Detail Query
+export const useEventDetail = (eventId: number | null) => {
+  const { isAuthenticated } = useAuthStatus();
+    
+  return useQuery<any, ApiError>({
+    queryKey: apiKeys.eventDetail(eventId!),
+    queryFn: () => apiService.getEventDetail(eventId!),
+    enabled: isAuthenticated && eventId !== null && eventId > 0,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 };
 

@@ -359,6 +359,20 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "activities": [...] } }
   }
 
+  async getQuestDetail(questId: number): Promise<any> {
+    console.log('🎯 Fetching quest detail for ID:', questId);
+    const response: AxiosResponse<any> = await this.api.get(`/quest/${questId}`);
+    console.log('🎯 Quest detail response:', response.data);
+    return response.data; // Based on your API response format: { "data": { "id": 2, "name": "...", ... } }
+  }
+
+  async getEventDetail(eventId: number): Promise<any> {
+    console.log('📅 Fetching event detail for ID:', eventId);
+    const response: AxiosResponse<any> = await this.api.get(`/event/${eventId}`);
+    console.log('📅 Event detail response:', response.data);
+    return response.data; // Based on your API response format: { "data": { "id": 1, "name": "...", ... } }
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }
