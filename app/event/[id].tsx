@@ -42,6 +42,34 @@ export default function EventDetailScreen() {
     participated: params.participated === 'true',
   };
 
+  // Map optimization constants
+  const MAP_BOUNDARY_RADIUS = 0.01; // ~1km in degrees (approximately)
+  const MIN_ZOOM = 12;
+  const MAX_ZOOM = 18;
+  const DEFAULT_ZOOM = 15;
+  
+  // Calculate map bounds around the event location
+  const mapBounds = {
+    northEast: {
+      latitude: event.latitude + MAP_BOUNDARY_RADIUS,
+      longitude: event.longitude + MAP_BOUNDARY_RADIUS,
+    },
+    southWest: {
+      latitude: event.latitude - MAP_BOUNDARY_RADIUS,
+      longitude: event.longitude - MAP_BOUNDARY_RADIUS,
+    },
+  };
+  
+  // Function to check if coordinates are within bounds
+  const isWithinBounds = (lat: number, lng: number) => {
+    return (
+      lat >= mapBounds.southWest.latitude &&
+      lat <= mapBounds.northEast.latitude &&
+      lng >= mapBounds.southWest.longitude &&
+      lng <= mapBounds.northEast.longitude
+    );
+  };
+
   const handleBack = () => {
     router.back();
   };
@@ -275,7 +303,7 @@ export default function EventDetailScreen() {
                       latitude: event.latitude,
                       longitude: event.longitude,
                     },
-                    zoom: 15,
+                    zoom: DEFAULT_ZOOM,
                   }}
                   markers={[
                     {
@@ -292,18 +320,25 @@ export default function EventDetailScreen() {
                         latitude: event.latitude,
                         longitude: event.longitude,
                       },
-                      radius: 2000, // 2km radius boundary
+                      radius: 1000, // 1km radius boundary (reduced for performance)
                       color: Colors.primary + '20',
                       lineColor: Colors.primary + '60',
                       lineWidth: 2,
                     },
                   ]}
                   uiSettings={{
-                    compassEnabled: true,
+                    compassEnabled: false, // Disabled for performance
                     myLocationButtonEnabled: false,
-                    scaleBarEnabled: true,
+                    scaleBarEnabled: false, // Disabled for performance
                   }}
-                  onCameraMove={(event) => {
+                  onCameraMove={(cameraEvent) => {
+                    // Restrict camera movement to bounds
+                    const { coordinates } = cameraEvent;
+                    if (coordinates?.latitude && coordinates?.longitude && 
+                        !isWithinBounds(coordinates.latitude, coordinates.longitude)) {
+                      // Log when camera moves out of bounds
+                      console.log('Camera moved out of bounds, coordinates:', coordinates);
+                    }
                   }}
                 />
               </View>
@@ -321,7 +356,7 @@ export default function EventDetailScreen() {
                       latitude: event.latitude,
                       longitude: event.longitude,
                     },
-                    zoom: 15,
+                    zoom: DEFAULT_ZOOM,
                   }}
                   markers={[
                     {
@@ -339,22 +374,29 @@ export default function EventDetailScreen() {
                         latitude: event.latitude,
                         longitude: event.longitude,
                     },
-                      radius: 2000, // 2km radius boundary
+                      radius: 1000, // 1km radius boundary (reduced for performance)
                       color: Colors.primary + '20',
                       lineColor: Colors.primary + '60',
                       lineWidth: 2,
                     },
                   ]}
                   uiSettings={{
-                    compassEnabled: true,
+                    compassEnabled: false, // Disabled for performance
                     myLocationButtonEnabled: false,
                     zoomControlsEnabled: true,
                     zoomGesturesEnabled: true,
                     scrollGesturesEnabled: true,
-                    rotationGesturesEnabled: true,
-                    tiltGesturesEnabled: true,
+                    rotationGesturesEnabled: false, // Disabled for performance
+                    tiltGesturesEnabled: false, // Disabled for performance
                   }}
-                  onCameraMove={(event) => {
+                  onCameraMove={(cameraEvent) => {
+                    // Restrict camera movement to bounds
+                    const { coordinates } = cameraEvent;
+                    if (coordinates?.latitude && coordinates?.longitude && 
+                        !isWithinBounds(coordinates.latitude, coordinates.longitude)) {
+                      // Log when camera moves out of bounds
+                      console.log('Camera moved out of bounds, coordinates:', coordinates);
+                    }
                   }}
                 />
               </View>

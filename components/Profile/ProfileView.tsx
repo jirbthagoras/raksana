@@ -1,8 +1,9 @@
 import LogCard from '@/components/Cards/LogCard';
 import MemoryCard from '@/components/Cards/MemoryCard';
-import Timeline from '@/components/Timeline';
+import TreasureCard from '@/components/Cards/TreasureCard';
+import { TimelineScreen } from '@/components/Timeline';
 import { Colors, Fonts } from '@/constants';
-import { useProfilePictureUpload, useUserActivity, useUserLogs, useUserMemories } from '@/hooks/useApiQueries';
+import { useProfilePictureUpload, useUserActivity, useUserActivityById, useUserLogs, useUserMemories, useUserTreasures, useUserTreasuresById } from '@/hooks/useApiQueries';
 import apiService from '@/services/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -60,6 +61,8 @@ interface ProfileViewProps {
   children?: React.ReactNode; // For additional buttons like logout
   onProfileUpdate?: () => void; // Callback for profile updates
   onMapInteractionChange?: (isInteracting: boolean) => void; // Callback for map interaction state
+  onRefresh?: () => void; // Callback for pull-to-refresh
+  isRefreshing?: boolean; // Loading state for refresh
 }
 
 interface ProfileTab {
@@ -68,11 +71,10 @@ interface ProfileTab {
   icon: string;
 }
 
-export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate, onMapInteractionChange }: ProfileViewProps) {
+export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate, onMapInteractionChange, onRefresh, isRefreshing = false }: ProfileViewProps) {
   const [selectedTab, setSelectedTab] = useState('statistics');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isMapInteracting, setIsMapInteracting] = useState(false);
   
   const profilePictureUploadMutation = useProfilePictureUpload();
 
@@ -89,23 +91,53 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
     refetch: refetchMemories 
   } = useUserMemories(isOwnProfile ? 0 : profileData.id);
 
+  // Conditional API calls based on profile type
   const { 
     data: userActivityData, 
     isLoading: activityLoading, 
     refetch: refetchActivity 
   } = useUserActivity();
 
+  const { 
+    data: otherUserActivityData, 
+    isLoading: otherActivityLoading, 
+    refetch: refetchOtherActivity 
+  } = useUserActivityById(isOwnProfile ? 0 : profileData.id);
+
+  const { 
+    data: userTreasuresData, 
+    isLoading: treasuresLoading, 
+    refetch: refetchTreasures 
+  } = useUserTreasures();
+
+  const { 
+    data: otherUserTreasuresData, 
+    isLoading: otherTreasuresLoading, 
+    refetch: refetchOtherTreasures 
+  } = useUserTreasuresById(isOwnProfile ? 0 : profileData.id);
+
+  // Use appropriate data based on profile type
+  const finalActivityData = isOwnProfile ? userActivityData : otherUserActivityData;
+  const finalActivityLoading = isOwnProfile ? activityLoading : otherActivityLoading;
+  const finalActivityRefetch = isOwnProfile ? refetchActivity : refetchOtherActivity;
+
+  const finalTreasuresData = isOwnProfile ? userTreasuresData : otherUserTreasuresData;
+  const finalTreasuresLoading = isOwnProfile ? treasuresLoading : otherTreasuresLoading;
+  const finalTreasuresRefetch = isOwnProfile ? refetchTreasures : refetchOtherTreasures;
+
 
   // Conditional tabs based on profile type
   const tabs: ProfileTab[] = isOwnProfile 
     ? [
         { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
+        { id: 'treasures', name: 'Treasures', icon: 'gem' },
         { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
       ]
     : [
         { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
         { id: 'journals', name: 'Journals', icon: 'book' },
         { id: 'albums', name: 'Albums', icon: 'images' },
+        { id: 'treasures', name: 'Treasures', icon: 'gem' },
         { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
       ];
 
@@ -231,6 +263,9 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
       case 'challenge': return 'trophy';
       case 'quest': return 'compass';
       case 'treasure': return 'gem';
+      case 'event': return 'calendar-alt';
+      case 'streak': return 'fire';
+      case 'task': return 'tasks';
       default: return 'award';
     }
   };
@@ -238,9 +273,12 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
   const getBadgeColor = (category: string) => {
     switch (category) {
       case 'challenge': return Colors.secondary;
-      case 'quest': return Colors.tertiary;
-      case 'treasure': return Colors.primary;
-      default: return Colors.outline;
+      case 'quest': return Colors.primary;
+      case 'treasure': return Colors.tertiary;
+      case 'event': return Colors.primary;
+      case 'streak': return Colors.error;
+      case 'task': return Colors.secondary;
+      default: return Colors.primary;
     }
   };
 
@@ -329,93 +367,27 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         );
       case 'journals':
         return (
-          <MotiView
-            from={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 600, delay: 100 }}
-            style={styles.tabContentList}
-          >
-            {logsLoading ? (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading journals...</Text>
-              </View>
-            ) : userLogsData?.data?.logs?.length > 0 ? (
-              <FlatList
-                data={userLogsData.data.logs}
-                keyExtractor={(item, index) => `log-${index}`}
-                renderItem={({ item, index }) => (
-                  <LogCard item={item} index={index} />
-                )}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContainer}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={logsLoading}
-                    onRefresh={refetchLogs}
-                    tintColor={Colors.primary}
-                    colors={[Colors.primary]}
-                  />
-                }
-              />
-            ) : (
-              <View style={styles.emptyContainer}>
-                <FontAwesome5 name="book-open" size={48} color={Colors.onSurfaceVariant} />
-                <Text style={styles.emptyText}>No journals yet</Text>
-                <Text style={styles.emptySubtext}>This user hasn't written any journals</Text>
-              </View>
-            )}
-          </MotiView>
+          <View style={styles.tabContent}>
+            <Text style={styles.comingSoonText}>Loading journals...</Text>
+          </View>
         );
       case 'albums':
         return (
-          <MotiView
-            from={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 600, delay: 100 }}
-            style={styles.tabContentList}
-          >
-            {memoriesLoading ? (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading albums...</Text>
-              </View>
-            ) : userMemoriesData?.data?.memories?.length > 0 ? (
-              <FlatList
-                data={userMemoriesData.data.memories}
-                keyExtractor={(item) => `memory-${item.memory_id}`}
-                renderItem={({ item, index }) => (
-                  <MemoryCard 
-                    item={item} 
-                    index={index} 
-                    showDeleteButton={false}
-                  />
-                )}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContainer}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={memoriesLoading}
-                    onRefresh={refetchMemories}
-                    tintColor={Colors.primary}
-                    colors={[Colors.primary]}
-                  />
-                }
-              />
-            ) : (
-              <View style={styles.emptyContainer}>
-                <FontAwesome5 name="images" size={48} color={Colors.onSurfaceVariant} />
-                <Text style={styles.emptyText}>No memories yet</Text>
-                <Text style={styles.emptySubtext}>This user hasn't shared any memories</Text>
-              </View>
-            )}
-          </MotiView>
+          <View style={styles.tabContent}>
+            <Text style={styles.comingSoonText}>Loading albums...</Text>
+          </View>
+        );
+      case 'treasures':
+        return (
+          <View style={styles.tabContent}>
+            <Text style={styles.comingSoonText}>Loading treasures...</Text>
+          </View>
         );
       case 'timeline':
         return (
-          <Timeline 
-            activityData={userActivityData}
-            isLoading={activityLoading}
-            onMapInteractionChange={onMapInteractionChange}
-          />
+          <View style={styles.tabContent}>
+            <Text style={styles.comingSoonText}>Loading timeline...</Text>
+          </View>
         );
       default:
         return (
@@ -465,15 +437,14 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
             >
               {profileData.badges.map((badge: Badge, index: number) => (
                 <View key={index} style={styles.badgeInProfileItem}>
-                  <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
-                    <FontAwesome5 name={getBadgeIcon(badge.category)} size={14} color={getBadgeColor(badge.category)} />
+                  <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '15' }]}>
+                    <FontAwesome5 
+                      name={getBadgeIcon(badge.category)} 
+                      size={14} 
+                      color={getBadgeColor(badge.category)} 
+                    />
                   </View>
                   <Text style={styles.badgeInProfileName}>{badge.name}</Text>
-                  {badge.frequency > 1 && (
-                    <View style={styles.badgeFrequency}>
-                      <Text style={styles.badgeFrequencyText}>{badge.frequency}</Text>
-                    </View>
-                  )}
                 </View>
               ))}
             </ScrollView>
@@ -494,31 +465,38 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
 
   // Render tab navigation
   const renderTabNavigation = () => (
-    <View style={styles.tabHeader}>
-      {tabs.map((tab) => (
-        <TouchableOpacity
-          key={tab.id}
-          style={[
-            styles.tabItem,
-            selectedTab === tab.id && styles.activeTabItem,
-          ]}
-          onPress={() => setSelectedTab(tab.id)}
-        >
-          <FontAwesome5 
-            name={tab.icon} 
-            size={16} 
-            color={selectedTab === tab.id ? Colors.primary : Colors.secondary} 
-            style={{ marginBottom: 4 }}
-          />
-          <Text style={[
-            styles.tabText,
-            selectedTab === tab.id && styles.activeTabText,
-          ]}>
-            {tab.name}
-          </Text>
-          {selectedTab === tab.id && <View style={styles.tabIndicator} />}
-        </TouchableOpacity>
-      ))}
+    <View style={styles.tabHeaderContainer}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabHeader}
+        style={styles.tabScrollView}
+      >
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.id}
+            style={[
+              styles.tabItem,
+              selectedTab === tab.id && styles.activeTabItem,
+            ]}
+            onPress={() => setSelectedTab(tab.id)}
+          >
+            <FontAwesome5 
+              name={tab.icon} 
+              size={16} 
+              color={selectedTab === tab.id ? Colors.primary : Colors.secondary} 
+              style={{ marginBottom: 4 }}
+            />
+            <Text style={[
+              styles.tabText,
+              selectedTab === tab.id && styles.activeTabText,
+            ]}>
+              {tab.name}
+            </Text>
+            {selectedTab === tab.id && <View style={styles.tabIndicator} />}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   );
 
@@ -559,8 +537,11 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         style={styles.fullScreenList}
         refreshControl={
           <RefreshControl
-            refreshing={logsLoading}
-            onRefresh={refetchLogs}
+            refreshing={isRefreshing || logsLoading}
+            onRefresh={() => {
+              onRefresh?.();
+              refetchLogs();
+            }}
             tintColor={Colors.primary}
             colors={[Colors.primary]}
           />
@@ -608,13 +589,82 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         style={styles.fullScreenList}
         refreshControl={
           <RefreshControl
-            refreshing={memoriesLoading}
-            onRefresh={refetchMemories}
+            refreshing={isRefreshing || memoriesLoading}
+            onRefresh={() => {
+              onRefresh?.();
+              refetchMemories();
+            }}
             tintColor={Colors.primary}
             colors={[Colors.primary]}
           />
         }
         ListFooterComponent={() => <View style={styles.bottomSpacing} />}
+      />
+    );
+  }
+
+  if (selectedTab === 'treasures') {
+    const treasures = finalTreasuresData?.data?.treasures || finalTreasuresData?.data || [];
+    
+    return (
+      <FlatList
+        data={treasures}
+        keyExtractor={(item, index) => `treasure-${index}`}
+        renderItem={({ item, index }) => (
+          <View style={styles.listItemContainer}>
+            <TreasureCard item={item} index={index} />
+          </View>
+        )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
+        )}
+        ListEmptyComponent={() => (
+          finalTreasuresLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading treasures...</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <FontAwesome5 name="gem" size={48} color={Colors.onSurfaceVariant} />
+              <Text style={styles.emptyText}>No treasures yet</Text>
+              <Text style={styles.emptySubtext}>Complete activities to find treasures</Text>
+            </View>
+          )
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        style={styles.fullScreenList}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing || finalTreasuresLoading}
+            onRefresh={() => {
+              onRefresh?.();
+              finalTreasuresRefetch();
+            }}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
+      />
+    );
+  }
+
+  if (selectedTab === 'timeline') {
+    return (
+      <TimelineScreen
+        activityData={finalActivityData}
+        isLoading={finalActivityLoading}
+        onRefresh={() => {
+          onRefresh?.();
+          finalActivityRefetch();
+        }}
+        isRefreshing={isRefreshing}
+        profileHeader={renderProfileHeader()}
+        tabNavigation={renderTabNavigation()}
       />
     );
   }
@@ -625,13 +675,13 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
       <ScrollView 
         showsVerticalScrollIndicator={false}
         style={styles.fullScreenList}
-        scrollEnabled={!isMapInteracting}
+        scrollEnabled={true}
         nestedScrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
-            refreshing={false}
-            onRefresh={() => {}}
+            refreshing={isRefreshing}
+            onRefresh={() => onRefresh?.()}
             tintColor={Colors.primary}
             colors={[Colors.primary]}
           />
@@ -900,40 +950,35 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 16,
-    minWidth: 80,
-    maxWidth: 100,
+    borderRadius: 12,
+    minWidth: 70,
+    maxWidth: 90,
     borderWidth: 1,
-    borderColor: Colors.outline + '30',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: Colors.outline + '20',
   },
   badgeInProfileIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
   },
   badgeInProfileName: {
     fontFamily: Fonts.text.bold,
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.onSurface,
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 12,
   },
   badgeFrequency: {
     position: 'absolute',
     top: -4,
     right: -4,
     backgroundColor: Colors.primary,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
@@ -942,7 +987,7 @@ const styles = StyleSheet.create({
   },
   badgeFrequencyText: {
     fontFamily: Fonts.text.bold,
-    fontSize: 9,
+    fontSize: 8,
     color: Colors.onPrimary,
   },
   badgeInProfileMore: {
@@ -967,23 +1012,29 @@ const styles = StyleSheet.create({
     height: 100,
   },
   // Tab Styles
-  tabHeader: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface,
+  tabHeaderContainer: {
     marginHorizontal: 20,
     marginBottom: 20,
+  },
+  tabScrollView: {
+    backgroundColor: Colors.surface,
     borderRadius: 12,
-    padding: 4,
     borderWidth: 1,
     borderColor: Colors.outline + '20',
   },
+  tabHeader: {
+    flexDirection: 'row',
+    padding: 4,
+    paddingRight: 20, // Extra padding for scroll
+  },
   tabItem: {
-    flex: 1,
+    minWidth: 100,
     paddingVertical: 14,
-    paddingHorizontal: 17,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: 'center',
     position: 'relative',
+    marginRight: 4,
   },
   activeTabItem: {
     backgroundColor: Colors.primary + '10',
@@ -999,8 +1050,8 @@ const styles = StyleSheet.create({
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
-    left: 16,
-    right: 16,
+    left: 12,
+    right: 12,
     height: 2,
     backgroundColor: Colors.primary,
     borderRadius: 1,

@@ -26,6 +26,8 @@ export const apiKeys = {
   userLogs: (userId: number) => ['userLogs', userId] as const,
   userMemories: (userId: number) => ['userMemories', userId] as const,
   userActivity: () => ['userActivity'] as const,
+  userActivityById: (userId: number) => ['userActivity', userId] as const,
+  userTreasuresById: (userId: number) => ['userTreasures', userId] as const,
   questDetail: (questId: number) => ['questDetail', questId] as const,
   eventDetail: (eventId: number) => ['eventDetail', eventId] as const,
 };
@@ -491,6 +493,18 @@ export const useUserActivity = () => {
   });
 };
 
+// User Treasures Query
+export const useUserTreasures = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<any, ApiError>({
+    queryKey: ['userTreasures'],
+    queryFn: () => apiService.getUserTreasures(),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+};
+
 // Quest Detail Query
 export const useQuestDetail = (questId: number | null) => {
   const { isAuthenticated } = useAuthStatus();
@@ -511,6 +525,30 @@ export const useEventDetail = (eventId: number | null) => {
     queryKey: apiKeys.eventDetail(eventId!),
     queryFn: () => apiService.getEventDetail(eventId!),
     enabled: isAuthenticated && eventId !== null && eventId > 0,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+};
+
+// User Activity by ID Query (for other users' profiles)
+export const useUserActivityById = (userId: number) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<ActivityResponse, ApiError>({
+    queryKey: apiKeys.userActivityById(userId),
+    queryFn: () => apiService.getUserActivityById(userId),
+    enabled: isAuthenticated && userId > 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+// User Treasures by ID Query (for other users' profiles)
+export const useUserTreasuresById = (userId: number) => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<any, ApiError>({
+    queryKey: apiKeys.userTreasuresById(userId),
+    queryFn: () => apiService.getUserTreasuresById(userId),
+    enabled: isAuthenticated && userId > 0,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 };

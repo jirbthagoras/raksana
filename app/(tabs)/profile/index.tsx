@@ -242,26 +242,13 @@ export default function ProfileScreen() {
         <FloatingElements />
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={!isMapInteracting}
-        nestedScrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={refetch}
-            tintColor={Colors.primary}
-            colors={[Colors.primary]}
-          />
-        }
-      >
         <ProfileView 
           profileData={profileData} 
           isOwnProfile={true}
           onProfileUpdate={refetch}
           onMapInteractionChange={setIsMapInteracting}
+          onRefresh={refetch}
+          isRefreshing={isLoading}
         >
           {/* Logout Button */}
           <TouchableOpacity 
@@ -279,7 +266,6 @@ export default function ProfileScreen() {
             </Text>
           </TouchableOpacity>
         </ProfileView>
-      </ScrollView>
       </GradientBackground>
 
       {/* Custom Image Picker Modal */}
@@ -384,9 +370,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  scrollView: {
-    flex: 1,
   },
   loadingContainer: {
     flex: 1,

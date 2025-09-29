@@ -359,6 +359,21 @@ class ApiService {
     return response.data; // Based on your API response format: { "data": { "activities": [...] } }
   }
 
+  async getUserTreasures(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/treasure/me');
+    return response.data; // Based on your API response format: { "data": [...] }
+  }
+
+  async getUserActivityById(userId: number): Promise<ActivityResponse> {
+    const response: AxiosResponse<ActivityResponse> = await this.api.get(`/activity/${userId}`);
+    return response.data; // Based on your API response format: { "data": { "activities": [...] } }
+  }
+
+  async getUserTreasuresById(userId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get(`/treasure/${userId}`);
+    return response.data; // Based on your API response format: { "data": { "treasures": [...] } }
+  }
+
   async getQuestDetail(questId: number): Promise<any> {
     console.log('🎯 Fetching quest detail for ID:', questId);
     const response: AxiosResponse<any> = await this.api.get(`/quest/${questId}`);

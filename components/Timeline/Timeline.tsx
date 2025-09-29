@@ -58,10 +58,12 @@ export default function Timeline({
   );
 
   const handleMapTouchStart = () => {
+    console.log('Map touch started');
     onMapInteractionChange?.(true);
   };
 
   const handleMapTouchEnd = () => {
+    console.log('Map touch ended');
     onMapInteractionChange?.(false);
   };
 
@@ -291,7 +293,7 @@ export default function Timeline({
           <FontAwesome5 name="map-marked-alt" size={24} color={Colors.primary} />
           <Text style={styles.timelineTitle}>Activity Timeline</Text>
           <Text style={styles.timelineSubtitle}>
-            {activities.length} activities across locations
+            Klik marker-nya!
           </Text>
         </View>
 
@@ -365,9 +367,9 @@ export default function Timeline({
                     }
                   }}
                   uiSettings={{
-                    compassEnabled: true,
+                    compassEnabled: false,
                     myLocationButtonEnabled: false,
-                    scaleBarEnabled: true,
+                    scaleBarEnabled: false,
                   }}
                   onCameraMove={(event) => {
                   }}
@@ -407,13 +409,13 @@ export default function Timeline({
                     }
                   }}
                   uiSettings={{
-                    compassEnabled: true,
+                    compassEnabled: false,
                     myLocationButtonEnabled: false,
                     zoomControlsEnabled: true,
                     zoomGesturesEnabled: true,
                     scrollGesturesEnabled: true,
-                    rotationGesturesEnabled: true,
-                    tiltGesturesEnabled: true,
+                    rotationGesturesEnabled: false,
+                    tiltGesturesEnabled: false,
                   }}
                   onCameraMove={(event) => {
                   }}
