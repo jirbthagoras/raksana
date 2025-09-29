@@ -263,3 +263,20 @@ export interface ChallengeParticipantsResponse {
     participants: ChallengeParticipant[];
   };
 }
+
+// Activity types
+export interface Activity {
+  id: number;
+  latitude: number;
+  longitude: number;
+  name: string;
+  description: string;
+  point_gain: number;
+  type: 'contribution' | 'attendance';
+}
+
+export interface ActivityResponse {
+  data: {
+    activities: Activity[];
+  };
+}

@@ -1,26 +1,28 @@
+import LogCard from '@/components/Cards/LogCard';
+import MemoryCard from '@/components/Cards/MemoryCard';
 import { Colors, Fonts } from '@/constants';
+import { useProfilePictureUpload, useUserActivity, useUserLogs, useUserMemories } from '@/hooks/useApiQueries';
+import apiService from '@/services/api';
 import { FontAwesome5 } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
+  FlatList,
   Image,
+  Modal,
+  Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  FlatList,
-  RefreshControl,
-  Modal,
-  ActivityIndicator
+  View
 } from 'react-native';
-import { useUserLogs, useUserMemories, useProfilePictureUpload } from '@/hooks/useApiQueries';
-import LogCard from '@/components/Cards/LogCard';
-import MemoryCard from '@/components/Cards/MemoryCard';
-import * as ImagePicker from 'expo-image-picker';
-import apiService from '@/services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -58,6 +60,7 @@ interface ProfileViewProps {
   isOwnProfile?: boolean;
   children?: React.ReactNode; // For additional buttons like logout
   onProfileUpdate?: () => void; // Callback for profile updates
+  onMapInteractionChange?: (isInteracting: boolean) => void; // Callback for map interaction state
 }
 
 interface ProfileTab {
@@ -66,10 +69,11 @@ interface ProfileTab {
   icon: string;
 }
 
-export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate }: ProfileViewProps) {
+export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate, onMapInteractionChange }: ProfileViewProps) {
   const [selectedTab, setSelectedTab] = useState('statistics');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isMapInteracting, setIsMapInteracting] = useState(false);
   
   const profilePictureUploadMutation = useProfilePictureUpload();
 
@@ -86,15 +90,24 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
     refetch: refetchMemories 
   } = useUserMemories(isOwnProfile ? 0 : profileData.id);
 
+  const { 
+    data: userActivityData, 
+    isLoading: activityLoading, 
+    refetch: refetchActivity 
+  } = useUserActivity();
+
+
   // Conditional tabs based on profile type
   const tabs: ProfileTab[] = isOwnProfile 
     ? [
         { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
+        { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
       ]
     : [
         { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
         { id: 'journals', name: 'Journals', icon: 'book' },
         { id: 'albums', name: 'Albums', icon: 'images' },
+        { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
       ];
 
   const handleEditProfilePicture = async () => {
@@ -231,6 +244,7 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
       default: return Colors.outline;
     }
   };
+
 
   const StatCard = ({ icon, label, value, color = Colors.primary }: {
     icon: string;
@@ -396,6 +410,180 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
             )}
           </MotiView>
         );
+      case 'timeline':
+        return (
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 600, delay: 100 }}
+            style={styles.tabContent}
+          >
+            {activityLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Loading timeline...</Text>
+              </View>
+            ) : userActivityData?.data ? (
+              <View style={styles.timelineContainer}>
+                {/* Timeline Header */}
+                <View style={styles.timelineHeader}>
+                  <FontAwesome5 name="map-marked-alt" size={24} color={Colors.primary} />
+                  <Text style={styles.timelineTitle}>Activity Timeline</Text>
+                  <Text style={styles.timelineSubtitle}>
+                    {userActivityData.data.activities?.length || 0} activities across locations
+                  </Text>
+                </View>
+
+                {/* Activity Map */}
+                <View style={styles.mapContainer}>
+                  {(() => {
+                    const activities = userActivityData.data.activities || [];
+                    console.log('🗺️ Rendering map with activities:', activities.length);
+                    
+                    // Use first activity as center, or default to Indonesia
+                    const centerCoords = activities.length > 0 
+                      ? { latitude: activities[0].latitude, longitude: activities[0].longitude }
+                      : { latitude: -6.2, longitude: 106.8 };
+
+                    // Create simple markers like in event detail
+                    const markers = activities.map((activity, index) => {
+                      const isEvent = activity.type === 'attendance';
+                      const isQuest = activity.type === 'contribution';
+                      
+                      // Determine marker properties based on activity type
+                      let emoji, color;
+                      if (isEvent) {
+                        emoji = '📅';
+                        color = 'blue'; // Blue for events - using predefined color
+                      } else if (isQuest) {
+                        emoji = '🎯';
+                        color = 'green'; // Green for quests - using predefined color
+                      } else {
+                        emoji = '📍';
+                        color = 'orange'; // Orange for unknown - using predefined color
+                      }
+                      
+                      console.log(`🎯 Creating marker ${index + 1}: ${activity.name} (${activity.type}) - Color: ${color}`);
+                      
+                      return {
+                        coordinates: {
+                          latitude: activity.latitude,
+                          longitude: activity.longitude,
+                        },
+                        title: `${emoji} ${activity.name}`,
+                        snippet: `${activity.description} | +${activity.point_gain} pts`,
+                      };
+                    });
+
+                    console.log('🗺️ Created markers:', markers.length);
+
+                    return Platform.OS === 'ios' ? (
+                      <View
+                        style={styles.mapWrapper}
+                        onTouchStart={() => {
+                          setIsMapInteracting(true);
+                          onMapInteractionChange?.(true);
+                        }}
+                        onTouchEnd={() => {
+                          setIsMapInteracting(false);
+                          onMapInteractionChange?.(false);
+                        }}
+                        onTouchCancel={() => {
+                          setIsMapInteracting(false);
+                          onMapInteractionChange?.(false);
+                        }}
+                      >
+                        <AppleMaps.View
+                          style={[styles.map, { zIndex: 1 }]}
+                          cameraPosition={{
+                            coordinates: {
+                              latitude: centerCoords.latitude,
+                              longitude: centerCoords.longitude,
+                            },
+                            zoom: 10,
+                          }}
+                          markers={markers}
+                          uiSettings={{
+                            compassEnabled: true,
+                            myLocationButtonEnabled: false,
+                            scaleBarEnabled: true,
+                          }}
+                          onCameraMove={(event) => {
+                          }}
+                        />
+                      </View>
+                    ) : (
+                      <View
+                        style={styles.mapWrapper}
+                        onTouchStart={() => {
+                          setIsMapInteracting(true);
+                          onMapInteractionChange?.(true);
+                        }}
+                        onTouchEnd={() => {
+                          setIsMapInteracting(false);
+                          onMapInteractionChange?.(false);
+                        }}
+                        onTouchCancel={() => {
+                          setIsMapInteracting(false);
+                          onMapInteractionChange?.(false);
+                        }}
+                      >
+                        <GoogleMaps.View
+                          style={[styles.map, { zIndex: 1 }]}
+                          cameraPosition={{
+                            coordinates: {
+                              latitude: centerCoords.latitude,
+                              longitude: centerCoords.longitude,
+                            },
+                            zoom: 10,
+                          }}
+                          markers={markers}
+                          uiSettings={{
+                            compassEnabled: true,
+                            myLocationButtonEnabled: false,
+                            zoomControlsEnabled: true,
+                            zoomGesturesEnabled: true,
+                            scrollGesturesEnabled: true,
+                            rotationGesturesEnabled: true,
+                            tiltGesturesEnabled: true,
+                          }}
+                          onCameraMove={(event) => {
+                          }}
+                        />
+                      </View>
+                    );
+                  })()}
+                </View>
+
+                {/* Activity Summary */}
+                <View style={styles.activitySummary}>
+                  <View style={styles.summaryItem}>
+                    <View style={[styles.summaryIcon, { backgroundColor: '#2196F3' + '20' }]}>
+                      <FontAwesome5 name="calendar-check" size={16} color="#2196F3" />
+                    </View>
+                    <Text style={styles.summaryText}>
+                      {userActivityData.data.activities?.filter((activity: any) => activity.type === 'attendance').length || 0} Events
+                    </Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <View style={[styles.summaryIcon, { backgroundColor: '#4CAF50' + '20' }]}>
+                      <FontAwesome5 name="hands-helping" size={16} color="#4CAF50" />
+                    </View>
+                    <Text style={styles.summaryText}>
+                      {userActivityData.data.activities?.filter((activity: any) => activity.type === 'contribution').length || 0} Quests
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <FontAwesome5 name="map" size={48} color={Colors.onSurfaceVariant} />
+                <Text style={styles.emptyText}>No activity yet</Text>
+                <Text style={styles.emptySubtext}>Start participating in events and quests to see your timeline</Text>
+              </View>
+            )}
+          </MotiView>
+        );
       default:
         return (
           <View style={styles.tabContent}>
@@ -434,23 +622,30 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         </View>
 
         {/* Badges Section */}
-        <View style={styles.badgesInProfile}>
-          <View style={styles.badgesInProfileContainer}>
-            {profileData.badges.slice(0, 3).map((badge: Badge, index: number) => (
-              <View key={index} style={styles.badgeInProfileItem}>
-                <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
-                  <FontAwesome5 name={getBadgeIcon(badge.category)} size={12} color={getBadgeColor(badge.category)} />
+        {profileData.badges && profileData.badges.length > 0 && (
+          <View style={styles.badgesInProfile}>
+            <Text style={styles.badgesSectionTitle}>Badges</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.badgesScrollContainer}
+            >
+              {profileData.badges.map((badge: Badge, index: number) => (
+                <View key={index} style={styles.badgeInProfileItem}>
+                  <View style={[styles.badgeInProfileIcon, { backgroundColor: getBadgeColor(badge.category) + '20' }]}>
+                    <FontAwesome5 name={getBadgeIcon(badge.category)} size={14} color={getBadgeColor(badge.category)} />
+                  </View>
+                  <Text style={styles.badgeInProfileName}>{badge.name}</Text>
+                  {badge.frequency > 1 && (
+                    <View style={styles.badgeFrequency}>
+                      <Text style={styles.badgeFrequencyText}>{badge.frequency}</Text>
+                    </View>
+                  )}
                 </View>
-                <Text style={styles.badgeInProfileName}>{badge.name}</Text>
-              </View>
-            ))}
-            {profileData.badges.length > 3 && (
-              <View style={styles.badgeInProfileMore}>
-                <Text style={styles.badgeInProfileMoreText}>+{profileData.badges.length - 3}</Text>
-              </View>
-            )}
+              ))}
+            </ScrollView>
           </View>
-        </View>
+        )}
 
         {/* Points */}
         <View style={styles.pointsContainer}>
@@ -597,6 +792,9 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
       <ScrollView 
         showsVerticalScrollIndicator={false}
         style={styles.fullScreenList}
+        scrollEnabled={!isMapInteracting}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={false}
@@ -853,47 +1051,84 @@ const styles = StyleSheet.create({
   badgesInProfile: {
     marginBottom: 16,
   },
-  badgesInProfileContainer: {
-    flexDirection: 'row',
+  badgesSectionTitle: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.onSurface,
+    marginBottom: 8,
+  },
+  badgesScrollContainer: {
+    paddingRight: 20,
     gap: 8,
-    flexWrap: 'wrap',
   },
   badgeInProfileItem: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: Colors.secondaryContainer,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 12,
-    gap: 6,
-    flex: 1,
-    minWidth: 0,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+    minWidth: 80,
+    maxWidth: 100,
+    borderWidth: 1,
+    borderColor: Colors.outline + '30',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   badgeInProfileIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 6,
   },
   badgeInProfileName: {
     fontFamily: Fonts.text.bold,
     fontSize: 11,
     color: Colors.onSurface,
-    flex: 1,
+    textAlign: 'center',
+    lineHeight: 14,
   },
-  badgeInProfileMore: {
-    backgroundColor: Colors.outline + '20',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+  badgeFrequency: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: Colors.primary,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.surface,
+  },
+  badgeFrequencyText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 9,
+    color: Colors.onPrimary,
+  },
+  badgeInProfileMore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.outline + '15',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 16,
+    justifyContent: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.outline + '30',
+    borderStyle: 'dashed',
   },
   badgeInProfileMoreText: {
     fontFamily: Fonts.text.bold,
-    fontSize: 11,
-    color: Colors.secondary,
+    fontSize: 10,
+    color: Colors.onSurfaceVariant,
   },
   bottomSpacing: {
     height: 100,
@@ -1106,6 +1341,266 @@ const styles = StyleSheet.create({
   imagePickerCancelButtonText: {
     fontFamily: Fonts.text.bold,
     fontSize: 16,
+    color: Colors.error,
+  },
+  // Timeline Styles
+  timelineContainer: {
+    flex: 1,
+  },
+  timelineHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+  },
+  timelineTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 20,
+    color: Colors.onSurface,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  timelineSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  activitySummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+  },
+  summaryItem: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  summaryText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.onSurface,
+  },
+  activitiesList: {
+    gap: 12,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  activityIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityName: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 16,
+    color: Colors.onSurface,
+    marginBottom: 4,
+  },
+  activityDescription: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  activityDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  locationInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  locationText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+  },
+  pointsInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  activityPointsText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
+    color: Colors.primary,
+  },
+  activityType: {
+    backgroundColor: Colors.primaryContainer,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  activityTypeText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 10,
+    color: Colors.primary,
+  },
+  // Map Styles
+  mapContainer: {
+    height: 300,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+  },
+  mapWrapper: {
+    width: '100%',
+    height: 300,
+  },
+  map: {
+    width: '100%',
+    height: 300,
+    backgroundColor: 'transparent',
+  },
+  customMarker: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  // Enhanced Timeline Styles
+  summaryIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  timelineList: {
+    marginTop: 20,
+  },
+  timelineListTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 16,
+    color: Colors.onSurface,
+    marginBottom: 16,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: Colors.outline + '20',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  timelineMarker: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  timelineContent: {
+    flex: 1,
+  },
+  timelineItemTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 14,
+    color: Colors.onSurface,
+    marginBottom: 4,
+  },
+  timelineItemDescription: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  timelineItemDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  timelineLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  timelineLocationText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 10,
+    color: Colors.onSurfaceVariant,
+  },
+  timelinePoints: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  timelinePointsText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 10,
+  },
+  timelineType: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: Colors.surfaceVariant,
+  },
+  timelineTypeText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 9,
+  },
+  // Debug Styles
+  debugContainer: {
+    backgroundColor: Colors.errorContainer,
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  debugText: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 12,
     color: Colors.error,
   },
 });

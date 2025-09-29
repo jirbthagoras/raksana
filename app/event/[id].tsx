@@ -91,11 +91,6 @@ export default function EventDetailScreen() {
 
   const isEventActive = eventStatus.status === 'upcoming' || eventStatus.status === 'ongoing';
 
-  // Debug log to check participation status
-  console.log(`Event Detail ${event.id} - participated: ${event.participated} (type: ${typeof event.participated}), Active: ${isEventActive}`);
-  console.log('Event params:', params);
-  console.log('Parsed event object:', event);
-
   const openInMaps = async () => {
     const latitude = event.latitude;
     const longitude = event.longitude;

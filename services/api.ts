@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { ApiError, AuthResponse, GoApiResponse, RegisterResponse } from '../types/auth';
+import { ActivityResponse, ApiError, AuthResponse, GoApiResponse, RegisterResponse } from '../types/auth';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
 
@@ -352,6 +352,11 @@ class ApiService {
       token
     });
     return response.data; // Based on your API response format: { "data": { "type": "...", ... } }
+  }
+
+  async getUserActivity(): Promise<ActivityResponse> {
+    const response: AxiosResponse<ActivityResponse> = await this.api.get('/activity');
+    return response.data; // Based on your API response format: { "data": { "activities": [...] } }
   }
 
   async saveAuthToken(token: string): Promise<void> {

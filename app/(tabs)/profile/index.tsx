@@ -44,6 +44,7 @@ export default function ProfileScreen() {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorPopupConfig, setErrorPopupConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'warning' | 'info' });
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [isMapInteracting, setIsMapInteracting] = useState(false);
 
   const handleLogout = () => {
     setShowLogoutPopup(true);
@@ -244,6 +245,9 @@ export default function ProfileScreen() {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!isMapInteracting}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -257,6 +261,7 @@ export default function ProfileScreen() {
           profileData={profileData} 
           isOwnProfile={true}
           onProfileUpdate={refetch}
+          onMapInteractionChange={setIsMapInteracting}
         >
           {/* Logout Button */}
           <TouchableOpacity 
