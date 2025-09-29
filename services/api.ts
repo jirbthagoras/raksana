@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { ActivityResponse, ApiError, AuthResponse, GoApiResponse, RegisterResponse } from '../types/auth';
+import { ActivityResponse, ApiError, AuthResponse, GoApiResponse, RegionsResponse, RegisterResponse } from '../types/auth';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
 
@@ -195,9 +195,28 @@ class ApiService {
     return response.data.data; // Extract from Go API wrapper
   }
 
-  async getRegions(): Promise<any> {
-    const response: AxiosResponse<GoApiResponse<any>> = await this.api.get('/region');
-    return response.data.data; // Extract from Go API wrapper
+  async getRegions(): Promise<RegionsResponse> {
+    console.log('🌍 Getting regions from API endpoint: /region');
+    console.log('🌍 API Base URL:', this.api.defaults.baseURL);
+    try {
+      const response: AxiosResponse<RegionsResponse> = await this.api.get('/region');
+      console.log('🌍 Regions response status:', response.status);
+      console.log('🌍 Regions response headers:', response.headers);
+      console.log('🌍 Regions response data:', response.data);
+      console.log('🌍 Regions data structure:', JSON.stringify(response.data, null, 2));
+      
+      // Validate the response structure
+      if (!response.data || !response.data.data || !response.data.data.regions) {
+        console.error('❌ Invalid regions response structure:', response.data);
+        throw new Error('Invalid API response structure');
+      }
+      
+      console.log('✅ Regions array length:', response.data.data.regions.length);
+      return response.data; // Return the data directly as it matches RegionsResponse format
+    } catch (error) {
+      console.error('❌ Error fetching regions:', error);
+      throw error;
+    }
   }
 
   async createPacket(packetData: { target: string; description: string }): Promise<any> {
@@ -386,6 +405,56 @@ class ApiService {
     const response: AxiosResponse<any> = await this.api.get(`/event/${eventId}`);
     console.log('📅 Event detail response:', response.data);
     return response.data; // Based on your API response format: { "data": { "id": 1, "name": "...", ... } }
+  }
+
+  async getTrashScans(): Promise<any> {
+    console.log('♻️ Fetching trash scans');
+    const response: AxiosResponse<any> = await this.api.get('/scan/trash');
+    console.log('♻️ Trash scans response:', response.data);
+    return response.data; // Based on your API response format: { "data": { "scans": [...] } }
+  }
+
+  async scanTrash(imageUri: string): Promise<any> {
+    console.log('📸 Scanning trash with image:', imageUri);
+    
+    // Create FormData for image upload
+    const formData = new FormData();
+    formData.append('image', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: 'trash_scan.jpg',
+    } as any);
+
+    const response: AxiosResponse<any> = await this.api.post('/scan/trash', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    console.log('📸 Trash scan response:', response.data);
+    return response.data; // Based on your API response format: { "data": { "title": "...", "items": [...] } }
+  }
+
+  // Greenprint API methods
+  async createGreenprint(itemId: number): Promise<any> {
+    console.log('🌱 Creating greenprint for item:', itemId);
+    const response: AxiosResponse<any> = await this.api.post(`/scan/greenprint/${itemId}`);
+    console.log('🌱 Create greenprint response:', response.data);
+    return response.data;
+  }
+
+  async getGreenprint(itemId: number): Promise<any> {
+    console.log('🌱 Getting greenprint for item:', itemId);
+    const response: AxiosResponse<any> = await this.api.get(`/scan/greenprint/${itemId}`);
+    console.log('🌱 Get greenprint response:', response.data);
+    return response.data;
+  }
+
+  async convertPoints(data: { amount: number; region_id: number }): Promise<any> {
+    console.log('🌳 Converting points to trees:', data);
+    const response: AxiosResponse<any> = await this.api.post('/point', data);
+    console.log('🌳 Convert points response:', response.data);
+    return response.data;
   }
 
   async saveAuthToken(token: string): Promise<void> {

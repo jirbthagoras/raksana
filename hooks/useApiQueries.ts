@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import { ActivityResponse, ApiError, ChallengeParticipantsResponse, ChallengesResponse, CreateWeeklyRecapResponse, EventsResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, PointHistoryResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, WeeklyRecapResponse } from '../types/auth';
+import { ActivityResponse, ApiError, ChallengeParticipantsResponse, ChallengesResponse, CreateWeeklyRecapResponse, EventsResponse, LeaderboardResponse, MemoriesResponse, MonthlyRecapResponse, PacketsResponse, PointHistoryResponse, RegionsResponse, Task, TaskCompletionResponse, TasksResponse, TrashScanResponse, TrashScansResponse, WeeklyRecapResponse } from '../types/auth';
 import { useAuthStatus } from './useAuthQueries';
 
 // Query keys for different API endpoints
@@ -11,7 +11,6 @@ export const apiKeys = {
   tasks: () => ['tasks'] as const,
   task: (id: number) => ['task', id] as const,
   packetDetail: (id: number) => ['packetDetail', id] as const,
-  regions: () => ['regions'] as const,
   logs: () => ['logs'] as const,
   leaderboard: () => ['leaderboard'] as const,
   weeklyRecaps: () => ['weeklyRecaps'] as const,
@@ -30,6 +29,9 @@ export const apiKeys = {
   userTreasuresById: (userId: number) => ['userTreasures', userId] as const,
   questDetail: (questId: number) => ['questDetail', questId] as const,
   eventDetail: (eventId: number) => ['eventDetail', eventId] as const,
+  trashScans: () => ['trashScans'] as const,
+  greenprint: (itemId: number) => ['greenprint', itemId] as const,
+  regions: () => ['regions'] as const,
 };
 
 // Profile queries
@@ -180,7 +182,13 @@ export const useRegions = () => {
   
   return useQuery<RegionsResponse, ApiError>({
     queryKey: apiKeys.regions(),
-    queryFn: () => apiService.getRegions(),
+    queryFn: async () => {
+      console.log('🔍 useRegions - Starting API call');
+      const result = await apiService.getRegions();
+      console.log('🔍 useRegions - API result:', result);
+      console.log('🔍 useRegions - Regions array:', result?.data?.regions);
+      return result;
+    },
     enabled: isAuthenticated,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
@@ -553,6 +561,70 @@ export const useUserTreasuresById = (userId: number) => {
   });
 };
 
+// Trash Scans Query
+export const useTrashScans = () => {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery<TrashScansResponse>({
+    queryKey: apiKeys.trashScans(),
+    queryFn: () => apiService.getTrashScans(),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 10, // 10 minutes - trash scans don't change frequently
+  });
+};
+
+// Scan Trash Mutation
+export const useScanTrash = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<TrashScanResponse, ApiError, string>({
+    mutationFn: (imageUri: string) => apiService.scanTrash(imageUri),
+    onSuccess: () => {
+      // Invalidate trash scans to refresh the list
+      queryClient.invalidateQueries({ queryKey: apiKeys.trashScans() });
+    },
+  });
+};
+
+// Greenprint hooks
+export const useCreateGreenprint = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (itemId: number) => apiService.createGreenprint(itemId),
+    onSuccess: (data, itemId) => {
+      // Invalidate and refetch related queries
+      queryClient.invalidateQueries({ queryKey: apiKeys.greenprint(itemId) });
+      queryClient.invalidateQueries({ queryKey: apiKeys.trashScans() });
+    },
+  });
+};
+
+export function useGreenprint(itemId: number) {
+  const { isAuthenticated } = useAuthStatus();
+  
+  return useQuery({
+    queryKey: apiKeys.greenprint(itemId),
+    queryFn: () => apiService.getGreenprint(itemId),
+    enabled: isAuthenticated && itemId > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+
+// Point conversion mutation
+export function useConvertPoints() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { amount: number; region_id: number }) => apiService.convertPoints(data),
+    onSuccess: () => {
+      // Invalidate point history to refresh balance
+      queryClient.invalidateQueries({ queryKey: apiKeys.pointHistory() });
+    },
+  });
+}
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,
@@ -571,4 +643,8 @@ export const apiQueries = {
   useChallenges,
   useChallengeParticipants,
   useUserProfile,
+  useTrashScans,
+  useScanTrash,
+  useCreateGreenprint,
+  useGreenprint,
 };

@@ -1,6 +1,8 @@
 import { HistoryInfoModal } from '@/components/Modals/HistoryInfoModal';
+import { PointConversionModal } from '@/components/Modals/PointConversionModal';
 import { SkeletonCircle, SkeletonText } from '@/components/Screens/SkeletonLoader';
 import { Colors, Fonts } from '@/constants';
+import { ErrorProvider } from '@/contexts/ErrorContext';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -18,8 +20,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { usePointHistory } from '../../hooks/useApiQueries';
 import { PointHistoryItem } from '../../types/auth';
 
-export default function HistoryScreen() {
+function HistoryContent() {
   const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const [conversionModalVisible, setConversionModalVisible] = useState(false);
 
   const {
     data: historyData,
@@ -41,6 +44,16 @@ export default function HistoryScreen() {
 
   const formatBalance = (amount: number) => {
     return amount.toLocaleString('id-ID');
+  };
+
+  const formatCompactNumber = (amount: number) => {
+    if (amount >= 1000000) {
+      return (amount / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (amount >= 1000) {
+      return (amount / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return amount.toString();
   };
 
   const formatDate = (dateString: string) => {
@@ -119,7 +132,7 @@ export default function HistoryScreen() {
               styles.amountText,
               { color: isOutput ? Colors.error : Colors.primary }
             ]}>
-              {isOutput ? '-' : '+'}{formatBalance(item.amount)}
+              {isOutput ? '-' : '+'}{formatCompactNumber(item.amount)}
             </Text>
             <Text style={styles.pointsLabel}>poin</Text>
           </View>
@@ -223,9 +236,7 @@ export default function HistoryScreen() {
           {/* Convert Button */}
           <TouchableOpacity 
             style={styles.convertButton}
-            onPress={() => {
-              // TODO: Implement convert points functionality
-            }}
+            onPress={() => setConversionModalVisible(true)}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -291,6 +302,13 @@ export default function HistoryScreen() {
       <HistoryInfoModal
         visible={infoModalVisible}
         onClose={() => setInfoModalVisible(false)}
+      />
+
+      {/* Point Conversion Modal */}
+      <PointConversionModal
+        visible={conversionModalVisible}
+        onClose={() => setConversionModalVisible(false)}
+        currentBalance={balance}
       />
     </SafeAreaView>
   );
@@ -456,7 +474,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     padding: 16,
-    minHeight: 64,
   },
   historyIconContainer: {
     width: 48,
@@ -465,52 +482,61 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    marginTop: 2,
   },
   historyDetails: {
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 12,
+    minWidth: 0, // Allows text to shrink
   },
   historyName: {
-    fontFamily: Fonts.text.regular,
+    fontFamily: Fonts.text.bold,
     fontSize: 14,
     color: Colors.onSurface,
-    lineHeight: 20,
-    marginBottom: 6,
+    lineHeight: 18,
+    marginBottom: 4,
+    flexWrap: 'wrap',
   },
   historyMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexDirection: 'column',
+    gap: 4,
   },
   categoryBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
   },
   categoryText: {
     fontFamily: Fonts.text.bold,
-    fontSize: 10,
+    fontSize: 9,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   historyDate: {
     fontFamily: Fonts.text.regular,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.onSurfaceVariant,
+    opacity: 0.8,
   },
   historyAmount: {
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
-    marginTop: 2,
+    minWidth: 80,
+    maxWidth: 100,
+    paddingTop: 2,
   },
   amountText: {
     fontFamily: Fonts.display.bold,
     fontSize: 16,
+    textAlign: 'right',
+    flexShrink: 1,
   },
   pointsLabel: {
     fontFamily: Fonts.text.regular,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.onSurfaceVariant,
+    textAlign: 'right',
+    marginTop: 1,
   },
   emptyState: {
     alignItems: 'center',
@@ -561,3 +587,11 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
 });
+
+export default function HistoryScreen() {
+  return (
+    <ErrorProvider>
+      <HistoryContent />
+    </ErrorProvider>
+  );
+}

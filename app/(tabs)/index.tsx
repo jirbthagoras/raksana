@@ -137,6 +137,14 @@ export default function HomeTab() {
     refetch: refetchRegions
   } = useRegions();
 
+  // Debug regions data
+  React.useEffect(() => {
+    console.log('🏠 Home - regionsData:', regionsData);
+    console.log('🏠 Home - regionsLoading:', regionsLoading);
+    console.log('🏠 Home - regionsError:', regionsError);
+    console.log('🏠 Home - regions array:', regionsData?.data?.regions);
+  }, [regionsData, regionsLoading, regionsError]);
+
   // Handle refresh
   const handleRefresh = React.useCallback(async () => {
     await Promise.all([refetch(), refetchRegions()]);
@@ -338,7 +346,7 @@ export default function HomeTab() {
                     </View>
                     <View style={styles.primaryActionText}>
                       <Text style={styles.primaryActionTitle}>Journal</Text>
-                      <Text style={styles.primaryActionSubtitle}>Write your thoughts</Text>
+                      <Text style={styles.primaryActionSubtitle}>Tuangkan pikiranmu</Text>
                     </View>
                     <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
                   </View>
@@ -358,7 +366,7 @@ export default function HomeTab() {
                     </View>
                     <View style={styles.primaryActionText}>
                       <Text style={styles.primaryActionTitle}>Memory</Text>
-                      <Text style={styles.primaryActionSubtitle}>Capture moments</Text>
+                      <Text style={styles.primaryActionSubtitle}>Tangkap momenmu</Text>
                     </View>
                     <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
                   </View>
@@ -443,7 +451,7 @@ export default function HomeTab() {
                   transition={{ type: 'spring', delay: 2700, damping: 12, stiffness: 120 }}
                   style={styles.utilityActionCard}
                   buttonStyle={styles.utilityActionButton}
-                  onPress={() => console.log('Recyclopedia pressed!')}
+                  onPress={() => router.push('/recyclopedia')}
                 >
                   <View style={[styles.utilityActionIcon, { backgroundColor: Colors.primary + '15' }]}>
                     <FontAwesome5 name="recycle" size={20} color={Colors.primary} />
@@ -518,7 +526,7 @@ export default function HomeTab() {
                         snapToInterval={172}
                         snapToAlignment="start"
                       >
-                        {regionsData?.regions?.map((region, index) => (
+                        {regionsData?.data?.regions?.map((region, index) => (
                           <MotiView
                             key={region.id}
                             from={{ opacity: 0, translateY: 20, scale: 0.8 }}

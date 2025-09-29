@@ -45,12 +45,11 @@ export const QuestCluePopup: React.FC<QuestCluePopupProps> = ({
           
           {/* Title */}
           <Text style={styles.title}>
-            Quest Clue Found!
+            Clue ditemukan!
           </Text>
           
           {/* Clue Message */}
           <View style={styles.clueContainer}>
-            <Text style={styles.clueLabel}>Your Quest Clue:</Text>
             <Text style={styles.clueText}>"{clue}"</Text>
           </View>
           
@@ -61,7 +60,7 @@ export const QuestCluePopup: React.FC<QuestCluePopupProps> = ({
           
           {/* Close Button */}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Got It!</Text>
+            <Text style={styles.closeButtonText}>Mengerti</Text>
           </TouchableOpacity>
         </View>
       </View>

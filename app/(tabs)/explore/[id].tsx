@@ -6,7 +6,7 @@ import { useUserProfile } from '@/hooks/useApiQueries';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { RefreshControl, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();

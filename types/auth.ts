@@ -104,7 +104,9 @@ export interface Region {
 }
 
 export interface RegionsResponse {
-  regions: Region[];
+  data: {
+    regions: Region[];
+  };
 }
 
 // Leaderboard types
@@ -279,4 +281,38 @@ export interface ActivityResponse {
   data: {
     activities: Activity[];
   };
+}
+
+// Recyclopedia/Trash Scan types
+export interface RecyclingItem {
+  id: number;
+  name: string;
+  description: string;
+  value: 'low' | 'mid' | 'high';
+  having_greenprint: boolean;
+}
+
+export interface TrashScan {
+  title: string;
+  description: string;
+  image_key: string;
+  items: RecyclingItem[];
+}
+
+export interface TrashScansResponse {
+  data: {
+    scans: TrashScan[];
+  };
+}
+
+// Trash Scan Result (single scan response)
+export interface TrashScanResult {
+  title: string;
+  description: string;
+  image_key: string;
+  items: RecyclingItem[];
+}
+
+export interface TrashScanResponse {
+  data: TrashScanResult;
 }

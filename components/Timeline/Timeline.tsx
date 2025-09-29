@@ -311,18 +311,18 @@ export default function Timeline({
               const isEvent = activity.type === 'attendance';
               const isQuest = activity.type === 'contribution';
             
-              
               // Determine marker properties based on activity type
-              let color;
+              let tintColor;
               if (isEvent) {
-                color = 'blue'; // Blue for events - using predefined color
+                tintColor = '#2196F3'; // Blue for events
               } else if (isQuest) {
-                color = 'green'; // Green for quests - using predefined color
+                tintColor = '#4CAF50'; // Green for quests
               } else {
-                color = 'orange'; // Orange for unknown - using predefined color
+                tintColor = '#FF9800'; // Orange for unknown
               }
 
-              return {
+              // Create marker object with platform-specific properties
+              const baseMarker = {
                 coordinates: {
                   latitude: activity.latitude,
                   longitude: activity.longitude,
@@ -331,6 +331,22 @@ export default function Timeline({
                 snippet: `${activity.description} | +${activity.point_gain} pts`,
                 id: `${activity.type}-${activity.id}`, // Unique ID combining type and ID
               };
+
+              // Add platform-specific properties
+              if (Platform.OS === 'ios') {
+                return {
+                  ...baseMarker,
+                  tintColor: tintColor, // Apple Maps supports tintColor
+                };
+              } else {
+                // For Google Maps, we'll use the base marker
+                // Google Maps doesn't support direct color customization for default markers
+                return {
+                  ...baseMarker,
+                  // Could add custom icon here if needed
+                  // icon: customIconForType(activity.type)
+                };
+              }
             });
 
             return Platform.OS === 'ios' ? (
