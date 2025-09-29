@@ -45,7 +45,6 @@ export default function UserCard({ user, index, onPress }: UserCardProps) {
         <Image
           source={{ uri: imageUrl }}
           style={styles.profileImage}
-          resizeMode="cover"
         />
       );
     } else {
@@ -91,10 +90,6 @@ export default function UserCard({ user, index, onPress }: UserCardProps) {
                 <Text style={styles.email} numberOfLines={1}>
                   {formatEmail(user.email)}
                 </Text>
-                <View style={styles.idContainer}>
-                  <FontAwesome5 name="hashtag" size={10} color={Colors.onSurfaceVariant} />
-                  <Text style={styles.idText}>ID: {user.id}</Text>
-                </View>
               </View>
             </View>
             

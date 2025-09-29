@@ -347,6 +347,13 @@ class ApiService {
     }
   }
 
+  async scanQR(token: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.post('/scan', {
+      token
+    });
+    return response.data; // Based on your API response format: { "data": { "type": "...", ... } }
+  }
+
   async saveAuthToken(token: string): Promise<void> {
     await SecureStore.setItemAsync('auth_token', token);
   }

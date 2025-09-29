@@ -256,6 +256,7 @@ export default function ProfileScreen() {
         <ProfileView 
           profileData={profileData} 
           isOwnProfile={true}
+          onProfileUpdate={refetch}
         >
           {/* Logout Button */}
           <TouchableOpacity 

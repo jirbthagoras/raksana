@@ -12,11 +12,15 @@ import {
   TouchableOpacity,
   View,
   FlatList,
-  RefreshControl
+  RefreshControl,
+  Modal,
+  ActivityIndicator
 } from 'react-native';
-import { useUserLogs, useUserMemories } from '@/hooks/useApiQueries';
+import { useUserLogs, useUserMemories, useProfilePictureUpload } from '@/hooks/useApiQueries';
 import LogCard from '@/components/Cards/LogCard';
 import MemoryCard from '@/components/Cards/MemoryCard';
+import * as ImagePicker from 'expo-image-picker';
+import apiService from '@/services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -53,6 +57,7 @@ interface ProfileViewProps {
   profileData: ProfileData;
   isOwnProfile?: boolean;
   children?: React.ReactNode; // For additional buttons like logout
+  onProfileUpdate?: () => void; // Callback for profile updates
 }
 
 interface ProfileTab {
@@ -61,8 +66,12 @@ interface ProfileTab {
   icon: string;
 }
 
-export default function ProfileView({ profileData, isOwnProfile = false, children }: ProfileViewProps) {
+export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate }: ProfileViewProps) {
   const [selectedTab, setSelectedTab] = useState('statistics');
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  const profilePictureUploadMutation = useProfilePictureUpload();
 
   // Fetch user logs and memories only for other users' profiles
   const { 
@@ -88,25 +97,121 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         { id: 'albums', name: 'Albums', icon: 'images' },
       ];
 
+  const handleEditProfilePicture = async () => {
+    try {
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Camera roll permissions not granted');
+        return;
+      }
+
+      // Show custom image picker modal
+      setShowImagePicker(true);
+    } catch (error) {
+      console.error('Error requesting permissions:', error);
+    }
+  };
+
+  const pickImageFromCamera = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Camera permissions not granted');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadProfilePicture(result.assets[0]);
+      }
+    } catch (error) {
+      console.error('Error picking image from camera:', error);
+    }
+  };
+
+  const pickImageFromGallery = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadProfilePicture(result.assets[0]);
+      }
+    } catch (error) {
+      console.error('Error picking image from gallery:', error);
+    }
+  };
+
+  const uploadProfilePicture = async (imageAsset: any) => {
+    try {
+      setIsUploadingImage(true);
+
+      // Get file extension
+      const fileExtension = imageAsset.uri.split('.').pop() || 'jpg';
+      const filename = `profile_${Date.now()}.${fileExtension}`;
+      const contentType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
+
+      // Get presigned URL
+      const response = await profilePictureUploadMutation.mutateAsync(filename);
+      const presignedUrl = response.data.presigned_url;
+
+      // Upload to S3 using the API service method
+      await apiService.uploadToPresignedUrl(presignedUrl, imageAsset, contentType);
+
+      // Call the profile update callback to refresh data
+      onProfileUpdate?.();
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const renderProfileImage = () => {
     const imageUrl = profileData?.profile_url;
     const isValidUrl = imageUrl && imageUrl.trim() !== '' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
 
-    if (isValidUrl) {
-      return (
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.profileImage}
-          resizeMode="cover"
-        />
-      );
-    } else {
-      return (
-        <View style={[styles.profileImage, styles.profileImageFallback]}>
-          <FontAwesome5 name="user" size={32} color={Colors.onSurfaceVariant} />
-        </View>
-      );
-    }
+    return (
+      <View style={styles.profileImageContainer}>
+        {isValidUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={styles.profileImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.profileImage, styles.profileImageFallback]}>
+            <FontAwesome5 name="user" size={32} color={Colors.onSurfaceVariant} />
+          </View>
+        )}
+        
+        {/* Edit button for own profile */}
+        {isOwnProfile && (
+          <TouchableOpacity 
+            style={styles.editImageButton}
+            onPress={handleEditProfilePicture}
+            disabled={isUploadingImage}
+          >
+            {isUploadingImage ? (
+              <ActivityIndicator size="small" color={Colors.surface} />
+            ) : (
+              <FontAwesome5 name="camera" size={12} color={Colors.surface} />
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+    );
   };
 
   const getBadgeIcon = (category: string) => {
@@ -315,9 +420,7 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.profileHeader}>
-          <View style={styles.profileImageContainer}>
-            {renderProfileImage()}
-          </View>
+          {renderProfileImage()}
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{profileData.name}</Text>
             <Text style={styles.profileUsername}>@{profileData.username}</Text>
@@ -490,28 +593,101 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
 
   // For Statistics tab, use full-screen ScrollView
   return (
-    <ScrollView 
-      showsVerticalScrollIndicator={false}
-      style={styles.fullScreenList}
-      refreshControl={
-        <RefreshControl
-          refreshing={false}
-          onRefresh={() => {}}
-          tintColor={Colors.primary}
-          colors={[Colors.primary]}
-        />
-      }
-    >
-      {renderProfileHeader()}
-      {renderTabNavigation()}
+    <>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        style={styles.fullScreenList}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => {}}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+      >
+        {renderProfileHeader()}
+        {renderTabNavigation()}
+        
+        {/* Tab Content */}
+        <View style={styles.tabContentContainer}>
+          {renderTabContent()}
+        </View>
+        
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
       
-      {/* Tab Content */}
-      <View style={styles.tabContentContainer}>
-        {renderTabContent()}
-      </View>
-      
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
+      {/* Image Picker Modal - only for own profile */}
+      {isOwnProfile && (
+        <Modal
+          visible={showImagePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowImagePicker(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowImagePicker(false)}
+          >
+            <TouchableOpacity 
+              style={styles.imagePickerSheet}
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              <View style={styles.imagePickerHeader}>
+                <View style={styles.imagePickerHandle} />
+                <Text style={styles.imagePickerTitle}>Change Profile Picture</Text>
+                <Text style={styles.imagePickerSubtitle}>Choose how you want to update your profile picture</Text>
+              </View>
+              
+              <View style={styles.imagePickerButtons}>
+                <TouchableOpacity 
+                  style={styles.imagePickerButton}
+                  onPress={() => {
+                    setShowImagePicker(false);
+                    pickImageFromCamera();
+                  }}
+                >
+                  <View style={styles.imagePickerButtonIcon}>
+                    <FontAwesome5 name="camera" size={20} color={Colors.primary} />
+                  </View>
+                  <View style={styles.imagePickerButtonContent}>
+                    <Text style={styles.imagePickerButtonTitle}>Take Photo</Text>
+                    <Text style={styles.imagePickerButtonSubtitle}>Use camera to take a new photo</Text>
+                  </View>
+                  <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.imagePickerButton}
+                  onPress={() => {
+                    setShowImagePicker(false);
+                    pickImageFromGallery();
+                  }}
+                >
+                  <View style={styles.imagePickerButtonIcon}>
+                    <FontAwesome5 name="images" size={20} color={Colors.primary} />
+                  </View>
+                  <View style={styles.imagePickerButtonContent}>
+                    <Text style={styles.imagePickerButtonTitle}>Choose from Gallery</Text>
+                    <Text style={styles.imagePickerButtonSubtitle}>Select from your photo library</Text>
+                  </View>
+                  <FontAwesome5 name="chevron-right" size={16} color={Colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.imagePickerCancelButton}
+                onPress={() => setShowImagePicker(false)}
+              >
+                <Text style={styles.imagePickerCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      )}
+    </>
   );
 }
 
@@ -820,5 +996,116 @@ const styles = StyleSheet.create({
     color: Colors.onSurfaceVariant,
     textAlign: 'center',
     opacity: 0.7,
+  },
+  // Edit Profile Image Button Styles
+  editImageButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: Colors.primary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.surface,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  // Image Picker Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  imagePickerSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 34,
+    maxHeight: '80%',
+  },
+  imagePickerHeader: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.outline + '20',
+  },
+  imagePickerHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: Colors.onSurfaceVariant + '40',
+    borderRadius: 2,
+    marginBottom: 16,
+  },
+  imagePickerTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 20,
+    color: Colors.onSurface,
+    marginBottom: 8,
+  },
+  imagePickerSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  imagePickerButtons: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.surfaceVariant + '40',
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  imagePickerButtonIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  imagePickerButtonContent: {
+    flex: 1,
+  },
+  imagePickerButtonTitle: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.onSurface,
+    marginBottom: 2,
+  },
+  imagePickerButtonSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 13,
+    color: Colors.onSurfaceVariant,
+  },
+  imagePickerCancelButton: {
+    marginHorizontal: 24,
+    marginTop: 16,
+    paddingVertical: 16,
+    backgroundColor: Colors.errorContainer,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  imagePickerCancelButtonText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 16,
+    color: Colors.error,
   },
 });

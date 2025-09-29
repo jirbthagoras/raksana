@@ -452,6 +452,34 @@ export const useUserMemories = (userId: number) => {
   });
 };
 
+// Profile Picture Upload Mutation
+export const useProfilePictureUpload = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<{ data: { presigned_url: string } }, ApiError, string>({
+    mutationFn: (filename: string) => apiService.getProfilePictureUploadUrl(filename),
+    onSuccess: () => {
+      // Invalidate profile data to refresh the updated image
+      queryClient.invalidateQueries({ queryKey: apiKeys.profile() });
+    },
+  });
+};
+
+// QR Scan Mutation
+export const useQRScan = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<any, ApiError, string>({
+    mutationFn: (token: string) => apiService.scanQR(token),
+    onSuccess: () => {
+      // Invalidate relevant data that might be affected by QR scan
+      queryClient.invalidateQueries({ queryKey: apiKeys.profile() });
+      queryClient.invalidateQueries({ queryKey: apiKeys.pointHistory() });
+      queryClient.invalidateQueries({ queryKey: apiKeys.memories() });
+    },
+  });
+};
+
 // Export all hooks for easy access
 export const apiQueries = {
   useDailyChallenge,

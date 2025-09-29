@@ -1,5 +1,6 @@
 import { Colors, Fonts } from '@/constants';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
@@ -46,6 +47,24 @@ const AnimatedTabIcon = ({ name, focused, color }: { name: string; focused: bool
   );
 };
 
+// Simple Floating QR button component
+const FloatingQRButton = ({ focused }: { focused: boolean }) => {
+  return (
+    <View style={styles.floatingButtonContainer}>
+      <LinearGradient
+        colors={[Colors.primary, Colors.secondary]}
+        style={[styles.floatingButton, focused && styles.floatingButtonFocused]}
+      >
+        <Ionicons
+          name="qr-code"
+          size={28}
+          color="white"
+        />
+      </LinearGradient>
+    </View>
+  );
+};
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   
@@ -59,25 +78,25 @@ export default function TabLayout() {
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 10 : 8),
-          paddingTop: 12,
-          paddingHorizontal: Math.max(insets.left, 24),
-          paddingRight: Math.max(insets.right, 24),
-          height: 70 + Math.max(insets.bottom, Platform.OS === 'ios' ? 25 : 15),
+          paddingTop: 12, // Reduced to make tab bar shorter
+          paddingHorizontal: Math.max(insets.left, 16),
+          paddingRight: Math.max(insets.right, 16),
+          height: 70 + Math.max(insets.bottom, Platform.OS === 'ios' ? 20 : 12), // Reduced height
           position: 'absolute',
           bottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 12 : 10),
-          left: 24,
-          right: 24,
+          left: 16,
+          right: 16,
           elevation: 0,
           shadowColor: 'transparent',
           borderRadius: 28,
-          marginHorizontal: 10,
+          marginHorizontal: 8,
         },
         tabBarLabelStyle: {
           fontFamily: Fonts.text.bold,
-          fontSize: 11,
-          marginTop: 4,
+          fontSize: 10, // Reduced font size
+          marginTop: 2,
           fontWeight: '700',
-          letterSpacing: 0.3,
+          letterSpacing: 0.2,
         },
         tabBarLabelPosition: 'below-icon',
         tabBarHideOnKeyboard: true,
@@ -85,13 +104,14 @@ export default function TabLayout() {
           marginBottom: 0,
         },
         tabBarItemStyle: {
-          paddingVertical: 8,
-          paddingHorizontal: 6,
-          borderRadius: 18,
-          marginHorizontal: 6,
+          paddingVertical: 6,
+          paddingHorizontal: 4, // Reduced horizontal padding
+          borderRadius: 16,
+          marginHorizontal: 3, // Reduced margin
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
+          minWidth: 0, // Allow shrinking
         },
         tabBarBackground: () => (
           <View style={styles.tabBarContainer}>
@@ -104,7 +124,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Beranda',
+          title: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
             <AnimatedTabIcon name="home" focused={focused} color={color} />
           ),
@@ -117,6 +137,18 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <AnimatedTabIcon name="folder" focused={focused} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="qr"
+        options={{
+          title: '',
+          tabBarIcon: ({ focused }) => (
+            <FloatingQRButton focused={focused} />
+          ),
+          tabBarItemStyle: {
+            ...styles.floatingTabItem,
+          },
         }}
       />
       <Tabs.Screen
@@ -177,5 +209,37 @@ const styles = StyleSheet.create({
   },
   activeIconContainer: {
     backgroundColor: Colors.primaryContainer + '40',
+  },
+  floatingButtonContainer: {
+    position: 'absolute',
+    top: -30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  floatingButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  floatingButtonFocused: {
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  floatingTabItem: {
+    borderRadius: 16,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    minWidth: 0,
+    height: 60, // Reduced height for more compact tab bar
   },
 });
