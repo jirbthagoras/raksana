@@ -9,7 +9,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -72,32 +72,24 @@ interface ProfileTab {
 }
 
 export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate, onMapInteractionChange, onRefresh, isRefreshing = false }: ProfileViewProps) {
-  // Simplified tab state management - no ref needed
   const [selectedTab, setSelectedTab] = useState('statistics');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isMapInteracting, setIsMapInteracting] = useState(false);
-  
-  // Handle map interaction changes
-  const handleMapInteractionChange = (interacting: boolean) => {
-    setIsMapInteracting(interacting);
-    onMapInteractionChange?.(interacting);
-  };
   
   const profilePictureUploadMutation = useProfilePictureUpload();
 
-  // Fetch user logs and memories for all profiles
+  // Fetch user logs and memories only for other users' profiles
   const { 
     data: userLogsData, 
     isLoading: logsLoading, 
     refetch: refetchLogs 
-  } = useUserLogs(profileData.id);
+  } = useUserLogs(isOwnProfile ? 0 : profileData.id);
   
   const { 
     data: userMemoriesData, 
     isLoading: memoriesLoading, 
     refetch: refetchMemories 
-  } = useUserMemories(profileData.id);
+  } = useUserMemories(isOwnProfile ? 0 : profileData.id);
 
   // Conditional API calls based on profile type
   const { 
@@ -134,14 +126,20 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
   const finalTreasuresRefetch = isOwnProfile ? refetchTreasures : refetchOtherTreasures;
 
 
-  // Show all tabs for all profiles
-  const tabs: ProfileTab[] = [
-    { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
-    { id: 'journals', name: 'Journals', icon: 'book' },
-    { id: 'albums', name: 'Albums', icon: 'images' },
-    { id: 'treasures', name: 'Treasures', icon: 'gem' },
-    { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
-  ];
+  // Conditional tabs based on profile type
+  const tabs: ProfileTab[] = isOwnProfile 
+    ? [
+        { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
+        { id: 'treasures', name: 'Treasures', icon: 'gem' },
+        { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
+      ]
+    : [
+        { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
+        { id: 'journals', name: 'Journals', icon: 'book' },
+        { id: 'albums', name: 'Albums', icon: 'images' },
+        { id: 'treasures', name: 'Treasures', icon: 'gem' },
+        { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
+      ];
 
   const handleEditProfilePicture = async () => {
     try {
@@ -502,24 +500,10 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
     </View>
   );
 
-  // Stable memoized components to prevent re-renders
-  const ProfileHeader = useMemo(() => renderProfileHeader(), [
-    profileData.name,
-    profileData.username, 
-    profileData.level,
-    profileData.points,
-    profileData.profile_url,
-    JSON.stringify(profileData.badges), // Stable string comparison
-    isUploadingImage,
-    isOwnProfile,
-    children // Include children for logout button
-  ]);
-
-  const TabNavigation = useMemo(() => renderTabNavigation(), [selectedTab]);
-
-  // Memoized tab content renderers to prevent unnecessary re-renders
-  const renderJournalsContent = useCallback(() => {
+  // For tabs with FlatList (Journals, Albums), use full-screen FlatList
+  if (selectedTab === 'journals') {
     const logs = userLogsData?.data?.logs || [];
+    
     return (
       <FlatList
         data={logs}
@@ -528,6 +512,12 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
           <View style={styles.listItemContainer}>
             <LogCard item={item} index={index} />
           </View>
+        )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
         )}
         ListEmptyComponent={() => (
           logsLoading ? (
@@ -538,15 +528,13 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
             <View style={styles.emptyContainer}>
               <FontAwesome5 name="book-open" size={48} color={Colors.onSurfaceVariant} />
               <Text style={styles.emptyText}>No journals yet</Text>
-              <Text style={styles.emptySubtext}>
-                {isOwnProfile ? "You haven't written any journals" : "This user hasn't written any journals"}
-              </Text>
+              <Text style={styles.emptySubtext}>This user hasn't written any journals</Text>
             </View>
           )
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
-        style={styles.tabContentList}
+        style={styles.fullScreenList}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing || logsLoading}
@@ -561,10 +549,11 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         ListFooterComponent={() => <View style={styles.bottomSpacing} />}
       />
     );
-  }, [userLogsData, logsLoading, isRefreshing, isOwnProfile, onRefresh, refetchLogs]);
+  }
 
-  const renderAlbumsContent = useCallback(() => {
+  if (selectedTab === 'albums') {
     const memories = userMemoriesData?.data?.memories || [];
+    
     return (
       <FlatList
         data={memories}
@@ -576,6 +565,12 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
             showDeleteButton={false}
           />
         )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
+        )}
         ListEmptyComponent={() => (
           memoriesLoading ? (
             <View style={styles.loadingContainer}>
@@ -585,15 +580,13 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
             <View style={styles.emptyContainer}>
               <FontAwesome5 name="images" size={48} color={Colors.onSurfaceVariant} />
               <Text style={styles.emptyText}>No memories yet</Text>
-              <Text style={styles.emptySubtext}>
-                {isOwnProfile ? "You haven't shared any memories" : "This user hasn't shared any memories"}
-              </Text>
+              <Text style={styles.emptySubtext}>This user hasn't shared any memories</Text>
             </View>
           )
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
-        style={styles.tabContentList}
+        style={styles.fullScreenList}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing || memoriesLoading}
@@ -608,10 +601,11 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         ListFooterComponent={() => <View style={styles.bottomSpacing} />}
       />
     );
-  }, [userMemoriesData, memoriesLoading, isRefreshing, isOwnProfile, onRefresh, refetchMemories]);
+  }
 
-  const renderTreasuresContent = useCallback(() => {
+  if (selectedTab === 'treasures') {
     const treasures = finalTreasuresData?.data?.treasures || finalTreasuresData?.data || [];
+    
     return (
       <FlatList
         data={treasures}
@@ -620,6 +614,12 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
           <View style={styles.listItemContainer}>
             <TreasureCard item={item} index={index} />
           </View>
+        )}
+        ListHeaderComponent={() => (
+          <>
+            {renderProfileHeader()}
+            {renderTabNavigation()}
+          </>
         )}
         ListEmptyComponent={() => (
           finalTreasuresLoading ? (
@@ -636,7 +636,7 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
-        style={styles.tabContentList}
+        style={styles.fullScreenList}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing || finalTreasuresLoading}
@@ -651,108 +651,52 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         ListFooterComponent={() => <View style={styles.bottomSpacing} />}
       />
     );
-  }, [finalTreasuresData, finalTreasuresLoading, isRefreshing, onRefresh, finalTreasuresRefetch]);
+  }
 
-  const renderTimelineContent = useCallback(() => (
-    <TimelineScreen
-      activityData={finalActivityData}
-      isLoading={finalActivityLoading}
-      onRefresh={() => {
-        onRefresh?.();
-        finalActivityRefetch();
-      }}
-      isRefreshing={isRefreshing}
-      onMapInteractionChange={handleMapInteractionChange}
-    />
-  ), [finalActivityData, finalActivityLoading, isRefreshing, onRefresh, finalActivityRefetch, handleMapInteractionChange]);
+  if (selectedTab === 'timeline') {
+    return (
+      <TimelineScreen
+        activityData={finalActivityData}
+        isLoading={finalActivityLoading}
+        onRefresh={() => {
+          onRefresh?.();
+          finalActivityRefetch();
+        }}
+        isRefreshing={isRefreshing}
+        profileHeader={renderProfileHeader()}
+        tabNavigation={renderTabNavigation()}
+      />
+    );
+  }
 
-  const renderStatisticsContent = useCallback(() => (
-    <ScrollView 
-      showsVerticalScrollIndicator={false}
-      style={styles.tabContentList}
-      scrollEnabled={true}
-      nestedScrollEnabled={true}
-      keyboardShouldPersistTaps="handled"
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={() => onRefresh?.()}
-          tintColor={Colors.primary}
-          colors={[Colors.primary]}
-        />
-      }
-    >
-      {/* Tab Content */}
-      <View style={styles.tabContentContainer}>
-        {renderTabContent()}
-      </View>
-      
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
-  ), [isRefreshing, onRefresh]);
-
-  // Render current tab content based on selected tab
-  const getCurrentTabContent = () => {
-    switch (selectedTab) {
-      case 'journals':
-        return renderJournalsContent();
-      case 'albums':
-        return renderAlbumsContent();
-      case 'treasures':
-        return renderTreasuresContent();
-      case 'timeline':
-        return renderTimelineContent();
-      case 'statistics':
-      default:
-        return renderStatisticsContent();
-    }
-  };
-
-  // Main component render - stable structure with conditional scrolling for timeline
+  // For Statistics tab, use full-screen ScrollView
   return (
     <>
-      <View style={styles.container}>
-        {selectedTab === 'timeline' ? (
-          // Timeline tab: Use ScrollView that can be disabled during map interaction
-          <ScrollView
-            style={styles.fullScreenList}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={!isMapInteracting}
-            nestedScrollEnabled={true}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={() => {
-                  onRefresh?.();
-                  finalActivityRefetch();
-                }}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
-              />
-            }
-          >
-            {ProfileHeader}
-            {TabNavigation}
-            {getCurrentTabContent()}
-            <View style={styles.bottomSpacing} />
-          </ScrollView>
-        ) : (
-          // Other tabs: Use fixed header structure
-          <>
-            {/* Fixed Header Section */}
-            <View style={styles.headerSection}>
-              {ProfileHeader}
-              {TabNavigation}
-            </View>
-            
-            {/* Dynamic Tab Content */}
-            <View style={styles.contentSection}>
-              {getCurrentTabContent()}
-            </View>
-          </>
-        )}
-      </View>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        style={styles.fullScreenList}
+        scrollEnabled={true}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => onRefresh?.()}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+      >
+        {renderProfileHeader()}
+        {renderTabNavigation()}
+        
+        {/* Tab Content */}
+        <View style={styles.tabContentContainer}>
+          {renderTabContent()}
+        </View>
+        
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
       
       {/* Image Picker Modal - only for own profile */}
       {isOwnProfile && (
@@ -830,18 +774,6 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  headerSection: {
-    // Fixed header section that doesn't re-render
-  },
-  contentSection: {
-    flex: 1,
-  },
-  timelineContainer: {
-    flex: 1,
-  },
-  timelineContent: {
     flex: 1,
   },
   fullScreenList: {
