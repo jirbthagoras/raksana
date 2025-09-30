@@ -6,7 +6,13 @@ export default function RecyclopediaLayout() {
       <Stack.Screen 
         name="index" 
         options={{ 
-          headerShown: false 
+          headerShown: false,
+        }} 
+      />
+      <Stack.Screen 
+        name="[id]" 
+        options={{ 
+          headerShown: false,
         }} 
       />
     </Stack>

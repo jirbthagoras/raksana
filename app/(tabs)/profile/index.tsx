@@ -249,6 +249,7 @@ export default function ProfileScreen() {
           onMapInteractionChange={setIsMapInteracting}
           onRefresh={refetch}
           isRefreshing={isLoading}
+          disabledTabs={['journals', 'albums']}
         >
           {/* Logout Button */}
           <TouchableOpacity 

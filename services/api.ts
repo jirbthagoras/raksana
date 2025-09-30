@@ -417,12 +417,24 @@ class ApiService {
   async scanTrash(imageUri: string): Promise<any> {
     console.log('📸 Scanning trash with image:', imageUri);
     
+    // Generate custom UUID for image filename
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+    
+    const customImageName = `trash_scan_${generateUUID()}.jpg`;
+    console.log('📸 Using custom image name:', customImageName);
+    
     // Create FormData for image upload
     const formData = new FormData();
     formData.append('image', {
       uri: imageUri,
       type: 'image/jpeg',
-      name: 'trash_scan.jpg',
+      name: customImageName,
     } as any);
 
     const response: AxiosResponse<any> = await this.api.post('/scan/trash', formData, {

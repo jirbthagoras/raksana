@@ -7,7 +7,6 @@ import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   StyleSheet,
   Text,
@@ -18,31 +17,45 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScanResultModal } from '../../components/Modals/ScanResultModal';
 import { useScanTrash } from '../../hooks/useApiQueries';
 import { TrashScanResult } from '../../types/auth';
+import { ErrorProvider, useError } from '../../contexts/ErrorContext';
+import LoadingOverlay from '../../components/Screens/LoadingComponent';
 
-export default function ScanScreen() {
+function ScanContent() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<TrashScanResult | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const scanTrashMutation = useScanTrash();
+  const { showPopUp } = useError();
 
   const handleBack = () => {
     router.back();
   };
 
   const requestPermissions = async () => {
-    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-    const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (cameraStatus !== 'granted' || mediaStatus !== 'granted') {
-      Alert.alert(
-        'Izin Diperlukan',
-        'Aplikasi memerlukan izin kamera dan galeri untuk memindai sampah.',
-        [{ text: 'OK' }]
+    try {
+      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (cameraStatus !== 'granted' || mediaStatus !== 'granted') {
+        showPopUp(
+          'Izin Diperlukan',
+          'Aplikasi memerlukan izin kamera dan galeri untuk memindai sampah. Silakan berikan izin di pengaturan aplikasi.',
+          'warning'
+        );
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Permission request error:', error);
+      showPopUp(
+        'Error Izin',
+        'Terjadi kesalahan saat meminta izin. Silakan coba lagi.',
+        'error'
       );
       return false;
     }
-    return true;
   };
 
   const pickImageFromCamera = async () => {
@@ -50,18 +63,44 @@ export default function ScanScreen() {
     if (!hasPermission) return;
 
     try {
+      setIsProcessing(true);
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
+        allowsMultipleSelection: false,
       });
 
       if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
+        const asset = result.assets[0];
+        
+        // Validate image size (max 10MB)
+        if (asset.fileSize && asset.fileSize > 10 * 1024 * 1024) {
+          showPopUp(
+            'File Terlalu Besar',
+            'Ukuran gambar tidak boleh lebih dari 10MB. Silakan pilih gambar yang lebih kecil.',
+            'warning'
+          );
+          return;
+        }
+        
+        setSelectedImage(asset.uri);
+        showPopUp(
+          'Foto Berhasil Diambil',
+          'Foto berhasil diambil dari kamera. Tap "Scan Sampah" untuk memulai analisis.',
+          'info'
+        );
       }
-    } catch (error) {
-      Alert.alert('Error', 'Gagal mengambil foto dari kamera');
+    } catch (error: any) {
+      console.error('Camera error:', error);
+      showPopUp(
+        'Error Kamera',
+        error.message || 'Gagal mengambil foto dari kamera. Pastikan kamera berfungsi dengan baik.',
+        'error'
+      );
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -70,37 +109,136 @@ export default function ScanScreen() {
     if (!hasPermission) return;
 
     try {
+      setIsProcessing(true);
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
+        allowsMultipleSelection: false,
       });
 
       if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
+        const asset = result.assets[0];
+        
+        // Validate image size (max 10MB)
+        if (asset.fileSize && asset.fileSize > 10 * 1024 * 1024) {
+          showPopUp(
+            'File Terlalu Besar',
+            'Ukuran gambar tidak boleh lebih dari 10MB. Silakan pilih gambar yang lebih kecil.',
+            'warning'
+          );
+          return;
+        }
+        
+        // Validate image format
+        const validFormats = ['jpg', 'jpeg', 'png', 'webp'];
+        const fileExtension = asset.uri.split('.').pop()?.toLowerCase();
+        if (!fileExtension || !validFormats.includes(fileExtension)) {
+          showPopUp(
+            'Format Tidak Didukung',
+            'Format gambar harus JPG, JPEG, PNG, atau WebP.',
+            'warning'
+          );
+          return;
+        }
+        
+        setSelectedImage(asset.uri);
+        showPopUp(
+          'Foto Berhasil Dipilih',
+          'Foto berhasil dipilih dari galeri. Tap "Scan Sampah" untuk memulai analisis.',
+          'info'
+        );
       }
-    } catch (error) {
-      Alert.alert('Error', 'Gagal mengambil foto dari galeri');
+    } catch (error: any) {
+      console.error('Gallery error:', error);
+      showPopUp(
+        'Error Galeri',
+        error.message || 'Gagal mengambil foto dari galeri. Pastikan aplikasi memiliki akses ke galeri.',
+        'error'
+      );
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleScanTrash = async () => {
     if (!selectedImage) {
-      Alert.alert('Error', 'Pilih gambar terlebih dahulu');
+      showPopUp(
+        'Gambar Belum Dipilih',
+        'Silakan pilih atau ambil foto terlebih dahulu sebelum memindai.',
+        'warning'
+      );
       return;
     }
 
     try {
+      setIsProcessing(true);
+      console.log('🔍 Starting trash scan for image:', selectedImage);
+      
       const response = await scanTrashMutation.mutateAsync(selectedImage);
+      
+      if (!response || !response.data) {
+        throw new Error('Response data tidak valid dari server');
+      }
+      
+      console.log('✅ Scan successful:', response.data);
       setScanResult(response.data);
       setShowResultModal(true);
       setSelectedImage(null); // Reset selected image
-    } catch (error: any) {
-      Alert.alert(
-        'Scan Gagal',
-        error.message || 'Terjadi kesalahan saat memindai sampah'
+      
+      showPopUp(
+        'Scan Berhasil!',
+        `Berhasil mengidentifikasi ${response.data.items?.length || 0} ide daur ulang dari gambar Anda.`,
+        'info'
       );
+      
+    } catch (error: any) {
+      console.error('❌ Scan error:', error);
+      
+      let errorTitle = 'Scan Gagal';
+      let errorMessage = 'Terjadi kesalahan saat memindai sampah';
+      
+      // Handle specific error types
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        switch (status) {
+          case 400:
+            errorTitle = 'Gambar Tidak Valid';
+            errorMessage = data?.message || 'Format atau kualitas gambar tidak sesuai. Silakan coba dengan gambar yang lebih jelas.';
+            break;
+          case 413:
+            errorTitle = 'File Terlalu Besar';
+            errorMessage = 'Ukuran file gambar terlalu besar. Silakan kompres gambar atau pilih gambar yang lebih kecil.';
+            break;
+          case 429:
+            errorTitle = 'Terlalu Banyak Permintaan';
+            errorMessage = 'Anda telah melakukan terlalu banyak scan. Silakan tunggu beberapa saat sebelum mencoba lagi.';
+            break;
+          case 500:
+            errorTitle = 'Server Error';
+            errorMessage = 'Terjadi kesalahan pada server. Silakan coba lagi dalam beberapa saat.';
+            break;
+          case 503:
+            errorTitle = 'Layanan Tidak Tersedia';
+            errorMessage = 'Layanan scan sedang dalam pemeliharaan. Silakan coba lagi nanti.';
+            break;
+          default:
+            errorMessage = data?.message || `Error ${status}: ${error.message}`;
+        }
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network')) {
+        errorTitle = 'Koneksi Bermasalah';
+        errorMessage = 'Periksa koneksi internet Anda dan coba lagi.';
+      } else if (error.message.includes('timeout')) {
+        errorTitle = 'Timeout';
+        errorMessage = 'Proses scan memakan waktu terlalu lama. Silakan coba dengan gambar yang lebih kecil.';
+      }
+      
+      showPopUp(errorTitle, errorMessage, 'error');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -171,7 +309,7 @@ export default function ScanScreen() {
             <TouchableOpacity
               style={[styles.actionButton, styles.cameraButton]}
               onPress={pickImageFromCamera}
-              disabled={scanTrashMutation.isPending}
+              disabled={scanTrashMutation.isPending || isProcessing}
             >
               <LinearGradient
                 colors={[Colors.primary, Colors.secondary]}
@@ -185,7 +323,7 @@ export default function ScanScreen() {
             <TouchableOpacity
               style={[styles.actionButton, styles.galleryButton]}
               onPress={pickImageFromGallery}
-              disabled={scanTrashMutation.isPending}
+              disabled={scanTrashMutation.isPending || isProcessing}
             >
               <View style={styles.buttonSolid}>
                 <FontAwesome5 name="images" size={20} color={Colors.primary} />
@@ -204,19 +342,19 @@ export default function ScanScreen() {
               <TouchableOpacity
                 style={styles.scanButton}
                 onPress={handleScanTrash}
-                disabled={scanTrashMutation.isPending}
+                disabled={scanTrashMutation.isPending || isProcessing}
               >
                 <LinearGradient
                   colors={[Colors.secondary, Colors.tertiary]}
                   style={styles.scanButtonGradient}
                 >
-                  {scanTrashMutation.isPending ? (
+                  {(scanTrashMutation.isPending || isProcessing) ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
                     <FontAwesome5 name="search" size={20} color="white" />
                   )}
                   <Text style={styles.scanButtonText}>
-                    {scanTrashMutation.isPending ? 'Memindai...' : 'Scan Sampah'}
+                    {(scanTrashMutation.isPending || isProcessing) ? 'Memindai...' : 'Scan Sampah'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -255,7 +393,18 @@ export default function ScanScreen() {
         onClose={handleCloseResultModal}
         scanResult={scanResult}
       />
+      
+      {/* Loading Overlay */}
+      <LoadingOverlay visible={isProcessing} />
     </SafeAreaView>
+  );
+}
+
+export default function ScanScreen() {
+  return (
+    <ErrorProvider>
+      <ScanContent />
+    </ErrorProvider>
   );
 }
 

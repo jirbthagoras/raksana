@@ -63,6 +63,7 @@ interface ProfileViewProps {
   onMapInteractionChange?: (isInteracting: boolean) => void; // Callback for map interaction state
   onRefresh?: () => void; // Callback for pull-to-refresh
   isRefreshing?: boolean; // Loading state for refresh
+  disabledTabs?: string[]; // Array of tab IDs to disable
 }
 
 interface ProfileTab {
@@ -71,7 +72,7 @@ interface ProfileTab {
   icon: string;
 }
 
-export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate, onMapInteractionChange, onRefresh, isRefreshing = false }: ProfileViewProps) {
+export default function ProfileView({ profileData, isOwnProfile = false, children, onProfileUpdate, onMapInteractionChange, onRefresh, isRefreshing = false, disabledTabs = [] }: ProfileViewProps) {
   const [selectedTab, setSelectedTab] = useState('statistics');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -126,20 +127,17 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
   const finalTreasuresRefetch = isOwnProfile ? refetchTreasures : refetchOtherTreasures;
 
 
-  // Conditional tabs based on profile type
-  const tabs: ProfileTab[] = isOwnProfile 
-    ? [
-        { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
-        { id: 'treasures', name: 'Treasures', icon: 'gem' },
-        { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
-      ]
-    : [
-        { id: 'statistics', name: 'Statistics', icon: 'chart-bar' },
-        { id: 'journals', name: 'Journals', icon: 'book' },
-        { id: 'albums', name: 'Albums', icon: 'images' },
-        { id: 'treasures', name: 'Treasures', icon: 'gem' },
-        { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
-      ];
+  // All tabs available for both profile types
+  const allTabs: ProfileTab[] = [
+    { id: 'statistics', name: 'Stats', icon: 'chart-bar' },
+    { id: 'journals', name: 'Journals', icon: 'book' },
+    { id: 'albums', name: 'Albums', icon: 'images' },
+    { id: 'treasures', name: 'Treasures', icon: 'gem' },
+    { id: 'timeline', name: 'Timeline', icon: 'map-marker-alt' },
+  ];
+
+  // Filter out disabled tabs
+  const tabs = allTabs.filter(tab => !disabledTabs.includes(tab.id));
 
   const handleEditProfilePicture = async () => {
     try {
@@ -466,12 +464,7 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
   // Render tab navigation
   const renderTabNavigation = () => (
     <View style={styles.tabHeaderContainer}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabHeader}
-        style={styles.tabScrollView}
-      >
+      <View style={styles.tabContainer}>
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab.id}
@@ -483,20 +476,15 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
           >
             <FontAwesome5 
               name={tab.icon} 
-              size={16} 
+              size={18} 
               color={selectedTab === tab.id ? Colors.primary : Colors.secondary} 
-              style={{ marginBottom: 4 }}
+              style={{ marginBottom: 6 }}
             />
-            <Text style={[
-              styles.tabText,
-              selectedTab === tab.id && styles.activeTabText,
-            ]}>
-              {tab.name}
-            </Text>
+
             {selectedTab === tab.id && <View style={styles.tabIndicator} />}
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 
@@ -1016,42 +1004,57 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
   },
-  tabScrollView: {
+  tabContainer: {
     backgroundColor: Colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.outline + '20',
-  },
-  tabHeader: {
     flexDirection: 'row',
-    padding: 4,
-    paddingRight: 20, // Extra padding for scroll
+    flexWrap: 'wrap',
+    padding: 6,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   tabItem: {
-    minWidth: 100,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    flex: 1,
+    minWidth: 0,
+    paddingVertical: 16,
+    paddingHorizontal: 6,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
-    marginRight: 4,
+    minHeight: 70,
   },
   activeTabItem: {
-    backgroundColor: Colors.primary + '10',
+    backgroundColor: Colors.primary + '15',
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
   },
   tabText: {
     fontFamily: Fonts.text.bold,
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.secondary,
+    textAlign: 'center',
+    lineHeight: 14,
   },
   activeTabText: {
     color: Colors.primary,
+    fontSize: 13,
+    fontFamily: Fonts.display.bold,
   },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
-    left: 12,
-    right: 12,
+    left: 8,
+    right: 8,
     height: 2,
     backgroundColor: Colors.primary,
     borderRadius: 1,

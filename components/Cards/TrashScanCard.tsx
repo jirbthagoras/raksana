@@ -1,10 +1,9 @@
 import { Colors, Fonts } from '@/constants';
-import { RecyclingItem, TrashScan } from '@/types/auth';
+import { TrashScan } from '@/types/auth';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView } from 'moti';
-import React, { useState } from 'react';
-import LoadingOverlay from '@/components/Screens/LoadingComponent';
+import { router } from 'expo-router';
+import React from 'react';
 import {
   Image,
   StyleSheet,
@@ -12,51 +11,19 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { RecyclingItemCard } from '@/components/Cards/RecyclingItemCard';
 
 interface TrashScanCardProps {
   item: TrashScan;
   index: number;
-  onLoadingChange?: (isLoading: boolean) => void;
 }
 
-export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index, onLoadingChange }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isCreatingGreenprint, setIsCreatingGreenprint] = useState(false);
-
-  const handleLoadingChange = (isLoading: boolean) => {
-    setIsCreatingGreenprint(isLoading);
-    onLoadingChange?.(isLoading);
-  };
-
-  const getValueColor = (value: string) => {
-    switch (value) {
-      case 'high':
-        return Colors.primary;
-      case 'mid':
-        return Colors.secondary;
-      case 'low':
-        return Colors.tertiary;
-      default:
-        return Colors.onSurfaceVariant;
-    }
-  };
-
-  const getValueText = (value: string) => {
-    switch (value) {
-      case 'high':
-        return 'Tinggi';
-      case 'mid':
-        return 'Sedang';
-      case 'low':
-        return 'Rendah';
-      default:
-        return 'Unknown';
-    }
+export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index }) => {
+  const handleCardPress = () => {
+    router.push(`/recyclopedia/${index}`);
   };
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={handleCardPress} activeOpacity={0.8}>
       <LinearGradient
         colors={[Colors.surface, Colors.surfaceContainerHigh]}
         style={styles.card}
@@ -72,7 +39,7 @@ export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index, onLoa
           />
           
           <View style={styles.headerContent}>
-            <Text style={styles.title}>
+            <Text style={styles.title} numberOfLines={2}>
               {item.title}
             </Text>
             
@@ -93,66 +60,29 @@ export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index, onLoa
             </View>
           </View>
 
-          <TouchableOpacity
-            onPress={() => setIsExpanded(!isExpanded)}
-            style={styles.expandButton}
-          >
+          <View style={styles.chevronContainer}>
             <FontAwesome5 
-              name={isExpanded ? "chevron-up" : "chevron-down"} 
+              name="chevron-right" 
               size={14} 
               color={Colors.primary} 
             />
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Description */}
-        <Text style={styles.description}>
+        <Text style={styles.description} numberOfLines={3}>
           {item.description}
         </Text>
 
-        {/* Recycling Items - Expandable */}
-        {isExpanded && (
-          <MotiView
-            from={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            transition={{ type: 'timing', duration: 300 }}
-            style={styles.recyclingItemsContainer}
-          >
-            <View style={styles.sectionHeader}>
-              <FontAwesome5 name="recycle" size={14} color={Colors.primary} />
-              <Text style={styles.sectionTitle}>Ide Daur Ulang</Text>
-            </View>
-            
-            {item.items.map((recyclingItem: RecyclingItem, itemIndex: number) => (
-              <RecyclingItemCard 
-                key={`${item.title}-${recyclingItem.id || itemIndex}-${itemIndex}`} 
-                item={recyclingItem} 
-                index={itemIndex}
-                getValueColor={getValueColor}
-                getValueText={getValueText}
-                onLoadingChange={handleLoadingChange}
-              />
-            ))}
-          </MotiView>
-        )}
-
-        {/* Footer with expand hint */}
-        {!isExpanded && (
-          <TouchableOpacity
-            onPress={() => setIsExpanded(true)}
-            style={styles.expandHint}
-          >
-            <Text style={styles.expandHintText}>
-              Tap untuk melihat {item.items.length} ide daur ulang
-            </Text>
-            <FontAwesome5 name="chevron-down" size={10} color={Colors.secondary} />
-          </TouchableOpacity>
-        )}
+        {/* Footer with tap hint */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Tap untuk melihat {item.items.length} ide daur ulang
+          </Text>
+          <FontAwesome5 name="arrow-right" size={10} color={Colors.secondary} />
+        </View>
       </LinearGradient>
-      
-      {/* Full Screen Loading Overlay */}
-      <LoadingOverlay visible={isCreatingGreenprint} />
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -207,7 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.onSurfaceVariant,
   },
-  expandButton: {
+  chevronContainer: {
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -222,31 +152,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 12,
   },
-  recyclingItemsContainer: {
-    marginTop: 8,
-  },
-  sectionHeader: {
+  footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
-  },
-  sectionTitle: {
-    fontFamily: Fonts.display.medium,
-    fontSize: 14,
-    color: Colors.primary,
-  },
-  expandHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 8,
-    gap: 6,
+    paddingHorizontal: 4,
     marginTop: 4,
   },
-  expandHintText: {
+  footerText: {
     fontFamily: Fonts.text.regular,
     fontSize: 12,
     color: Colors.secondary,
+    flex: 1,
   },
 });
