@@ -54,7 +54,7 @@ export const LogoutConfirmationPopup: React.FC<LogoutConfirmationPopupProps> = (
             {/* Message */}
             <View style={styles.messageContainer}>
               <Text style={styles.message}>
-                Are you sure you want to logout? You'll need to sign in again to access your account.
+                Yakin ingin keluar? Anda perlu memasukkan kredensial untuk masuk ke dalam aplikasi lagi.
               </Text>
             </View>
 

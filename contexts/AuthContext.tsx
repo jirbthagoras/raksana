@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext } from 'react';
-import { AuthState, LoginCredentials, RegisterCredentials, User } from '../types/auth';
+import { AuthResponse, AuthState, LoginCredentials, RegisterCredentials, User } from '../types/auth';
 import { 
   useAuthStatus, 
   useLoginMutation, 
@@ -12,7 +12,7 @@ import { authKeys } from '../hooks/useAuthQueries';
 // Auth Context Type - now powered by TanStack Query
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<{ success: boolean; message: string; }>;
+  register: (credentials: RegisterCredentials) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
   checkAuthState: () => Promise<void>;

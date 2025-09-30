@@ -37,7 +37,10 @@ export interface AuthResponse {
 }
 
 export interface RegisterResponse {
-  message: string;
+  email: string;
+  name: string;
+  username: string;
+  token: string;
 }
 
 export interface ApiError {
@@ -244,6 +247,7 @@ export interface Challenge {
   difficulty: string;
   name: string;
   description: string;
+  point_gain: number;
 }
 
 export interface ChallengesResponse {

@@ -72,10 +72,44 @@ export function useLoginMutation() {
 
 // Register mutation
 export function useRegisterMutation() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
-    mutationFn: async (credentials: RegisterCredentials) => {
+    mutationFn: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
       const response = await apiService.register(credentials);
-      return { success: true, message: 'Registrasi berhasil! Silakan login dengan akun Anda.' };
+      // Save token after successful registration
+      await apiService.saveAuthToken(response.token);
+      
+      // Transform RegisterResponse to AuthResponse format
+      const authResponse: AuthResponse = {
+        user: {
+          id: '', // Will be populated from profile fetch
+          email: response.email,
+          username: response.username,
+          name: response.name,
+        },
+        token: response.token,
+      };
+      
+      return authResponse;
+    },
+    onSuccess: async (data) => {
+      // Update token cache
+      queryClient.setQueryData(authKeys.token(), data.token);
+      // Update profile cache
+      queryClient.setQueryData(authKeys.profile(), data.user);
+      // Cache auth state in AsyncStorage for fast startup
+      await AsyncStorage.setItem('auth_state', JSON.stringify({
+        isAuthenticated: true,
+        user: data.user,
+        timestamp: Date.now()
+      }));
+      // Invalidate and refetch related queries
+      queryClient.invalidateQueries({ queryKey: authKeys.all });
+    },
+    onError: () => {
+      // Clear any cached auth data on registration failure
+      queryClient.removeQueries({ queryKey: authKeys.all });
     },
   });
 }

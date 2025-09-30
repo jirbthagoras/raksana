@@ -44,9 +44,9 @@ export default function RegisterScreen() {
 
     try {
       const result = await register({ email, username, name, password, password_confirmation: confirmPassword });
-      if (result?.success) {
-        showPopUp(result.message, 'Registration Successful', "info");
-        setTimeout(() => router.replace('/login'), 2000);
+      if (result?.user && result?.token) {
+        showPopUp('Registrasi berhasil! Selamat datang di Raksana!', 'Registration Successful', "info");
+        setTimeout(() => router.replace('/onboarding'), 1500);
       }
     } catch (error: any) {
       showPopUp(error.message || 'Terjadi kesalahan saat registrasi', 'Registrasi Gagal', 'error');

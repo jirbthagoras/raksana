@@ -3,7 +3,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -47,6 +47,7 @@ function ChallengesScreenContent({ onInfoPress }: { onInfoPress: () => void }) {
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const pagerRef = useRef<PagerView>(null);
+  const tabScrollRef = useRef<ScrollView>(null);
   
   const {
     data: challengesData,
@@ -68,14 +69,38 @@ function ChallengesScreenContent({ onInfoPress }: { onInfoPress: () => void }) {
     router.back();
   };
 
+  const scrollToTab = useCallback((index: number) => {
+    if (tabScrollRef.current && challenges.length > 0) {
+      const tabWidth = 100 + 12; // minWidth + gap
+      const scrollPosition = Math.max(0, (index * tabWidth) - (width / 2) + (tabWidth / 2));
+      tabScrollRef.current.scrollTo({
+        x: scrollPosition,
+        animated: true,
+      });
+    }
+  }, [challenges.length]);
+
+  // Scroll to active tab when challenges load or selected index changes
+  useEffect(() => {
+    if (challenges.length > 0) {
+      // Small delay to ensure ScrollView is rendered
+      const timer = setTimeout(() => {
+        scrollToTab(selectedChallengeIndex);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [challenges.length, selectedChallengeIndex, scrollToTab]);
+
   const handleTabPress = useCallback((index: number) => {
     setSelectedChallengeIndex(index);
     pagerRef.current?.setPage(index);
-  }, []);
+    scrollToTab(index);
+  }, [scrollToTab]);
 
   const handlePageSelected = (event: any) => {
     const { position } = event.nativeEvent;
     setSelectedChallengeIndex(position);
+    scrollToTab(position);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -120,8 +145,8 @@ function ChallengesScreenContent({ onInfoPress }: { onInfoPress: () => void }) {
             style={styles.descriptionGradient}
           >
             <View style={styles.descriptionHeader}>
-              <FontAwesome5 name="info-circle" size={18} color={Colors.primary} />
-              <Text style={styles.descriptionTitle}>Description</Text>
+              <FontAwesome5 name="trophy" size={18} color={Colors.primary} />
+              <Text style={styles.descriptionTitle}>{challenge.name}</Text>
             </View>
             <Text style={styles.descriptionText}>
               {challenge.description}
@@ -221,20 +246,13 @@ function ChallengesScreenContent({ onInfoPress }: { onInfoPress: () => void }) {
             style={styles.tabGradient}
           >
             <View style={styles.tabContent}>
-              <View style={styles.tabHeader}>
-                <View style={styles.tabDayContainer}>
-                  <FontAwesome5 
-                    name="calendar-day" 
-                    size={12} 
-                    color={isSelected ? Colors.primary : Colors.onSurfaceVariant} 
-                  />
-                  <Text style={[
-                    styles.tabDay,
-                    isSelected && styles.tabDayActive
-                  ]}>
-                    Day {challenge.day}
-                  </Text>
-                </View>
+              <View style={styles.tabCenterContainer}>
+                <Text style={[
+                  styles.tabDayNumber,
+                  isSelected && styles.tabDayNumberActive
+                ]}>
+                  {challenge.day}
+                </Text>
                 <View style={[
                   styles.difficultyBadge,
                   { backgroundColor: difficultyColor }
@@ -244,12 +262,6 @@ function ChallengesScreenContent({ onInfoPress }: { onInfoPress: () => void }) {
                   </Text>
                 </View>
               </View>
-              <Text style={[
-                styles.tabTitle,
-                isSelected && styles.tabTitleActive
-              ]} numberOfLines={2}>
-                {challenge.name}
-              </Text>
             </View>
           </LinearGradient>
           {isSelected && (
@@ -358,6 +370,7 @@ function ChallengesScreenContent({ onInfoPress }: { onInfoPress: () => void }) {
         style={styles.tabsSection}
       >
         <ScrollView
+          ref={tabScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsContainer}
@@ -504,7 +517,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   tabButton: {
-    minWidth: 200,
+    minWidth: 100,
   },
   tabButtonActive: {
     // Handled by container styles
@@ -557,6 +570,18 @@ const styles = StyleSheet.create({
   tabTitleActive: {
     color: Colors.primary,
   },
+  tabCenterContainer: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  tabDayNumber: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 24,
+    color: Colors.onSurface,
+  },
+  tabDayNumberActive: {
+    color: Colors.primary,
+  },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
@@ -600,6 +625,21 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display.bold,
     fontSize: 16,
     color: Colors.primary,
+    flex: 1,
+  },
+  pointsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  pointsText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
+    color: Colors.onPrimary,
   },
   descriptionText: {
     fontFamily: Fonts.text.regular,
