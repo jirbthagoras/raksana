@@ -29,7 +29,7 @@ import { useRouter } from 'expo-router';
 import HomePageSkeleton from '../../components/Screens/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
 import { ErrorProvider } from '../../contexts/ErrorContext';
-import { useProfileMe, useRegions } from '../../hooks/useApiQueries';
+import { useProfileMe, useRegions, useDailyChallenge } from '../../hooks/useApiQueries';
 
 const { width } = Dimensions.get('window');
 
@@ -137,6 +137,11 @@ export default function HomeTab() {
     refetch: refetchRegions
   } = useRegions();
 
+  // Use TanStack Query for daily challenge data
+  const { 
+    refetch: refetchDailyChallenge
+  } = useDailyChallenge();
+
   // Debug regions data
   React.useEffect(() => {
     console.log('🏠 Home - regionsData:', regionsData);
@@ -147,8 +152,8 @@ export default function HomeTab() {
 
   // Handle refresh
   const handleRefresh = React.useCallback(async () => {
-    await Promise.all([refetch(), refetchRegions()]);
-  }, [refetch, refetchRegions]);
+    await Promise.all([refetch(), refetchRegions(), refetchDailyChallenge()]);
+  }, [refetch, refetchRegions, refetchDailyChallenge]);
 
   // Handle quest found
   const handleQuestFound = (clue: string) => {

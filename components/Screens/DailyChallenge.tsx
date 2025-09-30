@@ -65,20 +65,7 @@ export default function WeeklyChallenge({ onPress }: Props) {
     }
   }, [challengeData]);
 
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scaleValue, {
-        toValue: 0.98,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleValue, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    
+  const handleParticipatePress = () => {
     // Navigate to album/create with challenge parameters
     if (challengeData) {
       router.push({
@@ -167,11 +154,7 @@ export default function WeeklyChallenge({ onPress }: Props) {
         },
       ]}
     >
-      <TouchableOpacity
-        activeOpacity={0.95}
-        onPress={handlePress}
-        style={styles.touchable}
-      >
+      <View style={styles.touchable}>
         <LinearGradient
           colors={[Colors.surface, Colors.surfaceContainerHigh]}
           style={styles.card}
@@ -268,18 +251,18 @@ export default function WeeklyChallenge({ onPress }: Props) {
             </View>
 
             {/* Action button */}
-            <TouchableOpacity style={styles.actionButton} onPress={handlePress}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleParticipatePress}>
               <LinearGradient
                 colors={[Colors.primary + '20', Colors.secondary + '20']}
                 style={styles.actionButtonGradient}
               >
                 <FontAwesome5 name="play" size={12} color={Colors.primary} />
-                <Text style={styles.actionButtonText}>Participate</Text>
+                <Text style={styles.actionButtonText}>Ikuti</Text>
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
         </LinearGradient>
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   );
 }

@@ -1,64 +1,160 @@
-# Raksana App User Flow - Mermaid Syntax
+# Raksana App User Flow - Complete Mermaid Syntax
 
-## Complete Mermaid Flowchart
+## Complete User Experience Flowchart
 
 ```mermaid
+---
+config:
+    theme: redux
+---
 flowchart TD
     %% Authentication Flow
-    START([Start App]) --> AUTH{Authenticated?}
-    AUTH -->|Yes| HOME[Home Screen]
-    AUTH -->|No| WELCOME[Welcome Screen]
+    START([Start App]) --> FASTAUTH{Fast Auth Check}
+    FASTAUTH -->|Authenticated| HOME[🏠 Home Screen]
+    FASTAUTH -->|Not Authenticated| WELCOME[👋 Welcome Screen]
     
     WELCOME --> HASACCT{Has Account?}
-    HASACCT -->|Yes| LOGIN[Login Screen]
-    HASACCT -->|No| REGISTER[Register Screen]
+    HASACCT -->|Yes| LOGIN[🔐 Login Screen]
+    HASACCT -->|No| REGISTER[📝 Register Screen]
     
     LOGIN --> LOGINOK{Login Success?}
     LOGINOK -->|Yes| HOME
-    LOGINOK -->|No| LERROR[Login Error]
+    LOGINOK -->|No| LERROR[❌ Login Error]
     LERROR --> LOGIN
     
     REGISTER --> REGOK{Registration Success?}
     REGOK -->|Yes| LOGIN
-    REGOK -->|No| RERROR[Registration Error]
+    REGOK -->|No| RERROR[❌ Registration Error]
     RERROR --> REGISTER
     
-    %% Main Navigation
-    HOME --> PACKETS[Packets Screen]
-    HOME --> PROFILE[Profile Screen]
-    HOME --> JOURNAL[Journal Screen]
-    HOME --> LEADERBOARD[Leaderboard Screen]
+    %% Main Tab Navigation (Bottom Tabs)
+    HOME --> PACKETS[📁 Habit/Packets Tab]
+    HOME --> QR[📱 QR Scanner Tab]
+    HOME --> EXPLORE[🧭 Explore Tab]
+    HOME --> PROFILE[👤 Yard/Profile Tab]
     
-    %% Packets Flow
-    PACKETS --> CREATEPKT[Create Packet Screen]
-    PACKETS --> COMPLETETASK[Complete Task]
+    %% Home Screen Quick Actions
+    HOME --> JOURNAL[📖 Journal Screen]
+    HOME --> ALBUM[📸 Album/Memory Screen]
+    HOME --> EVENTS[📅 Events Screen]
+    HOME --> CHALLENGES[🏆 Challenges Screen]
+    HOME --> LEADERBOARD[👑 Leaderboard Screen]
+    HOME --> RECAPS[📊 Recaps Screen]
+    HOME --> RECYCLOPEDIA[♻️ Recyclopedia Screen]
+    HOME --> NEARBYQUEST[🎯 Nearby Quest Locator]
+    
+    %% Packets/Habits Flow
+    PACKETS --> PACKETDETAIL[📋 Packet Detail Screen]
+    PACKETS --> CREATEPKT[➕ Create Packet Screen]
+    PACKETDETAIL --> COMPLETETASK[✅ Complete Task]
     CREATEPKT --> PACKETS
-    COMPLETETASK --> TASKPOPUP[Success Popup]
-    TASKPOPUP --> PACKETS
+    COMPLETETASK --> TASKPOPUP[🎉 Success Popup]
+    TASKPOPUP --> UNLOCKCHECK{Packet Unlocked?}
+    UNLOCKCHECK -->|Yes| UNLOCKPOPUP[🔓 Unlock Popup]
+    UNLOCKCHECK -->|No| PACKETS
+    UNLOCKPOPUP --> PACKETS
     
-    %% Profile Flow
-    PROFILE --> SETTINGS[Settings Screen]
-    PROFILE --> LOGOUT[Logout]
-    SETTINGS --> PROFILE
+    %% QR Scanner Flow
+    QR --> SCANRESULT[📊 Scan Result]
+    SCANRESULT --> HOME
+    
+    %% Explore Flow
+    EXPLORE --> USERPROFILE[👥 User Profile View]
+    USERPROFILE --> USERTABS{Profile Tabs}
+    USERTABS --> USERSTATISTICS[📈 User Statistics]
+    USERTABS --> USERJOURNALS[📝 User Journals]
+    USERTABS --> USERALBUMS[🖼️ User Albums]
+    USERTABS --> USERTIMELINE[🗺️ User Timeline]
+    
+    %% Profile/Yard Flow
+    PROFILE --> PROFILETABS{Profile Tabs}
+    PROFILETABS --> STATISTICS[📈 Statistics Tab]
+    PROFILETABS --> TREASURES[💎 Treasures Tab]
+    PROFILETABS --> TIMELINE[🗺️ Timeline Tab]
+    PROFILE --> EDITPROFILE[✏️ Edit Profile]
+    PROFILE --> LOGOUT[🚪 Logout]
+    EDITPROFILE --> PROFILE
     LOGOUT --> WELCOME
     
+    %% Timeline Interaction
+    TIMELINE --> TIMELINEDETAIL[📍 Activity Detail]
+    TIMELINEDETAIL --> TIMELINE
+    USERTIMELINE --> USERTIMELINEDETAIL[📍 User Activity Detail]
+    USERTIMELINEDETAIL --> USERTIMELINE
+    
     %% Journal Flow
-    JOURNAL --> CREATEJOURNAL[Create Journal Screen]
+    JOURNAL --> CREATEJOURNAL[✍️ Create Journal Entry]
     CREATEJOURNAL --> JOURNAL
     
-    %% Return to Home
+    %% Album/Memory Flow
+    ALBUM --> CREATEMEMORY[📷 Create Memory]
+    CREATEMEMORY --> ALBUM
+    
+    %% Events Flow
+    EVENTS --> EVENTTABS{Event Tabs}
+    EVENTTABS --> ALLEVENTS[📅 All Events]
+    EVENTTABS --> UPCOMING[⏰ Upcoming Events]
+    EVENTTABS --> ONGOING[▶️ Ongoing Events]
+    EVENTTABS --> ENDED[✅ Ended Events]
+    
+    ALLEVENTS --> EVENTDETAIL[📋 Event Detail]
+    UPCOMING --> EVENTDETAIL
+    ONGOING --> EVENTDETAIL
+    ENDED --> EVENTDETAIL
+    
+    EVENTDETAIL --> EVENTREGISTER[📝 Event Registration]
+    EVENTDETAIL --> EVENTMAP[🗺️ Event Location]
+    EVENTREGISTER --> EVENTDETAIL
+    EVENTMAP --> EVENTDETAIL
+    
+    EVENTS --> PENDINGEVENTS[⏳ Pending Events]
+    PENDINGEVENTS --> EVENTDETAIL
+    
+    %% Challenges Flow
+    CHALLENGES --> CHALLENGEDETAIL[🏆 Challenge Detail]
+    CHALLENGEDETAIL --> CHALLENGEPARTICIPANTS[👥 Challenge Participants]
+    CHALLENGEPARTICIPANTS --> CHALLENGEDETAIL
+    
+    %% Leaderboard Flow
+    LEADERBOARD --> LEADERBOARDUSER[👤 Leaderboard User Profile]
+    LEADERBOARDUSER --> LEADERBOARD
+    
+    %% Recaps Flow
+    RECAPS --> WEEKLYRECAP[📊 Weekly Recap]
+    RECAPS --> MONTHLYRECAP[📈 Monthly Recap]
+    WEEKLYRECAP --> RECAPS
+    MONTHLYRECAP --> RECAPS
+    
+    %% Additional Screens
+    RECYCLOPEDIA --> HOME
+    NEARBYQUEST --> QUESTFOUND[🎯 Quest Found Popup]
+    QUESTFOUND --> HOME
+    
+    %% Return Navigation
+    JOURNAL --> HOME
+    ALBUM --> HOME
+    EVENTS --> HOME
+    CHALLENGES --> HOME
     LEADERBOARD --> HOME
+    RECAPS --> HOME
+    RECYCLOPEDIA --> HOME
     
     %% Styling
-    classDef startEnd fill:#e1f5fe
-    classDef screen fill:#f3e5f5
-    classDef decision fill:#fff3e0
-    classDef error fill:#ffebee
+    classDef startEnd fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef mainScreen fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef tabScreen fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef detailScreen fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef decision fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    classDef popup fill:#ffebee,stroke:#c62828,stroke-width:2px
+    classDef action fill:#e0f2f1,stroke:#00695c,stroke-width:2px
     
     class START,HOME startEnd
-    class WELCOME,LOGIN,REGISTER,PACKETS,PROFILE,JOURNAL,LEADERBOARD,CREATEPKT,SETTINGS,CREATEJOURNAL screen
-    class AUTH,HASACCT,LOGINOK,REGOK decision
-    class LERROR,RERROR,TASKPOPUP error
+    class WELCOME,LOGIN,REGISTER mainScreen
+    class PACKETS,QR,EXPLORE,PROFILE tabScreen
+    class JOURNAL,ALBUM,EVENTS,CHALLENGES,LEADERBOARD,RECAPS,RECYCLOPEDIA detailScreen
+    class FASTAUTH,HASACCT,LOGINOK,REGOK,UNLOCKCHECK,PROFILETABS,EVENTTABS,USERTABS decision
+    class LERROR,RERROR,TASKPOPUP,UNLOCKPOPUP,QUESTFOUND popup
+    class CREATEPKT,CREATEJOURNAL,CREATEMEMORY,EVENTREGISTER,EDITPROFILE action
 ```
 
 ## How to Use This Mermaid Flowchart in Draw.io

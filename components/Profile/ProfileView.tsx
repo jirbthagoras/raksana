@@ -500,176 +500,130 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
     </View>
   );
 
-  // For tabs with FlatList (Journals, Albums), use full-screen FlatList
-  if (selectedTab === 'journals') {
-    const logs = userLogsData?.data?.logs || [];
-    
-    return (
-      <FlatList
-        data={logs}
-        keyExtractor={(item, index) => `log-${index}`}
-        renderItem={({ item, index }) => (
-          <View style={styles.listItemContainer}>
-            <LogCard item={item} index={index} />
+  // Render tab content based on selected tab
+  const renderCurrentTabContent = () => {
+    switch (selectedTab) {
+      case 'journals':
+        const logs = userLogsData?.data?.logs || [];
+        return (
+          <FlatList
+            data={logs}
+            keyExtractor={(item, index) => `log-${index}`}
+            renderItem={({ item, index }) => (
+              <View style={styles.listItemContainer}>
+                <LogCard item={item} index={index} />
+              </View>
+            )}
+            ListEmptyComponent={() => (
+              logsLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>Loading journals...</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome5 name="book-open" size={48} color={Colors.onSurfaceVariant} />
+                  <Text style={styles.emptyText}>No journals yet</Text>
+                  <Text style={styles.emptySubtext}>This user hasn't written any journals</Text>
+                </View>
+              )
+            )}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+            scrollEnabled={false}
+            nestedScrollEnabled={false}
+          />
+        );
+      
+      case 'albums':
+        const memories = userMemoriesData?.data?.memories || [];
+        return (
+          <FlatList
+            data={memories}
+            keyExtractor={(item) => `memory-${item.memory_id}`}
+            renderItem={({ item, index }) => (
+              <MemoryCard 
+                item={item} 
+                index={index} 
+                showDeleteButton={false}
+              />
+            )}
+            ListEmptyComponent={() => (
+              memoriesLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>Loading albums...</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome5 name="images" size={48} color={Colors.onSurfaceVariant} />
+                  <Text style={styles.emptyText}>No memories yet</Text>
+                  <Text style={styles.emptySubtext}>This user hasn't shared any memories</Text>
+                </View>
+              )
+            )}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+            scrollEnabled={false}
+            nestedScrollEnabled={false}
+          />
+        );
+      
+      case 'treasures':
+        const treasures = finalTreasuresData?.data?.treasures || finalTreasuresData?.data || [];
+        return (
+          <FlatList
+            data={treasures}
+            keyExtractor={(item, index) => `treasure-${index}`}
+            renderItem={({ item, index }) => (
+              <View style={styles.listItemContainer}>
+                <TreasureCard item={item} index={index} />
+              </View>
+            )}
+            ListEmptyComponent={() => (
+              finalTreasuresLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>Loading treasures...</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome5 name="gem" size={48} color={Colors.onSurfaceVariant} />
+                  <Text style={styles.emptyText}>No treasures yet</Text>
+                  <Text style={styles.emptySubtext}>Complete activities to find treasures</Text>
+                </View>
+              )
+            )}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+            scrollEnabled={false}
+            nestedScrollEnabled={false}
+          />
+        );
+      
+      case 'timeline':
+        return (
+          <TimelineScreen
+            activityData={finalActivityData}
+            isLoading={finalActivityLoading}
+            onRefresh={() => {
+              onRefresh?.();
+              finalActivityRefetch();
+            }}
+            isRefreshing={isRefreshing}
+            profileHeader={null}
+            tabNavigation={null}
+          />
+        );
+      
+      case 'statistics':
+      default:
+        return (
+          <View style={styles.tabContentContainer}>
+            {renderTabContent()}
           </View>
-        )}
-        ListHeaderComponent={() => (
-          <>
-            {renderProfileHeader()}
-            {renderTabNavigation()}
-          </>
-        )}
-        ListEmptyComponent={() => (
-          logsLoading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading journals...</Text>
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <FontAwesome5 name="book-open" size={48} color={Colors.onSurfaceVariant} />
-              <Text style={styles.emptyText}>No journals yet</Text>
-              <Text style={styles.emptySubtext}>This user hasn't written any journals</Text>
-            </View>
-          )
-        )}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-        style={styles.fullScreenList}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing || logsLoading}
-            onRefresh={() => {
-              onRefresh?.();
-              refetchLogs();
-            }}
-            tintColor={Colors.primary}
-            colors={[Colors.primary]}
-          />
-        }
-        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
-      />
-    );
-  }
+        );
+    }
+  };
 
-  if (selectedTab === 'albums') {
-    const memories = userMemoriesData?.data?.memories || [];
-    
-    return (
-      <FlatList
-        data={memories}
-        keyExtractor={(item) => `memory-${item.memory_id}`}
-        renderItem={({ item, index }) => (
-          <MemoryCard 
-            item={item} 
-            index={index} 
-            showDeleteButton={false}
-          />
-        )}
-        ListHeaderComponent={() => (
-          <>
-            {renderProfileHeader()}
-            {renderTabNavigation()}
-          </>
-        )}
-        ListEmptyComponent={() => (
-          memoriesLoading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading albums...</Text>
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <FontAwesome5 name="images" size={48} color={Colors.onSurfaceVariant} />
-              <Text style={styles.emptyText}>No memories yet</Text>
-              <Text style={styles.emptySubtext}>This user hasn't shared any memories</Text>
-            </View>
-          )
-        )}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-        style={styles.fullScreenList}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing || memoriesLoading}
-            onRefresh={() => {
-              onRefresh?.();
-              refetchMemories();
-            }}
-            tintColor={Colors.primary}
-            colors={[Colors.primary]}
-          />
-        }
-        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
-      />
-    );
-  }
-
-  if (selectedTab === 'treasures') {
-    const treasures = finalTreasuresData?.data?.treasures || finalTreasuresData?.data || [];
-    
-    return (
-      <FlatList
-        data={treasures}
-        keyExtractor={(item, index) => `treasure-${index}`}
-        renderItem={({ item, index }) => (
-          <View style={styles.listItemContainer}>
-            <TreasureCard item={item} index={index} />
-          </View>
-        )}
-        ListHeaderComponent={() => (
-          <>
-            {renderProfileHeader()}
-            {renderTabNavigation()}
-          </>
-        )}
-        ListEmptyComponent={() => (
-          finalTreasuresLoading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading treasures...</Text>
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <FontAwesome5 name="gem" size={48} color={Colors.onSurfaceVariant} />
-              <Text style={styles.emptyText}>No treasures yet</Text>
-              <Text style={styles.emptySubtext}>Complete activities to find treasures</Text>
-            </View>
-          )
-        )}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-        style={styles.fullScreenList}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing || finalTreasuresLoading}
-            onRefresh={() => {
-              onRefresh?.();
-              finalTreasuresRefetch();
-            }}
-            tintColor={Colors.primary}
-            colors={[Colors.primary]}
-          />
-        }
-        ListFooterComponent={() => <View style={styles.bottomSpacing} />}
-      />
-    );
-  }
-
-  if (selectedTab === 'timeline') {
-    return (
-      <TimelineScreen
-        activityData={finalActivityData}
-        isLoading={finalActivityLoading}
-        onRefresh={() => {
-          onRefresh?.();
-          finalActivityRefetch();
-        }}
-        isRefreshing={isRefreshing}
-        profileHeader={renderProfileHeader()}
-        tabNavigation={renderTabNavigation()}
-      />
-    );
-  }
-
-  // For Statistics tab, use full-screen ScrollView
+  // Main component render with consistent header/tabs
   return (
     <>
       <ScrollView 
@@ -681,7 +635,13 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={() => onRefresh?.()}
+            onRefresh={() => {
+              onRefresh?.();
+              if (selectedTab === 'journals') refetchLogs();
+              if (selectedTab === 'albums') refetchMemories();
+              if (selectedTab === 'treasures') finalTreasuresRefetch();
+              if (selectedTab === 'timeline') finalActivityRefetch();
+            }}
             tintColor={Colors.primary}
             colors={[Colors.primary]}
           />
@@ -690,10 +650,7 @@ export default function ProfileView({ profileData, isOwnProfile = false, childre
         {renderProfileHeader()}
         {renderTabNavigation()}
         
-        {/* Tab Content */}
-        <View style={styles.tabContentContainer}>
-          {renderTabContent()}
-        </View>
+        {renderCurrentTabContent()}
         
         <View style={styles.bottomSpacing} />
       </ScrollView>

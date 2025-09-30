@@ -166,8 +166,11 @@ function GreenprintContent() {
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Greenprint</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleContainer}>
+            <FontAwesome5 name="leaf" size={18} color={Colors.secondary} />
+            <Text style={styles.headerTitle}>Greenprint</Text>
+          </View>
+          <View style={{ width: 32 }} />
         </View>
 
         <View style={styles.loadingContainer}>
@@ -185,8 +188,11 @@ function GreenprintContent() {
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Greenprint</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleContainer}>
+            <FontAwesome5 name="leaf" size={18} color={Colors.secondary} />
+            <Text style={styles.headerTitle}>Greenprint</Text>
+          </View>
+          <View style={{ width: 32 }} />
         </View>
 
         <View style={styles.errorContainer}>
@@ -219,7 +225,7 @@ function GreenprintContent() {
           <FontAwesome5 name="leaf" size={18} color={Colors.secondary} />
           <Text style={styles.headerTitle}>Greenprint</Text>
         </View>
-        <View style={styles.headerSpacer} />
+        <View style={{ width: 32 }} />
       </MotiView>
 
       <ScrollView
@@ -375,9 +381,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display.bold,
     fontSize: 18,
     color: Colors.onSurface,
-  },
-  headerSpacer: {
-    width: 40,
   },
   scrollView: {
     flex: 1,

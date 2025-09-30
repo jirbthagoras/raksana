@@ -1,9 +1,10 @@
+import { GreenprintInfoModal } from '@/components/Modals/GreenprintInfoModal';
 import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { FloatingActionButton } from '@/components/Buttons/FloatingActionButton';
 import { MotiView } from 'moti';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -20,6 +21,8 @@ import { TrashScan, TrashScansResponse } from '../../types/auth';
 import { ErrorProvider } from '@/contexts/ErrorContext';
 
 function RecyclopediaContent() {
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  
   const { 
     data: trashScansData, 
     isLoading, 
@@ -48,9 +51,10 @@ function RecyclopediaContent() {
             <FontAwesome5 name="arrow-left" size={20} color={Colors.onSurface} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
+            <FontAwesome5 name="recycle" size={18} color={Colors.primary} style={styles.headerIcon} />
             <Text style={styles.headerTitle}>Recyclopedia</Text>
           </View>
-          <View style={styles.headerSpacer} />
+          <View style={{ width: 32 }} />
         </View>
 
         <View style={styles.loadingContainer}>
@@ -77,7 +81,12 @@ function RecyclopediaContent() {
           <FontAwesome5 name="recycle" size={18} color={Colors.primary} style={styles.headerIcon} />
           <Text style={styles.headerTitle}>Recyclopedia</Text>
         </View>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity 
+          style={styles.headerInfoButton}
+          onPress={() => setShowInfoModal(true)}
+        >
+          <FontAwesome5 name="info-circle" size={16} color={Colors.primary} />
+        </TouchableOpacity>
       </MotiView>
 
       <ScrollView
@@ -147,6 +156,12 @@ function RecyclopediaContent() {
         label="Scan"
         onPress={() => router.push('/scan')}
       />
+
+      {/* Recyclopedia Info Modal */}
+      <GreenprintInfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -187,8 +202,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.onSurface,
   },
-  headerSpacer: {
-    width: 40,
+  headerInfoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,

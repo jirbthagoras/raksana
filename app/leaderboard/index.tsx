@@ -158,7 +158,7 @@ const LeaderboardCard = React.memo(({ item, index }: { item: LeaderboardEntry; i
             <Text style={[styles.userName, item.is_user && styles.currentUserName]}>
               {item.name}
               {item.is_user && (
-                <Text style={styles.youIndicator}> (You)</Text>
+                <Text style={styles.youIndicator}> (Anda)</Text>
               )}
             </Text>
             <View style={styles.pointsContainer}>
