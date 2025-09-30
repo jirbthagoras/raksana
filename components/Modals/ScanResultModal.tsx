@@ -3,7 +3,8 @@ import { RecyclingItem, TrashScanResult } from '@/types/auth';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
-import React from 'react';
+import React, { useState } from 'react';
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
 import {
   Image,
   Modal,
@@ -26,7 +27,13 @@ export const ScanResultModal: React.FC<ScanResultModalProps> = ({
   onClose,
   scanResult,
 }) => {
+  const [isCreatingGreenprint, setIsCreatingGreenprint] = useState(false);
+  
   if (!scanResult) return null;
+
+  const handleLoadingChange = (isLoading: boolean) => {
+    setIsCreatingGreenprint(isLoading);
+  };
 
   const getValueColor = (value: string) => {
     switch (value) {
@@ -56,11 +63,13 @@ export const ScanResultModal: React.FC<ScanResultModalProps> = ({
 
   const renderRecyclingItem = (item: RecyclingItem, index: number) => (
     <RecyclingItemCard 
-      key={item.id} 
+      key={`modal-${item.id || index}-${index}`} 
       item={item} 
       index={index}
       getValueColor={getValueColor}
       getValueText={getValueText}
+      hideGreenprintButton={true}
+      onLoadingChange={handleLoadingChange}
     />
   );
 
@@ -175,6 +184,9 @@ export const ScanResultModal: React.FC<ScanResultModalProps> = ({
           {/* Bottom spacing */}
           <View style={styles.bottomSpacing} />
         </ScrollView>
+        
+        {/* Full Screen Loading Overlay */}
+        <LoadingOverlay visible={isCreatingGreenprint} />
       </View>
     </Modal>
   );

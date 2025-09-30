@@ -15,6 +15,7 @@ interface TimelineScreenProps {
   isRefreshing?: boolean;
   profileHeader?: React.ReactNode;
   tabNavigation?: React.ReactNode;
+  onMapInteractionChange?: (isInteracting: boolean) => void;
 }
 
 export default function TimelineScreen({ 
@@ -23,13 +24,15 @@ export default function TimelineScreen({
   onRefresh,
   isRefreshing = false,
   profileHeader,
-  tabNavigation
+  tabNavigation,
+  onMapInteractionChange
 }: TimelineScreenProps) {
   const [isMapInteracting, setIsMapInteracting] = useState(false);
 
   const handleMapInteractionChange = (interacting: boolean) => {
     console.log('TimelineScreen: Map interaction changed to:', interacting);
     setIsMapInteracting(interacting);
+    onMapInteractionChange?.(interacting);
   };
 
   return (
@@ -37,14 +40,9 @@ export default function TimelineScreen({
       showsVerticalScrollIndicator={false}
       style={styles.container}
       scrollEnabled={!isMapInteracting}
-      nestedScrollEnabled={false}
+      nestedScrollEnabled={true}
       keyboardShouldPersistTaps="handled"
-      removeClippedSubviews={true}
       contentContainerStyle={styles.contentContainer}
-      scrollEventThrottle={16}
-      bounces={!isMapInteracting}
-      alwaysBounceVertical={!isMapInteracting}
-      directionalLockEnabled={true}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}

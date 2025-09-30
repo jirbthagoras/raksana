@@ -12,25 +12,31 @@ import {
      TouchableOpacity,
      View,
 } from 'react-native';
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
 
 interface RecyclingItemCardProps {
   item: RecyclingItem;
   index: number;
   getValueColor: (value: string) => string;
   getValueText: (value: string) => string;
+  hideGreenprintButton?: boolean;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 export const RecyclingItemCard: React.FC<RecyclingItemCardProps> = ({ 
   item, 
   index, 
   getValueColor, 
-  getValueText 
+  getValueText,
+  hideGreenprintButton = false,
+  onLoadingChange
 }) => {
   const createGreenprintMutation = useCreateGreenprint();
   const { showApiError, showPopUp } = useError();
 
   const handleCreateGreenprint = async () => {
     try {
+      onLoadingChange?.(true);
       console.log('🌱 Creating greenprint for item:', item.id);
       await createGreenprintMutation.mutateAsync(item.id);
       
@@ -74,6 +80,8 @@ export const RecyclingItemCard: React.FC<RecyclingItemCardProps> = ({
           );
         }
       }
+    } finally {
+      onLoadingChange?.(false);
     }
   };
 
@@ -110,30 +118,35 @@ export const RecyclingItemCard: React.FC<RecyclingItemCardProps> = ({
           {item.description}
         </Text>
 
-        {/* Greenprint Button */}
-        <TouchableOpacity
-          style={[
-            styles.greenprintButton,
-            item.having_greenprint && styles.greenprintButtonView
-          ]}
-          disabled={createGreenprintMutation.isPending}
-          onPress={item.having_greenprint ? handleViewGreenprint : handleCreateGreenprint}
-        >
-          <FontAwesome5 
-            name={item.having_greenprint ? "eye" : "leaf"} 
-            size={12} 
-            color="white" 
-          />
-          <Text style={styles.greenprintButtonText}>
-            {createGreenprintMutation.isPending 
-              ? 'Membuat...' 
-              : item.having_greenprint 
-                ? 'Lihat Greenprint' 
-                : 'Buat Greenprint'
-            }
-          </Text>
-        </TouchableOpacity>
+        {/* Greenprint Button - Hidden when hideGreenprintButton is true */}
+        {!hideGreenprintButton && (
+          <TouchableOpacity
+            style={[
+              styles.greenprintButton,
+              item.having_greenprint && styles.greenprintButtonView,
+              createGreenprintMutation.isPending && styles.disabledButton
+            ]}
+            disabled={createGreenprintMutation.isPending}
+            onPress={item.having_greenprint ? handleViewGreenprint : handleCreateGreenprint}
+          >
+            <FontAwesome5 
+              name={item.having_greenprint ? "eye" : "leaf"} 
+              size={12} 
+              color="white" 
+            />
+            <Text style={styles.greenprintButtonText}>
+              {createGreenprintMutation.isPending 
+                ? 'Membuat...' 
+                : item.having_greenprint 
+                  ? 'Lihat Greenprint' 
+                  : 'Buat Greenprint'
+              }
+            </Text>
+          </TouchableOpacity>
+        )}
+        
       </LinearGradient>
+      
     </View>
   );
 };
@@ -205,6 +218,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.text.bold,
     fontSize: 12,
     color: 'white',
+  },
+  disabledButton: {
+    backgroundColor: Colors.surfaceVariant,
+    opacity: 0.6,
   },
   footer: {
     flexDirection: 'row',

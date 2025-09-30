@@ -1,8 +1,10 @@
+import { FloatingActionButton } from '@/components/Buttons/FloatingActionButton';
+import { TrashScanCard } from '@/components/Cards/TrashScanCard';
 import { GreenprintInfoModal } from '@/components/Modals/GreenprintInfoModal';
 import { Colors, Fonts } from '@/constants';
+import { ErrorProvider } from '@/contexts/ErrorContext';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { FloatingActionButton } from '@/components/Buttons/FloatingActionButton';
 import { MotiView } from 'moti';
 import React, { useMemo, useState } from 'react';
 import {
@@ -15,10 +17,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TrashScanCard } from '@/components/Cards/TrashScanCard';
 import { useTrashScans } from '../../hooks/useApiQueries';
-import { TrashScan, TrashScansResponse } from '../../types/auth';
-import { ErrorProvider } from '@/contexts/ErrorContext';
+import { TrashScansResponse } from '../../types/auth';
 
 function RecyclopediaContent() {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -140,7 +140,7 @@ function RecyclopediaContent() {
           ) : (
             <View style={styles.trashScansContainer}>
               {trashScans.map((scan, index) => (
-                <TrashScanCard key={`${scan.title}-${index}`} item={scan} index={index} />
+                <TrashScanCard key={`scan-${scan.image_key}-${index}`} item={scan} index={index} />
               ))}
             </View>
           )}

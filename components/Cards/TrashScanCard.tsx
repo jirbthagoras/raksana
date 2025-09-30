@@ -4,6 +4,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
+import LoadingOverlay from '@/components/Screens/LoadingComponent';
 import {
   Image,
   StyleSheet,
@@ -16,10 +17,17 @@ import { RecyclingItemCard } from '@/components/Cards/RecyclingItemCard';
 interface TrashScanCardProps {
   item: TrashScan;
   index: number;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
-export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index }) => {
+export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index, onLoadingChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isCreatingGreenprint, setIsCreatingGreenprint] = useState(false);
+
+  const handleLoadingChange = (isLoading: boolean) => {
+    setIsCreatingGreenprint(isLoading);
+    onLoadingChange?.(isLoading);
+  };
 
   const getValueColor = (value: string) => {
     switch (value) {
@@ -117,11 +125,12 @@ export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index }) => 
             
             {item.items.map((recyclingItem: RecyclingItem, itemIndex: number) => (
               <RecyclingItemCard 
-                key={recyclingItem.id} 
+                key={`${item.title}-${recyclingItem.id || itemIndex}-${itemIndex}`} 
                 item={recyclingItem} 
                 index={itemIndex}
                 getValueColor={getValueColor}
                 getValueText={getValueText}
+                onLoadingChange={handleLoadingChange}
               />
             ))}
           </MotiView>
@@ -140,6 +149,9 @@ export const TrashScanCard: React.FC<TrashScanCardProps> = ({ item, index }) => 
           </TouchableOpacity>
         )}
       </LinearGradient>
+      
+      {/* Full Screen Loading Overlay */}
+      <LoadingOverlay visible={isCreatingGreenprint} />
     </View>
   );
 };

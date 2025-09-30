@@ -21,6 +21,7 @@ export default function UserProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const userId = parseInt(id as string, 10);
+  const [isMapInteracting, setIsMapInteracting] = React.useState(false);
   
   console.log('UserProfileScreen - ID from params:', id);
   console.log('UserProfileScreen - Parsed userId:', userId);
@@ -111,13 +112,15 @@ export default function UserProfileScreen() {
           <ProfileView 
             profileData={profileData} 
             isOwnProfile={false}
+            onMapInteractionChange={setIsMapInteracting}
+            onRefresh={refetch}
+            isRefreshing={isLoading}
           />
         </View>
       </GradientBackground>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

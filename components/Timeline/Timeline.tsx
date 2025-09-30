@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -58,12 +59,10 @@ export default function Timeline({
   );
 
   const handleMapTouchStart = () => {
-    console.log('Map touch started');
     onMapInteractionChange?.(true);
   };
 
   const handleMapTouchEnd = () => {
-    console.log('Map touch ended');
     onMapInteractionChange?.(false);
   };
 
@@ -267,38 +266,61 @@ export default function Timeline({
   const renderTimelineContent = () => {
     if (isLoading) {
       return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading timeline...</Text>
-        </View>
+        <ScrollView 
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Loading timeline...</Text>
+          </View>
+        </ScrollView>
       );
     }
 
     if (!activityData?.data) {
       return (
-        <View style={styles.emptyContainer}>
-          <FontAwesome5 name="map" size={48} color={Colors.onSurfaceVariant} />
-          <Text style={styles.emptyText}>No activity yet</Text>
-          <Text style={styles.emptySubtext}>Start participating in events and quests to see your timeline</Text>
-        </View>
+        <ScrollView 
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.emptyContainer}>
+            <FontAwesome5 name="map" size={48} color={Colors.onSurfaceVariant} />
+            <Text style={styles.emptyText}>No activity yet</Text>
+            <Text style={styles.emptySubtext}>Start participating in events and quests to see your timeline</Text>
+          </View>
+        </ScrollView>
       );
     }
 
     const activities = activityData.data.activities || [];
     
     return (
-      <View style={styles.timelineContainer}>
-        {/* Timeline Header */}
-        <View style={styles.timelineHeader}>
-          <FontAwesome5 name="map-marked-alt" size={24} color={Colors.primary} />
-          <Text style={styles.timelineTitle}>Activity Timeline</Text>
-          <Text style={styles.timelineSubtitle}>
-            Klik marker-nya!
-          </Text>
-        </View>
+      <ScrollView 
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={true}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.timelineContainer}>
+          {/* Timeline Header */}
+          <View style={styles.timelineHeader}>
+            <FontAwesome5 name="map-marked-alt" size={24} color={Colors.primary} />
+            <Text style={styles.timelineTitle}>Activity Timeline</Text>
+            <Text style={styles.timelineSubtitle}>
+              Klik marker-nya!
+            </Text>
+          </View>
 
-        {/* Activity Map */}
-        <View style={styles.mapContainer}>
+          {/* Activity Map */}
+          <View style={styles.mapContainer}>
           {(() => {
             
             // Use first activity as center, or default to Indonesia
@@ -432,6 +454,7 @@ export default function Timeline({
                     scrollGesturesEnabled: true,
                     rotationGesturesEnabled: false,
                     tiltGesturesEnabled: false,
+                    scaleBarEnabled: false,
                   }}
                   onCameraMove={(event) => {
                   }}
@@ -461,28 +484,28 @@ export default function Timeline({
           </View>
         </View>
 
-        {/* Activity Detail Section */}
-        {renderActivityDetail()}
-      </View>
+          {/* Activity Detail Section */}
+          {renderActivityDetail()}
+        </View>
+        
+        {/* Bottom spacing for scroll */}
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
     );
   };
 
-  return (
-    <MotiView
-      from={{ opacity: 0, translateY: 20 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: 'timing', duration: 600, delay: 100 }}
-      style={styles.container}
-    >
-      {renderTimelineContent()}
-    </MotiView>
-  );
+  return renderTimelineContent();
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    flex: 1,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  bottomSpacing: {
+    height: 100,
   },
   loadingContainer: {
     flex: 1,
@@ -520,6 +543,8 @@ const styles = StyleSheet.create({
   },
   timelineContainer: {
     flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   timelineHeader: {
     alignItems: 'center',
