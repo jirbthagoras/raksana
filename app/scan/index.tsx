@@ -2,12 +2,13 @@ import { Colors, Fonts } from '@/constants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { MotiView } from 'moti';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -28,6 +29,23 @@ function ScanContent() {
 
   const scanTrashMutation = useScanTrash();
   const { showPopUp } = useError();
+
+  // Manage status bar when screen is focused/unfocused
+  useFocusEffect(
+    useCallback(() => {
+      // Set status bar for this screen
+      StatusBar.setBarStyle('dark-content', true);
+      StatusBar.setBackgroundColor('transparent', true);
+      StatusBar.setTranslucent(true);
+      
+      return () => {
+        // Reset status bar when leaving this screen
+        StatusBar.setBarStyle('dark-content', true);
+        StatusBar.setBackgroundColor('transparent', true);
+        StatusBar.setTranslucent(true);
+      };
+    }, [])
+  );
 
   const handleBack = () => {
     router.back();
@@ -249,6 +267,7 @@ function ScanContent() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
       {/* Header */}
       <MotiView
         from={{ opacity: 0, translateY: -20 }}

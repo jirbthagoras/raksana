@@ -2,6 +2,18 @@
 
 ## Complete User Experience Flowchart
 
+### Recent Updates (v2.0)
+- **New Onboarding System**: Added comprehensive onboarding flow after registration
+- **Token-Based Registration**: Registration now automatically saves authentication token
+- **Guided First Packet Creation**: New users create their first packet as part of onboarding
+- **Enhanced User Journey**: Smoother transition from registration to main app usage
+
+### Key Changes:
+1. **Registration Flow**: Now redirects to onboarding instead of login
+2. **Onboarding Screen**: Two-step process (Welcome → Create Packet)
+3. **Automatic Authentication**: Users are logged in immediately after registration
+4. **First Packet Creation**: Mandatory packet creation during onboarding
+
 ```mermaid
 ---
 config:
@@ -23,9 +35,20 @@ flowchart TD
     LERROR --> LOGIN
     
     REGISTER --> REGOK{Registration Success?}
-    REGOK -->|Yes| LOGIN
+    REGOK -->|Yes| ONBOARDING[🌟 Onboarding Screen]
     REGOK -->|No| RERROR[❌ Registration Error]
     RERROR --> REGISTER
+    
+    %% Onboarding Flow
+    ONBOARDING --> ONBOARDSTEP{Onboarding Step}
+    ONBOARDSTEP -->|Welcome| WELCOME_STEP[👋 Welcome & Features]
+    ONBOARDSTEP -->|Create Packet| CREATE_STEP[📝 Create First Packet]
+    
+    WELCOME_STEP --> CREATE_STEP
+    CREATE_STEP --> PACKET_CREATED{Packet Created?}
+    PACKET_CREATED -->|Yes| HOME
+    PACKET_CREATED -->|No| PACKET_ERROR[❌ Packet Creation Error]
+    PACKET_ERROR --> CREATE_STEP
     
     %% Main Tab Navigation (Bottom Tabs)
     HOME --> PACKETS[📁 Habit/Packets Tab]
@@ -149,12 +172,12 @@ flowchart TD
     classDef action fill:#e0f2f1,stroke:#00695c,stroke-width:2px
     
     class START,HOME startEnd
-    class WELCOME,LOGIN,REGISTER mainScreen
+    class WELCOME,LOGIN,REGISTER,ONBOARDING mainScreen
     class PACKETS,QR,EXPLORE,PROFILE tabScreen
     class JOURNAL,ALBUM,EVENTS,CHALLENGES,LEADERBOARD,RECAPS,RECYCLOPEDIA detailScreen
-    class FASTAUTH,HASACCT,LOGINOK,REGOK,UNLOCKCHECK,PROFILETABS,EVENTTABS,USERTABS decision
-    class LERROR,RERROR,TASKPOPUP,UNLOCKPOPUP,QUESTFOUND popup
-    class CREATEPKT,CREATEJOURNAL,CREATEMEMORY,EVENTREGISTER,EDITPROFILE action
+    class FASTAUTH,HASACCT,LOGINOK,REGOK,UNLOCKCHECK,PROFILETABS,EVENTTABS,USERTABS,ONBOARDSTEP,PACKET_CREATED decision
+    class LERROR,RERROR,TASKPOPUP,UNLOCKPOPUP,QUESTFOUND,PACKET_ERROR popup
+    class CREATEPKT,CREATEJOURNAL,CREATEMEMORY,EVENTREGISTER,EDITPROFILE,WELCOME_STEP,CREATE_STEP action
 ```
 
 ## How to Use This Mermaid Flowchart in Draw.io

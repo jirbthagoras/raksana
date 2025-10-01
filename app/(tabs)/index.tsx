@@ -29,7 +29,7 @@ import { useRouter } from 'expo-router';
 import HomePageSkeleton from '../../components/Screens/HomePageSkeleton';
 import { useAuth } from '../../contexts/AuthContext';
 import { ErrorProvider } from '../../contexts/ErrorContext';
-import { useProfileMe, useRegions, useDailyChallenge } from '../../hooks/useApiQueries';
+import { useDailyChallenge, useProfileMe, useRegions } from '../../hooks/useApiQueries';
 
 const { width } = Dimensions.get('window');
 
@@ -564,6 +564,40 @@ export default function HomeTab() {
             
           </MotiView>
         </ScrollView>
+
+        {/* Floating Info Popup */}
+        <MotiView
+          from={{ opacity: 0, scale: 0.5, rotate: '0deg' }}
+          animate={{ opacity: 1, scale: 1, rotate: '0deg' }}
+          transition={{ 
+            type: 'spring', 
+            delay: 2000, 
+            damping: 12, 
+            stiffness: 150,
+            scale: { type: 'spring', damping: 8, stiffness: 200 }
+          }}
+          style={styles.floatingInfoPopup}
+        >
+          <TouchableOpacity
+            style={styles.floatingInfoButton}
+            onPress={() => router.push('/info')}
+            activeOpacity={0.8}
+          >
+            <MotiView
+              from={{ rotate: '0deg' }}
+              animate={{ rotate: '360deg' }}
+              transition={{ 
+                type: 'timing', 
+                duration: 3000, 
+                loop: true,
+                repeatReverse: false
+              }}
+            >
+              <FontAwesome5 name="info-circle" size={24} color={Colors.onPrimary} />
+            </MotiView>
+          </TouchableOpacity>
+        
+        </MotiView>
       </SafeAreaView>
       
         {/* Quest Clue Popup */}
@@ -898,5 +932,39 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.text.bold,
     fontSize: 12,
     color: Colors.surface,
+  },
+  floatingInfoPopup: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 25,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+  },
+  floatingInfoButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  floatingInfoText: {
+    marginLeft: 8,
+    marginRight: 4,
+  },
+  floatingInfoLabel: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.onPrimary,
   },
 });

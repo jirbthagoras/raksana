@@ -8,35 +8,92 @@ import { router } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+     ActivityIndicator,
+     Dimensions,
+     KeyboardAvoidingView,
+     Platform,
+     ScrollView,
+     StyleSheet,
+     Text,
+     TextInput,
+     TouchableOpacity,
+     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ErrorProvider } from '../contexts/ErrorContext';
 
+// Import Info Section Components
+import ActivitiesSection from '@/components/Info/ActivitiesSection';
+import GamificationSection from '@/components/Info/GamificationSection';
+import RecyclopediaSection from '@/components/Info/RecyclopediaSection';
+import TrilokaSection from '@/components/Info/TrilokaSection';
+
 const { width } = Dimensions.get('window');
+
+interface InfoSection {
+  id: string;
+  title: string;
+  icon: string;
+  component: React.ComponentType;
+}
+
+const infoSections: InfoSection[] = [
+  {
+    id: 'triloka',
+    title: 'Apa itu Raksana?',
+    icon: 'leaf',
+    component: TrilokaSection,
+  },
+  {
+    id: 'gamification',
+    title: 'Make Lifestyle-Crafting Fun!',
+    icon: 'gamepad',
+    component: GamificationSection,
+  },
+  {
+    id: 'activities',
+    title: 'Activities',
+    icon: 'tasks',
+    component: ActivitiesSection,
+  },
+  {
+    id: 'recyclopedia',
+    title: 'Recyclopedia',
+    icon: 'recycle',
+    component: RecyclopediaSection,
+  },
+];
 
 interface OnboardingContentProps {}
 
 function OnboardingContent({}: OnboardingContentProps) {
   const [target, setTarget] = useState('');
   const [description, setDescription] = useState('');
-  const [step, setStep] = useState<'welcome' | 'create'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'info' | 'create'>('welcome');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentInfoSection, setCurrentInfoSection] = useState(0);
 
   const { showPopUp } = useError();
   const createPacketMutation = useCreatePacket();
 
   const handleNext = () => {
-    setStep('create');
+    setStep('info');
+  };
+
+  const handleInfoNext = () => {
+    if (currentInfoSection < infoSections.length - 1) {
+      setCurrentInfoSection(currentInfoSection + 1);
+    } else {
+      setStep('create');
+    }
+  };
+
+  const handleInfoPrevious = () => {
+    if (currentInfoSection > 0) {
+      setCurrentInfoSection(currentInfoSection - 1);
+    } else {
+      setStep('welcome');
+    }
   };
 
   const handleCreatePacket = async () => {
@@ -61,9 +118,9 @@ function OnboardingContent({}: OnboardingContentProps) {
 
       showPopUp('Paket berhasil dibuat! Selamat datang di Raksana!', 'info');
       
-      // Navigate to main app after success
+      // Navigate to packet screen after success
       setTimeout(() => {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/packet');
       }, 1500);
     } catch (error: any) {
       showPopUp(error.message || 'Gagal membuat paket', 'error');
@@ -177,6 +234,147 @@ function OnboardingContent({}: OnboardingContentProps) {
       </MotiView>
     </ScrollView>
   );
+
+  const renderInfoStep = () => {
+    const currentSection = infoSections[currentInfoSection];
+    const CurrentComponent = currentSection.component;
+    const progress = ((currentInfoSection + 1) / infoSections.length) * 100;
+
+    return (
+      <ScrollView 
+        contentContainerStyle={styles.infoScrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <MotiView
+          from={{ opacity: 0, translateY: 30 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 600 }}
+          style={styles.infoContainer}
+        >
+          {/* Header */}
+          <View style={styles.infoHeader}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleInfoPrevious}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="chevron-left" size={20} color={Colors.onSurface} />
+            </TouchableOpacity>
+            <View style={styles.infoHeaderCenter}>
+              <Text style={styles.infoTitle}>Tentang Raksana</Text>
+              <Text style={styles.infoSubtitle}>
+                {currentInfoSection + 1} dari {infoSections.length}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.skipButton}
+              onPress={() => setStep('create')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.skipText}>Skip</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBackground}>
+              <MotiView
+                from={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ type: 'timing', duration: 500 }}
+                style={styles.progressBar}
+              >
+                <LinearGradient
+                  colors={[Colors.primary, Colors.secondary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.progressGradient}
+                />
+              </MotiView>
+            </View>
+            <Text style={styles.progressText}>{Math.round(progress)}%</Text>
+          </View>
+
+          {/* Section Title */}
+          <View style={styles.sectionTitleContainer}>
+            <View style={styles.sectionIconContainer}>
+              <LinearGradient
+                colors={[Colors.primary, Colors.secondary]}
+                style={styles.sectionIconGradient}
+              >
+                <FontAwesome5 
+                  name={currentSection.icon} 
+                  size={24} 
+                  color={Colors.onPrimary} 
+                />
+              </LinearGradient>
+            </View>
+            <Text style={styles.sectionTitle}>
+              {currentSection.title}
+            </Text>
+          </View>
+
+          {/* Content */}
+          <MotiView
+            key={`content-${currentInfoSection}`}
+            from={{ opacity: 0, translateX: 30 }}
+            animate={{ opacity: 1, translateX: 0 }}
+            transition={{ type: 'timing', duration: 600 }}
+            style={styles.infoContentContainer}
+          >
+            <CurrentComponent />
+          </MotiView>
+
+          {/* Navigation */}
+          <View style={styles.infoNavigationContainer}>
+            <TouchableOpacity
+              style={[
+                styles.infoNavButton,
+                styles.infoPrevButton,
+                currentInfoSection === 0 && styles.infoNavButtonDisabled
+              ]}
+              onPress={handleInfoPrevious}
+              disabled={currentInfoSection === 0}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 
+                name="chevron-left" 
+                size={20} 
+                color={currentInfoSection === 0 ? Colors.onSurfaceVariant : Colors.onSurface} 
+              />
+            </TouchableOpacity>
+
+            {/* Section Indicators */}
+            <View style={styles.indicatorsContainer}>
+              {infoSections.map((_, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.indicator,
+                    index === currentInfoSection && styles.indicatorActive
+                  ]}
+                  onPress={() => setCurrentInfoSection(index)}
+                  activeOpacity={0.7}
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.infoNavButton, styles.infoNextButton]}
+              onPress={handleInfoNext}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 
+                name={currentInfoSection === infoSections.length - 1 ? 'check' : 'chevron-right'} 
+                size={20} 
+                color={Colors.onPrimary} 
+              />
+            </TouchableOpacity>
+          </View>
+        </MotiView>
+      </ScrollView>
+    );
+  };
 
   const renderCreateStep = () => (
     <KeyboardAvoidingView 
@@ -296,7 +494,9 @@ function OnboardingContent({}: OnboardingContentProps) {
   return (
     <SafeAreaView style={styles.container}>
       <LoadingOverlay visible={isLoading} />
-      {step === 'welcome' ? renderWelcomeStep() : renderCreateStep()}
+      {step === 'welcome' && renderWelcomeStep()}
+      {step === 'info' && renderInfoStep()}
+      {step === 'create' && renderCreateStep()}
     </SafeAreaView>
   );
 }
@@ -317,6 +517,9 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     padding: 20,
+  },
+  infoScrollContainer: {
+    flexGrow: 1,
   },
   
   // Welcome Step Styles
@@ -523,5 +726,145 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display.bold,
     fontSize: 16,
     color: Colors.onPrimary,
+  },
+  
+  // Info Step Styles
+  infoContainer: {
+    flex: 1,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+  },
+  infoHeaderCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  infoTitle: {
+    fontFamily: Fonts.display.bold,
+    fontSize: 18,
+    color: Colors.onSurface,
+  },
+  infoSubtitle: {
+    fontFamily: Fonts.text.regular,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  skipButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  skipText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 14,
+    color: Colors.primary,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    gap: 12,
+  },
+  progressBackground: {
+    flex: 1,
+    height: 6,
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  progressGradient: {
+    flex: 1,
+  },
+  progressText: {
+    fontFamily: Fonts.text.bold,
+    fontSize: 12,
+    color: Colors.primary,
+    minWidth: 35,
+    textAlign: 'right',
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    gap: 12,
+  },
+  sectionIconContainer: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  sectionIconGradient: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    flex: 1,
+    fontFamily: Fonts.display.bold,
+    fontSize: 20,
+    color: Colors.onSurface,
+  },
+  infoContentContainer: {
+    flex: 1,
+    marginHorizontal: 20,
+  },
+  infoNavigationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: Colors.surface + '95',
+    borderTopWidth: 1,
+    borderTopColor: Colors.outline + '20',
+  },
+  infoNavButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoPrevButton: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.outline + '30',
+  },
+  infoNextButton: {
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  infoNavButtonDisabled: {
+    opacity: 0.5,
+  },
+  indicatorsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.outline + '40',
+  },
+  indicatorActive: {
+    backgroundColor: Colors.primary,
+    width: 20,
   },
 });
